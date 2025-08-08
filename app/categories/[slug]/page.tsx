@@ -1,0 +1,285 @@
+"use client"
+
+import { useMemo, useState, useEffect } from "react"
+import SiteHeader from "@/components/site-header"
+import SiteFooter from "@/components/site-footer"
+import ProductCard from "@/components/product-card"
+import Breadcrumbs from "@/components/breadcrumbs"
+import { categories } from "@/lib/categories"
+import { listProductsByCategorySlug } from "@/lib/data"
+import { notFound, useSearchParams, usePathname } from "next/navigation"
+import { CartProvider } from "@/components/cart"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Label } from "@/components/ui/label"
+import { Input } from "@/components/ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import PaginatedGrid from "@/components/paginated-grid"
+import { getVisibilityMap } from "@/lib/admin-store"
+
+type Props = { params: { slug: string } }
+
+export default function CategoryDetailPage({ params }: Props) {
+  const searchParams = useSearchParams()
+  const pathname = usePathname()
+  const cat = categories.find((c) => c.slug === params.slug)
+  if (!cat) return notFound()
+
+  const initialAudience = (searchParams.get("audiencia") ?? "").toLowerCase()
+  const initialQuery = searchParams.get("q") ?? ""
+  const initialSort = (searchParams.get("sort") ?? "relevance").toLowerCase()
+
+  const baseItemsRaw = useMemo(() => listProductsByCategorySlug(cat.slug), [cat.slug])
+  const visibility = useMemo(() => getVisibilityMap(), [])
+  const baseItems = useMemo(
+    () => baseItemsRaw.filter((p) => visibility[p.slug] !== false),
+    [baseItemsRaw, visibility]
+  )
+
+  // Estado de filtros
+  const [q, setQ] = useState(initialQuery)
+  const [colors, setColors] = useState<string[]>([])
+  const [fabrics, setFabrics] = useState<string[]>([])
+  const [audiencia, setAudiencia] = useState<string>(initialAudience)
+  const [sort, setSort] = useState<string>(initialSort)
+
+  useEffect(() => {
+    setAudiencia(initialAudience)
+    setQ(initialQuery)
+    setSort(initialSort)
+  }, [initialAudience, initialQuery, initialSort])
+
+  // Opciones disponibles
+  const colorsAll = useMemo(() => {
+    const set = new Set<string>()
+    baseItems.forEach((p) => p.colors.forEach((c) => set.add(c)))
+    return Array.from(set)
+  }, [baseItems])
+
+  const fabricsAll = useMemo(() => {
+    const set = new Set<string>()
+    baseItems.forEach((p) => p.fabrics.forEach((f) => set.add(f)))
+    return Array.from(set)
+  }, [baseItems])
+
+  // Aplicar filtros
+  const filteredItems = useMemo(() => {
+    let items = baseItems
+
+    if (audiencia) items = items.filter((p) => (p.tags ?? []).includes(audiencia))
+
+    const term = q.trim().toLowerCase()
+    if (term) {
+      items = items.filter(
+        (p) => p.title.toLowerCase().includes(term) || p.description.toLowerCase().includes(term)
+      )
+    }
+
+    if (colors.length > 0) items = items.filter((p) => p.colors.some((c) => colors.includes(c)))
+    if (fabrics.length > 0) items = items.filter((p) => p.fabrics.some((f) => fabrics.includes(f)))
+
+    switch (sort) {
+      case "price-asc":
+        items = [...items].sort((a, b) => a.price - b.price)
+        break
+      case "price-desc":
+        items = [...items].sort((a, b) => b.price - a.price)
+        break
+      default:
+        break
+    }
+    return items
+  }, [baseItems, audiencia, q, colors, fabrics, sort])
+
+  // Sincronizar a URL (q, audiencia, sort)
+  useEffect(() => {
+    const params = new URLSearchParams()
+    if (q) params.set("q", q)
+    if (audiencia) params.set("audiencia", audiencia)
+    if (sort && sort !== "relevance") params.set("sort", sort)
+    const newUrl = `${pathname}${params.toString() ? `?${params}` : ""}`
+    window.history.replaceState(null, "", newUrl)
+  }, [q, audiencia, sort, pathname])
+
+  const toggle = (list: string[], value: string, setter: (v: string[]) => void) => {
+    if (list.includes(value)) setter(list.filter((v) => v !== value))
+    else setter([...list, value])
+  }
+
+  const resetFilters = () => {
+    setColors([])
+    setFabrics([])
+    setAudiencia(initialAudience || "")
+    setQ("")
+    setSort("relevance")
+  }
+
+  return (
+    <CartProvider>
+      <div className="flex min-h-[100dvh] flex-col">
+        <SiteHeader />
+        <main className="container mx-auto px-4 py-10 grid gap-8">
+          <Breadcrumbs
+            items={[
+              { label: "Inicio", href: "/" },
+              { label: "Categorías", href: "/categories" },
+              { label: cat.title },
+            ]}
+          />
+
+          <header className="grid gap-2">
+            <h1 className="text-2xl md:text-3xl tracking-tight">
+              {cat.title}
+              {audiencia ? ` · ${capitalize(audiencia)}` : ""}
+            </h1>
+            {cat.description ? <p className="text-sm text-muted-foreground">{cat.description}</p> : null}
+          </header>
+
+          <section className="grid gap-8 md:grid-cols-[280px_1fr]">
+            <aside className="md:sticky md:top-20 md:h-fit grid gap-6">
+              {/* Buscador */}
+              <div className="grid gap-2">
+                <Label htmlFor="q" className="text-xs uppercase tracking-widest text-muted-foreground">
+                  {`Buscar en ${cat.title.toLowerCase()}`}
+                </Label>
+                <Input
+                  id="q"
+                  placeholder="Ej. white, oxford, anime..."
+                  value={q}
+                  onChange={(e) => setQ(e.target.value)}
+                  className="rounded-none"
+                />
+              </div>
+
+              {/* Audiencia */}
+              <div className="grid gap-2">
+                <div className="text-xs uppercase tracking-widest text-muted-foreground">Audiencia</div>
+                <div className="flex flex-wrap gap-2">
+                  {["hombres", "mujeres", "niños"].map((a) => (
+                    <button
+                      key={a}
+                      onClick={() => setAudiencia((prev) => (prev === a ? "" : a))}
+                      className={`text-xs px-3 py-1 rounded-full border ${
+                        audiencia === a ? "bg-foreground text-background" : "bg-background text-foreground"
+                      }`}
+                      aria-pressed={audiencia === a}
+                    >
+                      {capitalize(a)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <Accordion type="multiple" defaultValue={["color", "fabric"]}>
+                <AccordionItem value="color">
+                  <AccordionTrigger className="text-base">
+                    Color
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <div className="grid gap-2">
+                      {colorsAll.length === 0 && (
+                        <div className="text-xs text-muted-foreground">Sin opciones de color</div>
+                      )}
+                      {colorsAll.map((c) => (
+                        <Label key={c} className="flex items-center gap-2 font-normal">
+                          <Checkbox
+                            checked={colors.includes(c)}
+                            onCheckedChange={() => toggle(colors, c, setColors)}
+                          />
+                          {c}
+                        </Label>
+                      ))}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+
+                <AccordionItem value="fabric">
+                  <AccordionTrigger className="text-base">
+                    Tejido
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <div className="grid gap-2">
+                      {fabricsAll.length === 0 && (
+                        <div className="text-xs text-muted-foreground">Sin opciones de tejido</div>
+                      )}
+                      {fabricsAll.map((f) => (
+                        <Label key={f} className="flex items-center gap-2 font-normal">
+                          <Checkbox
+                            checked={fabrics.includes(f)}
+                            onCheckedChange={() => toggle(fabrics, f, setFabrics)}
+                          />
+                          {f}
+                        </Label>
+                      ))}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+
+              {(colors.length > 0 || fabrics.length > 0 || audiencia || q) && (
+                <button
+                  onClick={resetFilters}
+                  className="text-xs px-3 py-2 rounded-md border mt-2 w-fit hover:bg-muted"
+                >
+                  Limpiar filtros
+                </button>
+              )}
+            </aside>
+
+            <section className="grid gap-6">
+              <div className="flex items-center justify-between">
+                <div className="text-sm text-muted-foreground">
+                  {filteredItems.length} {filteredItems.length === 1 ? "resultado" : "resultados"}
+                  {q ? ` para “${q}”` : ""}
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground hidden sm:inline">Ordenar por</span>
+                  <Select value={sort} onValueChange={setSort}>
+                    <SelectTrigger className="h-9 w-[180px]">
+                      <SelectValue placeholder="Relevancia" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="relevance">Relevancia</SelectItem>
+                      <SelectItem value="price-asc">Precio: menor a mayor</SelectItem>
+                      <SelectItem value="price-desc">Precio: mayor a menor</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {/* Chips activos */}
+              {(colors.length > 0 || fabrics.length > 0 || audiencia || q) && (
+                <div className="flex flex-wrap gap-2">
+                  {q && <span className="text-xs px-2 py-1 rounded-full border">Búsqueda: {q}</span>}
+                  {audiencia && <span className="text-xs px-2 py-1 rounded-full border">Audiencia: {capitalize(audiencia)}</span>}
+                  {colors.map((c) => (
+                    <span key={`c-${c}`} className="text-xs px-2 py-1 rounded-full border">
+                      Color: {c}
+                    </span>
+                  ))}
+                  {fabrics.map((f) => (
+                    <span key={`f-${f}`} className="text-xs px-2 py-1 rounded-full border">
+                      Tejido: {f}
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              <PaginatedGrid
+                items={filteredItems}
+                initialPageSize={12}
+                perPageOptions={[12, 24, 36]}
+                renderItem={(p) => <ProductCard key={p.id} product={p} />}
+              />
+            </section>
+          </section>
+        </main>
+        <SiteFooter />
+      </div>
+    </CartProvider>
+  )
+}
+
+function capitalize(s: string) {
+  return s.charAt(0).toUpperCase() + s.slice(1)
+}
