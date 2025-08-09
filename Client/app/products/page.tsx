@@ -36,7 +36,7 @@ export default function ProductsPage() {
   // Paginación progresiva
   const [pageSize, setPageSize] = useState(12)
   const [page, setPage] = useState(1)
-  const sentinelRef = useRef<HTMLDivElement | null>(null)
+  const sentinelRef:any = useRef<HTMLDivElement | null>(null)
   const hitBottom = useIntersection(sentinelRef, { rootMargin: "480px 0px 0px 0px" })
 
   // UX: transiciones de filtro
@@ -110,31 +110,8 @@ export default function ProductsPage() {
       <div className="flex min-h-[100dvh] flex-col bg-white">
         <SiteHeader />
 
-        {/* Hero editorial */}
-        <section className="relative">
-          <div className="container mx-auto px-4 py-10 md:py-14">
-            <div className="grid gap-6 md:grid-cols-[1fr_420px] md:items-end">
-              <div className="grid gap-3">
-                <h1 className="text-3xl md:text-4xl tracking-tight">Colección de Productos</h1>
-                <p className="text-muted-foreground max-w-prose">
-                  Prendas diseñadas con precisión. Filtra por color, tejido y precio para encontrar el ajuste perfecto.
-                </p>
-              </div>
-              <div className="relative aspect-[16/9] w-full overflow-hidden rounded-md bg-muted">
-                <Image
-                  src="/images/hero-2.png"
-                  alt="Editorial de producto"
-                  fill
-                  className="object-cover"
-                  sizes="(min-width: 1024px) 420px, 100vw"
-                />
-              </div>
-            </div>
-          </div>
-        </section>
-
         {/* Toolbar */}
-        <div className="border-t">
+        <div className="">
           <div className="container mx-auto px-4 py-4">
             <ProductToolbar
               total={filtered.length}

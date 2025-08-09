@@ -71,7 +71,7 @@ export default function PaginatedGrid<T>({
   }, [items, page, perPage, total, infinite])
 
   // Infinite scroll con "sentinel"
-  const sentinelRef = useRef<HTMLDivElement | null>(null)
+  const sentinelRef:any = useRef<HTMLDivElement | null>(null)
   const hitBottom = useIntersection(sentinelRef, { rootMargin: "400px 0px 0px 0px" })
 
   useEffect(() => {

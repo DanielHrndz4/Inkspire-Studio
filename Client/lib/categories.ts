@@ -36,4 +36,10 @@ export const categories: Category[] = [
     image: "/images/categories/typography.png",
     description: "Diseños tipográficos minimalistas.",
   },
+  {
+    slug: "marvel",
+    title: "Marvel",
+    image: "/images/categories/typography.png",
+    description: "Superhéroes y villanos en cada prenda.",
+  },
 ]

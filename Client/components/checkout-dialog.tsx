@@ -91,7 +91,7 @@ export default function CheckoutDialog({ open, onOpenChange }: Props) {
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-2xl p-0">
+        <DialogContent style={{ maxWidth: '50vw', padding: 0 }}>
           <DialogHeader className="px-6 pt-6">
             <DialogTitle>{ticketId ? "Comprobante de pedido" : "Datos para completar tu compra"}</DialogTitle>
           </DialogHeader>
@@ -137,7 +137,7 @@ export default function CheckoutDialog({ open, onOpenChange }: Props) {
                 </div>
               </div>
 
-              <div className="rounded-md border">
+              <div className="rounded-md border w-full">
                 <ScrollArea className="h-[360px]">
                   <div className="p-4 space-y-3">
                     <div className="font-medium">Resumen</div>
@@ -220,7 +220,7 @@ export default function CheckoutDialog({ open, onOpenChange }: Props) {
 
       {/* Términos y condiciones */}
       <TermsDialog open={showTerms} onOpenChange={setShowTerms}>
-        <TermsContent className="sm:max-w-lg">
+        <TermsContent className="sm:max-w-xl">
           <TermsHeader>
             <TermsTitle>Términos y condiciones</TermsTitle>
           </TermsHeader>

@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button"
 import { products } from "@/lib/data"
 import { CartProvider } from "@/components/cart"
 import FeatureStrip from "@/components/feature-strip"
-import BrandGrid from "@/components/brand-grid"
 import HowItWorks from "@/components/how-it-works"
 import Testimonials from "@/components/testimonials"
 import NewsletterForm from "@/components/newsletter-form"
@@ -65,7 +64,6 @@ export default function Page() {
           </section>
 
           <FeatureStrip />
-          <BrandGrid />
           <CategorySpotlight categories={featuredCats} title="Capítulos — Categorías" subtitle="Explora por tipo y temática" />
           <AudienceSections />
           <HomeCollection />

@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import Image from "next/image"
 import { formatCurrency } from "@/lib/format"
-import { addOrder } from "@/lib/admin-store"
 import CheckoutDialog from "@/components/checkout-dialog"
 import { AuthProvider } from "@/components/auth"
 
@@ -116,9 +115,7 @@ function CartSheet() {
       <SheetContent side="right" className="w-full sm:w-[460px] p-0">
         <div className="flex items-center justify-between px-6 h-16 border-b">
           <h2 className="text-base font-medium tracking-wide">Carrito</h2>
-          <Button variant="ghost" size="icon" onClick={() => setOpen(false)} aria-label="Cerrar carrito">
-            <X className="h-5 w-5" />
-          </Button>
+          
         </div>
         <div className="max-h-[calc(100vh-8rem)] overflow-auto">
           {items.length === 0 ? (

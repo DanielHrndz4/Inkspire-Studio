@@ -30,7 +30,7 @@ export default function ProductToolbar({
   return (
     <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
       <div className="flex items-center gap-3">
-        <p className="text-sm text-muted-foreground">{total} {total === 1 ? "resultado" : "resultados"}</p>
+        <p className="text-sm text-muted-foreground"></p>
         <Separator orientation="vertical" className="hidden h-4 md:block" />
         <Button
           variant="outline"

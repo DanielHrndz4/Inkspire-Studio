@@ -118,7 +118,7 @@ export default function CategoryDetailPage({ params }: Props) {
     <CartProvider>
       <div className="flex min-h-[100dvh] flex-col">
         <SiteHeader />
-        <main className="container mx-auto px-4 py-10 grid gap-8">
+        <main className="container mx-auto px-4 pt-8 pb-10 grid gap-5">
           <Breadcrumbs
             items={[
               { label: "Inicio", href: "/" },
@@ -159,9 +159,8 @@ export default function CategoryDetailPage({ params }: Props) {
                     <button
                       key={a}
                       onClick={() => setAudiencia((prev) => (prev === a ? "" : a))}
-                      className={`text-xs px-3 py-1 rounded-full border ${
-                        audiencia === a ? "bg-foreground text-background" : "bg-background text-foreground"
-                      }`}
+                      className={`text-xs px-3 py-1 rounded-full border ${audiencia === a ? "bg-foreground text-background" : "bg-background text-foreground"
+                        }`}
                       aria-pressed={audiencia === a}
                     >
                       {capitalize(a)}
@@ -227,31 +226,15 @@ export default function CategoryDetailPage({ params }: Props) {
             </aside>
 
             <section className="grid gap-6">
-              <div className="flex items-center justify-between">
-                <div className="text-sm text-muted-foreground">
-                  {filteredItems.length} {filteredItems.length === 1 ? "resultado" : "resultados"}
-                  {q ? ` para “${q}”` : ""}
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-muted-foreground hidden sm:inline">Ordenar por</span>
-                  <Select value={sort} onValueChange={setSort}>
-                    <SelectTrigger className="h-9 w-[180px]">
-                      <SelectValue placeholder="Relevancia" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="relevance">Relevancia</SelectItem>
-                      <SelectItem value="price-asc">Precio: menor a mayor</SelectItem>
-                      <SelectItem value="price-desc">Precio: mayor a menor</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
               {/* Chips activos */}
               {(colors.length > 0 || fabrics.length > 0 || audiencia || q) && (
                 <div className="flex flex-wrap gap-2">
                   {q && <span className="text-xs px-2 py-1 rounded-full border">Búsqueda: {q}</span>}
-                  {audiencia && <span className="text-xs px-2 py-1 rounded-full border">Audiencia: {capitalize(audiencia)}</span>}
+                  {audiencia && (
+                    <span className="text-xs px-2 py-1 rounded-full border inline-flex items-center h-6">
+                      Audiencia: {capitalize(audiencia)}
+                    </span>
+                  )}
                   {colors.map((c) => (
                     <span key={`c-${c}`} className="text-xs px-2 py-1 rounded-full border">
                       Color: {c}
@@ -265,12 +248,22 @@ export default function CategoryDetailPage({ params }: Props) {
                 </div>
               )}
 
-              <PaginatedGrid
-                items={filteredItems}
-                initialPageSize={12}
-                perPageOptions={[12, 24, 36]}
-                renderItem={(p) => <ProductCard key={p.id} product={p} />}
-              />
+              {filteredItems.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 space-y-4">
+                  <svg className="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                  </svg>
+                  <h3 className="text-xl font-medium text-gray-600">No encontramos productos</h3>
+                  <p className="text-gray-500 max-w-md">Parece que no hay items disponibles con los filtros actuales.</p>
+                </div>
+              ) : (
+                <PaginatedGrid
+                  items={filteredItems}
+                  initialPageSize={12}
+                  perPageOptions={[12, 24, 36]}
+                  renderItem={(p) => <ProductCard key={p.id} product={p} />}
+                />
+              )}
             </section>
           </section>
         </main>

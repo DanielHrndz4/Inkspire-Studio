@@ -69,16 +69,6 @@ export default function ProductCard({ product, showQuickBuy = true }: Props) {
           <ShoppingBag className="h-4 w-4" />
         </Button>
 
-        {showQuickBuy && (
-          <div className="pointer-events-none absolute inset-x-2 bottom-2 flex opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-            <Button
-              className="pointer-events-auto w-full rounded-none"
-              onClick={handleBuyNow}
-            >
-              Comprar ahora
-            </Button>
-          </div>
-        )}
       </div>
       <div className="flex items-start justify-between">
         <div className="text-sm">{p.title}</div>
