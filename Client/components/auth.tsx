@@ -7,12 +7,24 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 
-export type User = { email: string; name?: string }
+export type User = { 
+  email: string
+  name?: string
+  lastName?: string
+  phone?: string
+}
 
 type AuthContextType = {
   user: User | null
   login: (email: string, password: string) => Promise<void>
-  register: (name: string, email: string, password: string) => Promise<void>
+  register: (data: {
+    name: string
+    lastName: string
+    email: string
+    phone: string
+    password: string
+    confirmPassword: string
+  }) => Promise<void>
   logout: () => void
   openAuth: (mode?: "login" | "register") => void
   ensureAuth: () => Promise<void>
@@ -22,7 +34,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 const KEY_CURRENT_USER = "inkspire_current_user"
 const KEY_USERS = "inkspire_users"
-const KEY_USER_ORDERS = "inkspire_user_orders" // email -> string[] ids
+const KEY_USER_ORDERS = "inkspire_user_orders"
 
 function getJSON<T>(key: string, fallback: T): T {
   try {
@@ -32,6 +44,7 @@ function getJSON<T>(key: string, fallback: T): T {
     return fallback
   }
 }
+
 function setJSON<T>(key: string, value: T) {
   try {
     localStorage.setItem(key, JSON.stringify(value))
@@ -60,7 +73,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = useCallback(async (email: string, _password: string) => {
     const users = getJSON<Record<string, User>>(KEY_USERS, {})
     if (!users[email]) {
-      // crear usuario básico si no existe
       users[email] = { email }
       setJSON(KEY_USERS, users)
     }
@@ -71,12 +83,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     resolverRef.current = null
   }, [])
 
-  const register = useCallback(async (name: string, email: string, _password: string) => {
+  const register = useCallback(async (data: {
+    name: string
+    lastName: string
+    email: string
+    phone: string
+    password: string
+    confirmPassword: string
+  }) => {
+    if (data.password !== data.confirmPassword) {
+      throw new Error("Las contraseñas no coinciden")
+    }
+
     const users = getJSON<Record<string, User>>(KEY_USERS, {})
-    users[email] = { email, name }
+    users[data.email] = { 
+      email: data.email, 
+      name: data.name,
+      lastName: data.lastName,
+      phone: data.phone
+    }
     setJSON(KEY_USERS, users)
-    setJSON(KEY_CURRENT_USER, users[email])
-    setUser(users[email])
+    setJSON(KEY_CURRENT_USER, users[data.email])
+    setUser(users[data.email])
     setOpen(false)
     resolverRef.current?.()
     resolverRef.current = null
@@ -109,7 +137,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   return (
     <AuthContext.Provider value={value}>
       {children}
-      <AuthModal open={open} onOpenChange={setOpen} mode={mode} onModeChange={setMode} onLogin={login} onRegister={register} />
+      <AuthModal 
+        open={open} 
+        onOpenChange={setOpen} 
+        mode={mode} 
+        onModeChange={setMode} 
+        onLogin={login} 
+        onRegister={register} 
+      />
     </AuthContext.Provider>
   )
 }
@@ -133,19 +168,52 @@ function AuthModal({
   mode: "login" | "register"
   onModeChange: (m: "login" | "register") => void
   onLogin: (email: string, password: string) => Promise<void>
-  onRegister: (name: string, email: string, password: string) => Promise<void>
+  onRegister: (data: {
+    name: string
+    lastName: string
+    email: string
+    phone: string
+    password: string
+    confirmPassword: string
+  }) => Promise<void>
 }) {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [name, setName] = useState("")
+  const [lastName, setLastName] = useState("")
+  const [phone, setPhone] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!open) {
       setEmail("")
       setPassword("")
       setName("")
+      setLastName("")
+      setPhone("")
+      setConfirmPassword("")
+      setError(null)
     }
   }, [open])
+
+  const handleRegister = async () => {
+    try {
+      if (password !== confirmPassword) {
+        throw new Error("Las contraseñas no coinciden")
+      }
+      await onRegister({
+        name,
+        lastName,
+        email,
+        phone,
+        password,
+        confirmPassword
+      })
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error al registrar")
+    }
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -158,33 +226,105 @@ function AuthModal({
             <TabsTrigger value="login">Ingresar</TabsTrigger>
             <TabsTrigger value="register">Registrarse</TabsTrigger>
           </TabsList>
+          
+          {/* Login Form */}
           <TabsContent value="login" className="space-y-4 pt-4">
+            {error && <div className="text-red-500 text-sm">{error}</div>}
             <div className="grid gap-2">
               <Label htmlFor="login-email">Email</Label>
-              <Input id="login-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="tucorreo@dominio.com" />
+              <Input 
+                id="login-email" 
+                type="email" 
+                value={email} 
+                onChange={(e) => setEmail(e.target.value)} 
+                placeholder="tucorreo@dominio.com" 
+              />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="login-pass">Contraseña</Label>
-              <Input id="login-pass" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" />
+              <Input 
+                id="login-pass" 
+                type="password" 
+                value={password} 
+                onChange={(e) => setPassword(e.target.value)} 
+                placeholder="••••••••" 
+              />
             </div>
-            <Button className="w-full rounded-none" onClick={() => onLogin(email, password)} disabled={!email || !password}>
+            <Button 
+              className="w-full rounded-none" 
+              onClick={() => onLogin(email, password).catch(err => setError(err.message))} 
+              disabled={!email || !password}
+            >
               Entrar
             </Button>
           </TabsContent>
+          
+          {/* Register Form */}
           <TabsContent value="register" className="space-y-4 pt-4">
+            {error && <div className="text-red-500 text-sm">{error}</div>}
             <div className="grid gap-2">
               <Label htmlFor="reg-name">Nombre</Label>
-              <Input id="reg-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Tu nombre" />
+              <Input 
+                id="reg-name" 
+                value={name} 
+                onChange={(e) => setName(e.target.value)} 
+                placeholder="Tu nombre" 
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="reg-lastname">Apellidos</Label>
+              <Input 
+                id="reg-lastname" 
+                value={lastName} 
+                onChange={(e) => setLastName(e.target.value)} 
+                placeholder="Tus apellidos" 
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="reg-phone">Teléfono</Label>
+              <Input 
+                id="reg-phone" 
+                type="tel" 
+                value={phone} 
+                onChange={(e) => setPhone(e.target.value)} 
+                placeholder="+52 123 456 7890" 
+              />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="reg-email">Email</Label>
-              <Input id="reg-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="tucorreo@dominio.com" />
+              <Input 
+                id="reg-email" 
+                type="email" 
+                value={email} 
+                onChange={(e) => setEmail(e.target.value)} 
+                placeholder="tucorreo@dominio.com" 
+              />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="reg-pass">Contraseña</Label>
-              <Input id="reg-pass" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" />
+              <Input 
+                id="reg-pass" 
+                type="password" 
+                value={password} 
+                onChange={(e) => setPassword(e.target.value)} 
+                placeholder="••••••••" 
+              />
             </div>
-            <Button className="w-full rounded-none" onClick={() => onRegister(name, email, password)} disabled={!email || !password || !name}>
+            <div className="grid gap-2">
+              <Label htmlFor="reg-confirm-pass">Confirmar contraseña</Label>
+              <Input 
+                id="reg-confirm-pass" 
+                type="password" 
+                value={confirmPassword} 
+                onChange={(e) => setConfirmPassword(e.target.value)} 
+                placeholder="••••••••" 
+              />
+            </div>
+            <Button 
+              className="w-full rounded-none" 
+              onClick={handleRegister}
+              disabled={!email || !password || !name || !lastName || !phone || !confirmPassword}
+            >
               Crear cuenta
             </Button>
           </TabsContent>

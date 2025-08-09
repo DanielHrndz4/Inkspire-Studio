@@ -13,8 +13,6 @@ import NewsletterForm from "@/components/newsletter-form"
 import InstagramGrid from "@/components/instagram-grid"
 import { categories } from "@/lib/categories"
 import LocationSection from "@/components/location-section"
-import FAQ from "@/components/faq"
-import ValueProps from "@/components/value-props"
 import CategorySpotlight from "@/components/category-spotlight"
 import HomeCollection from "@/components/home-collection"
 import AudienceSections from "@/components/audience-sections"
@@ -86,7 +84,6 @@ export default function Page() {
           </section>
 
           <HowItWorks />
-          <ValueProps />
 
           <section className="relative">
             <div className="relative aspect-[21/9] w-full overflow-hidden bg-muted">
@@ -112,11 +109,10 @@ export default function Page() {
           <Testimonials />
           <InstagramGrid />
           <NewsletterForm />
-          <FAQ />
         </main>
         <SiteFooter />
         <BackToTop />
-      </div>
+      </div> 
     </CartProvider>
   )
 }
