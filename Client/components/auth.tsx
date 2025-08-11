@@ -6,8 +6,11 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import postData from "@/hooks/post"
+import { useDispatch } from "react-redux"
+import { useAuthStore } from "@/store/authStore"
 
-export type User = { 
+export type User = {
   email: string
   name?: string
   lastName?: string
@@ -48,7 +51,7 @@ function getJSON<T>(key: string, fallback: T): T {
 function setJSON<T>(key: string, value: T) {
   try {
     localStorage.setItem(key, JSON.stringify(value))
-  } catch {}
+  } catch { }
 }
 
 export function linkOrderToUser(email: string, orderId: string) {
@@ -96,8 +99,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     const users = getJSON<Record<string, User>>(KEY_USERS, {})
-    users[data.email] = { 
-      email: data.email, 
+    users[data.email] = {
+      email: data.email,
       name: data.name,
       lastName: data.lastName,
       phone: data.phone
@@ -137,13 +140,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   return (
     <AuthContext.Provider value={value}>
       {children}
-      <AuthModal 
-        open={open} 
-        onOpenChange={setOpen} 
-        mode={mode} 
-        onModeChange={setMode} 
-        onLogin={login} 
-        onRegister={register} 
+      <AuthModal
+        open={open}
+        onOpenChange={setOpen}
+        mode={mode}
+        onModeChange={setMode}
+        onLogin={login}
+        onRegister={register}
       />
     </AuthContext.Provider>
   )
@@ -184,6 +187,8 @@ function AuthModal({
   const [phone, setPhone] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState<boolean>(false)
+  const [message, setMessage] = useState<string | null>(null)
 
   useEffect(() => {
     if (!open) {
@@ -198,22 +203,38 @@ function AuthModal({
   }, [open])
 
   const handleRegister = async () => {
+    setLoading(true);
+    setError(null);
+
     try {
       if (password !== confirmPassword) {
-        throw new Error("Las contraseñas no coinciden")
+        throw new Error("Las contraseñas no coinciden");
       }
-      await onRegister({
+
+      const result = await postData<any>("http://localhost:4444/api/v01/register", {
         name,
-        lastName,
+        lastname: lastName,
         email,
-        phone,
-        password,
-        confirmPassword
-      })
+        tel: phone,
+        password
+      });
+
+      if (result.error) {
+        setError(result.error);
+      } else {
+        console.log("Datos recibidos:", result.data);
+        setMessage(result.message)
+          useAuthStore.getState().login(result.data.data.user, result.data.data.token);
+        setTimeout(() => {
+          location.reload()
+        }, 2000);
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error al registrar")
+      setError(err instanceof Error ? err.message : "Error al registrar");
+    } finally {
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -226,102 +247,180 @@ function AuthModal({
             <TabsTrigger value="login">Ingresar</TabsTrigger>
             <TabsTrigger value="register">Registrarse</TabsTrigger>
           </TabsList>
-          
+
           {/* Login Form */}
           <TabsContent value="login" className="space-y-4 pt-4">
-            {error && <div className="text-red-500 text-sm">{error}</div>}
+            {error && (
+              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded-md flex items-center justify-center space-x-2">
+                <svg
+                  className="w-5 h-5 flex-shrink-0"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M18.364 5.636l-12.728 12.728M5.636 5.636l12.728 12.728"
+                  />
+                </svg>
+                <span className="text-sm font-medium">{error}</span>
+              </div>
+            )}
+
+            {message && (
+              <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-2 rounded-md flex items-center justify-center space-x-2">
+                <svg
+                  className="w-5 h-5 flex-shrink-0"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+                <span className="text-sm font-medium">{message}</span>
+              </div>
+            )}
+
             <div className="grid gap-2">
               <Label htmlFor="login-email">Email</Label>
-              <Input 
-                id="login-email" 
-                type="email" 
-                value={email} 
-                onChange={(e) => setEmail(e.target.value)} 
-                placeholder="tucorreo@dominio.com" 
+              <Input
+                id="login-email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="tucorreo@dominio.com"
               />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="login-pass">Contraseña</Label>
-              <Input 
-                id="login-pass" 
-                type="password" 
-                value={password} 
-                onChange={(e) => setPassword(e.target.value)} 
-                placeholder="••••••••" 
+              <Input
+                id="login-pass"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
               />
             </div>
-            <Button 
-              className="w-full rounded-none" 
-              onClick={() => onLogin(email, password).catch(err => setError(err.message))} 
+            <Button
+              className="w-full rounded-none"
+              onClick={() => onLogin(email, password).catch(err => setError(err.message))}
               disabled={!email || !password}
             >
               Entrar
             </Button>
           </TabsContent>
-          
+
           {/* Register Form */}
           <TabsContent value="register" className="space-y-4 pt-4">
-            {error && <div className="text-red-500 text-sm">{error}</div>}
+            {error && (
+              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded-md flex items-center justify-center space-x-2">
+                <svg
+                  className="w-5 h-5 flex-shrink-0"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M18.364 5.636l-12.728 12.728M5.636 5.636l12.728 12.728"
+                  />
+                </svg>
+                <span className="text-sm font-medium">{error}</span>
+              </div>
+            )}
+
+            {message && (
+              <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-2 rounded-md flex items-center justify-center space-x-2">
+                <svg
+                  className="w-5 h-5 flex-shrink-0"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+                <span className="text-sm font-medium">{message}</span>
+              </div>
+            )}
+
             <div className="grid gap-2">
               <Label htmlFor="reg-name">Nombre</Label>
-              <Input 
-                id="reg-name" 
-                value={name} 
-                onChange={(e) => setName(e.target.value)} 
-                placeholder="Tu nombre" 
+              <Input
+                id="reg-name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Tu nombre"
               />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="reg-lastname">Apellidos</Label>
-              <Input 
-                id="reg-lastname" 
-                value={lastName} 
-                onChange={(e) => setLastName(e.target.value)} 
-                placeholder="Tus apellidos" 
+              <Input
+                id="reg-lastname"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                placeholder="Tus apellidos"
               />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="reg-phone">Teléfono</Label>
-              <Input 
-                id="reg-phone" 
-                type="tel" 
-                value={phone} 
-                onChange={(e) => setPhone(e.target.value)} 
-                placeholder="+52 123 456 7890" 
+              <Input
+                id="reg-phone"
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="+52 123 456 7890"
               />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="reg-email">Email</Label>
-              <Input 
-                id="reg-email" 
-                type="email" 
-                value={email} 
-                onChange={(e) => setEmail(e.target.value)} 
-                placeholder="tucorreo@dominio.com" 
+              <Input
+                id="reg-email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="tucorreo@dominio.com"
               />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="reg-pass">Contraseña</Label>
-              <Input 
-                id="reg-pass" 
-                type="password" 
-                value={password} 
-                onChange={(e) => setPassword(e.target.value)} 
-                placeholder="••••••••" 
+              <Input
+                id="reg-pass"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
               />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="reg-confirm-pass">Confirmar contraseña</Label>
-              <Input 
-                id="reg-confirm-pass" 
-                type="password" 
-                value={confirmPassword} 
-                onChange={(e) => setConfirmPassword(e.target.value)} 
-                placeholder="••••••••" 
+              <Input
+                id="reg-confirm-pass"
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="••••••••"
               />
             </div>
-            <Button 
-              className="w-full rounded-none" 
+            <Button
+              className="w-full rounded-none"
               onClick={handleRegister}
               disabled={!email || !password || !name || !lastName || !phone || !confirmPassword}
             >

@@ -1,3 +1,5 @@
+const { generateToken } = require("../auth/jwt");
+const createPayload = require("../constants/payload.constant");
 const userModel = require("../models/user.model");
 
 const userExist = async (email) => {
@@ -18,13 +20,19 @@ const userCreate = async (userData) => {
   }
 };
 
-const userLogin = async (email, password) => {
+const userLogin = async (email, ps) => {
   try {
-    const user = await userModel.findOne({ email });
+    const user = await userModel.findOne({ email }).select("+password");
     if (!user) return null;
-    const checkPass = userModel.correctPassword(password, user.password);
+    const checkPass = user.correctPassword(ps, user.password);
     if (!checkPass) return null;
-    return user;
+    const { password, createdAt, passwordChangedAt, ...userWithoutPass } = user.toObject();
+    const payload = createPayload(user)
+    const token = generateToken(payload)
+    return {
+      user: payload,
+      token
+    };
   } catch (error) {
     throw new Error("Error user not found");
   }
@@ -33,5 +41,5 @@ const userLogin = async (email, password) => {
 module.exports = {
   userExist,
   userCreate,
-  userLogin
+  userLogin,
 };

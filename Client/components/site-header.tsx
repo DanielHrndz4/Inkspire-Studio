@@ -10,11 +10,15 @@ import MegaMenu from "./mega-menu"
 import MobileNav from "./mobile-nav"
 import { useAuth } from "@/components/auth"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
+import { useAuthStore } from "@/store/authStore"
 
 export default function SiteHeader() {
   const { count, setOpen } = useCart()
   const [showSearch, setShowSearch] = useState(false)
-  const { user, openAuth, logout } = useAuth()
+  const { openAuth } = useAuth()
+  const user = useAuthStore((state) => state.user)
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
+  const logout = useAuthStore((state) => state.logout)
 
   return (
     <header className="sticky top-0 z-40 bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/60 border-b">
@@ -55,14 +59,24 @@ export default function SiteHeader() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" aria-label={user ? "Cuenta" : "Iniciar sesión"}>
-                  <User className="h-5 w-5" />
+                  <div className="flex">
+                    {isAuthenticated
+                      ? user?.name
+                        ? user.name
+                          .split(" ")
+                          .slice(0, 2)
+                          .map((n) => n.charAt(0).toUpperCase())
+                          .join("")
+                        : ""
+                      : <User className="h-5 w-5" />}
+                  </div>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-52">
-                {user ? (
+                {isAuthenticated ? (
                   <>
                     <DropdownMenuLabel className="text-xs">
-                      {user.name ? `${user.name} · ` : ""}{user.email}
+                      {user?.name ? `${user.name} · ` : ""}{user?.email}
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>

@@ -17,10 +17,10 @@ import CategorySpotlight from "@/components/category-spotlight"
 import HomeCollection from "@/components/home-collection"
 import AudienceSections from "@/components/audience-sections"
 import BackToTop from "@/components/back-to-top"
+import React, { useEffect } from 'react'; 
 
 export default function Page() {
   const featuredCats = categories
-
   return (
     <CartProvider>
       <div className="flex min-h-[100dvh] flex-col bg-white">
@@ -112,7 +112,7 @@ export default function Page() {
         </main>
         <SiteFooter />
         <BackToTop />
-      </div> 
+      </div>
     </CartProvider>
   )
 }
