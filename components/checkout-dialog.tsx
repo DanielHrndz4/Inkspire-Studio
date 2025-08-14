@@ -14,6 +14,8 @@ import { useCart } from "@/components/cart"
 import { useAuth, linkOrderToUser } from "@/components/auth"
 import { formatCurrency } from "@/lib/format"
 import { addOrder } from "@/lib/admin-store"
+import { useAuthStore } from "@/store/authStore"
+import { createOrder } from "@/hooks/supabase/orders.supabase"
 
 type Props = {
   open: boolean
@@ -22,19 +24,20 @@ type Props = {
 
 export default function CheckoutDialog({ open, onOpenChange }: Props) {
   const { items, total, clear } = useCart()
-  const { user, ensureAuth } = useAuth()
+  const { ensureAuth } = useAuth()
+  const user = useAuthStore((state) => state.user)
 
   const [showTerms, setShowTerms] = useState(false)
   const [accepted, setAccepted] = useState(false)
   const [ticketId, setTicketId] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
-  const [name, setName] = useState(user?.name ?? "")
+  const [name, setName] = useState("")
   const [email, setEmail] = useState(user?.email ?? "")
-  const [phone, setPhone] = useState("")
+  const [phone, setPhone] = useState(user?.tel ?? "")
   const [address, setAddress] = useState("")
   const [city, setCity] = useState("")
-  const [zip, setZip] = useState("")
+  const [totalCart, setTotalCart] = useState<any>(0)
 
   useEffect(() => {
     if (user) {
@@ -44,8 +47,8 @@ export default function CheckoutDialog({ open, onOpenChange }: Props) {
   }, [user])
 
   const canSubmit = useMemo(() => {
-    return items.length > 0 && accepted && name.trim() && email.trim() && phone.trim() && address.trim() && city.trim() && zip.trim()
-  }, [items.length, accepted, name, email, phone, address, city, zip])
+    return items.length > 0 && accepted && name.trim() && email.trim() && phone.trim() && address.trim() && city.trim()
+  }, [items.length, accepted, name, email, phone, address, city])
 
   useEffect(() => {
     if (open) {
@@ -62,6 +65,12 @@ export default function CheckoutDialog({ open, onOpenChange }: Props) {
     owner: "Inkspire Studio",
   }
 
+  const calculateCartTotal = (cartItems:any) => {
+    return cartItems.reduce((total:any, item:any) => {
+      return total + (item.qty * item.price);
+    }, 0);
+  };
+
   async function handleSubmit() {
     if (!user) {
       await ensureAuth()
@@ -69,21 +78,34 @@ export default function CheckoutDialog({ open, onOpenChange }: Props) {
     if (!canSubmit) return
     setLoading(true)
     try {
-      const order = addOrder({
-        items,
-        total,
-        customer: { name, email, },
-        status: "pendiente",
+      // Usamos la función createOrder para crear el pedido y los items
+      const { order } = await createOrder({
+        fullName: name,
+        email: email,
+        phone: phone,
+        address: address,
+        city: city,
+        cart: items.map(i => ({
+          title: i.title,
+          color: i.color,
+          size: i.size,
+          qty: i.qty,
+          price: i.price
+        }))
       })
-      // Link a la cuenta
-      linkOrderToUser(email, order.id)
-      setTicketId(order.id)
-      clear()
+
+      const sumTotalCart = calculateCartTotal(order.cart)
+
+      setTotalCart(sumTotalCart)
+      setTicketId(order.id) // guardamos el ID para mostrar el comprobante
+      clear() // vaciamos el carrito
+    } catch (error) {
+      console.error("Error al crear el pedido:", error)
+      // Aquí podrías mostrar un mensaje al usuario
     } finally {
       setLoading(false)
     }
   }
-
   function printReceipt() {
     window.print()
   }
@@ -105,7 +127,7 @@ export default function CheckoutDialog({ open, onOpenChange }: Props) {
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="tucorreo@dominio.com" />
+                  <Input id="email" type="email" readOnly value={email} onChange={(e) => setEmail(e.target.value)} placeholder="tucorreo@dominio.com" />
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="phone">Teléfono</Label>
@@ -119,10 +141,6 @@ export default function CheckoutDialog({ open, onOpenChange }: Props) {
                   <div className="grid gap-2">
                     <Label htmlFor="city">Ciudad</Label>
                     <Input id="city" value={city} onChange={(e) => setCity(e.target.value)} placeholder="Ciudad" />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="zip">C.P.</Label>
-                    <Input id="zip" value={zip} onChange={(e) => setZip(e.target.value)} placeholder="00000" />
                   </div>
                 </div>
 
@@ -194,7 +212,7 @@ export default function CheckoutDialog({ open, onOpenChange }: Props) {
                 <Separator className="my-2" />
                 <div className="flex items-center justify-between">
                   <span>Total</span>
-                  <span className="tabular-nums">{formatCurrency(total)}</span>
+                  <span className="tabular-nums">{formatCurrency(totalCart)}</span>
                 </div>
               </div>
             </div>

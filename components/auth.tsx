@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button"
 import postData from "@/hooks/post"
 import { useDispatch } from "react-redux"
 import { useAuthStore } from "@/store/authStore"
+import signUp from "@/hooks/supabase/signup.supabase"
+import { signIn } from "@/hooks/supabase/signin.supabase"
 
 export type User = {
   email: string
@@ -202,34 +204,89 @@ function AuthModal({
     }
   }, [open])
 
+  const handleLogin = async () => {
+    setLoading(true);
+    setError(null);
+    setMessage('');
+
+    try {
+      // Validaciones básicas
+      if (!email) throw new Error("El email es necesario");
+      if (!password) throw new Error("La contraseña es requerida");
+
+      // Llamar a tu función signIn existente
+      const result = await signIn({ email, password });
+
+      // Verificar si hay error en la respuesta
+      if ('error' in result) {
+        throw result.error;
+      }
+
+      // Manejar respuesta exitosa
+      console.log("Login exitoso:", result.user);
+
+      // Crear objeto user que cumpla con la interfaz User esperada
+      const authUser = {
+        name: result.user.profile?.name || '',
+        lastname: result.user.profile?.lastname || '',
+        tel: result.user.profile?.tel || '',
+        email: result.user.email || ""
+      };
+
+      // Actualizar estado global (Zustand)
+      useAuthStore.getState().login(
+        authUser, // Objeto que cumple con la interfaz User
+        result.session?.access_token || "" // JWT
+      );
+
+      // Mensaje de éxito y redirección
+      setMessage("¡Bienvenido!");
+      setTimeout(() => {
+        location.reload()
+      }, 2000);
+
+    } catch (err: any) {
+      console.error("Error en login:", err);
+      const errorMessage = err.message.includes("Invalid login credentials")
+        ? "Email o contraseña incorrectos"
+        : err.message;
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleRegister = async () => {
     setLoading(true);
     setError(null);
+    setMessage('');
 
     try {
+      // 1. Validación de contraseñas
       if (password !== confirmPassword) {
         throw new Error("Las contraseñas no coinciden");
       }
 
-      const result = await postData<any>("http://localhost:4444/api/v01/register", {
+      // 2. Registro en Supabase
+      const { data, error }: any = await signUp({
         name,
         lastname: lastName,
-        email,
         tel: phone,
-        password
+        email,
+        password // Asegúrate de incluir la contraseña
       });
 
-      if (result.error) {
-        setError(result.error);
-      } else {
-        console.log("Datos recibidos:", result.data);
-        setMessage(result.message)
-          useAuthStore.getState().login(result.data.data.user, result.data.data.token);
-        setTimeout(() => {
-          location.reload()
-        }, 2000);
+      if (error) {
+        throw error;
       }
+
+      // 3. Manejo de la respuesta exitosa
+      console.log("Usuario registrado:", data);
+      setMessage("¡Registro exitoso! Redirigiendo...");
+
+
     } catch (err) {
+      console.error("Error en registro:", err);
       setError(err instanceof Error ? err.message : "Error al registrar");
     } finally {
       setLoading(false);
@@ -312,7 +369,7 @@ function AuthModal({
             </div>
             <Button
               className="w-full rounded-none"
-              onClick={() => onLogin(email, password).catch(err => setError(err.message))}
+              onClick={handleLogin}
               disabled={!email || !password}
             >
               Entrar
