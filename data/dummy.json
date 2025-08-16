@@ -1,0 +1,46 @@
+{
+  "title": "T-shirt Black Premium",
+  "description": "A stylish black t-shirt made from premium materials, perfect for casual outings or lounging at home.",
+  "type": "t-shirt",
+  "category": {
+    "name": "Anime",
+    "image": "https://example.com/images/category-anime.jpg"
+  },
+  "material": "Cotton Blend",
+  "price": 49.99,
+  "discountPercentage": 0.0,
+  "product": [
+    {
+      "color": "Black",
+      "size": ["2", "6", "XS", "S", "M", "L", "XL", "XXL"],
+      "images": [
+        "https://example.com/images/t-shirt-black-front.jpg",
+        "https://example.com/images/t-shirt-black-back.jpg"
+      ]
+    },
+    {
+      "color": "White",
+      "size": ["2", "6", "S", "M", "L", "XL"],
+      "images": [
+        "https://example.com/images/t-shirt-white-front.jpg",
+        "https://example.com/images/t-shirt-white-back.jpg"
+      ]
+    },
+    {
+      "color": "Sky Blue",
+      "size": ["S", "M", "L", "XL"],
+      "images": [
+        "https://example.com/images/t-shirt-sky-blue-front.jpg",
+        "https://example.com/images/t-shirt-sky-blue-back.jpg"
+      ]
+    },
+    {
+      "color": "Orange",
+      "size": ["S", "M", "L", "XL"],
+      "images": [
+        "https://example.com/images/t-shirt-orange-front.jpg",
+        "https://example.com/images/t-shirt-orange-back.jpg"
+      ]
+    }
+  ]
+}

@@ -1,11 +1,16 @@
 import SiteHeader from "@/components/site-header"
 import SiteFooter from "@/components/site-footer"
 import CategoryCard from "@/components/category-card"
-import { categories } from "@/lib/categories"
-import { countProductsByCategorySlug } from "@/lib/data"
 import { CartProvider } from "@/components/cart"
+import { countProductsByCategory, products } from "@/lib/data"
 
 export default function CategoriesPage() {
+  const categories = products.map((p)=>p.category)
+  const uniqueCategories = categories.reduce<string[]>((acc, cat) => {
+    if (!acc.includes(cat)) acc.push(cat)
+    return acc
+  }, [])
+  console.log(uniqueCategories)
   return (
     <CartProvider>
       <div className="flex min-h-[100dvh] flex-col">
@@ -16,13 +21,13 @@ export default function CategoriesPage() {
             <p className="text-sm text-muted-foreground">Explora por temas y tipos de producto.</p>
           </header>
           <section className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {categories.map((cat) => (
+            {uniqueCategories.map((cat) => (
               <CategoryCard
                 key={cat.slug}
                 slug={cat.slug}
                 title={cat.title}
                 image={cat.image}
-                count={countProductsByCategorySlug(cat.slug)}
+                count={countProductsByCategory(cat.slug)}
               />
             ))}
           </section>

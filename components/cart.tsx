@@ -12,12 +12,12 @@ import { AuthProvider } from "@/components/auth"
 
 export type CartItem = {
   id: string
+  productId: string  // Added product ID reference
   title: string
   price: number
   image: string
-  slug: string
   qty: number
-  // Opciones
+  // Options
   size?: string
   fit?: string
   color?: string
@@ -44,7 +44,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false)
   const [checkoutOpen, setCheckoutOpen] = useState(false)
 
-  // cargar desde localStorage
+  // Load from localStorage
   useEffect(() => {
     try {
       const raw = localStorage.getItem("atelier_cart")
@@ -53,7 +53,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       // noop
     }
   }, [])
-  // persistir
+  
+  // Persist to localStorage
   useEffect(() => {
     try {
       localStorage.setItem("atelier_cart", JSON.stringify(items))
@@ -64,8 +65,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const addItem = (item: CartItem) => {
     setItems((prev) => {
-      // Combinar si mismo slug y mismas opciones
-      const key = (i: CartItem) => `${i.slug}|${i.size}|${i.fit}|${i.color}|${i.monogram ?? ""}`
+      // Combine if same product and same options
+      const key = (i: CartItem) => `${i.productId}|${i.size}|${i.fit}|${i.color}|${i.monogram ?? ""}`
       const existing = prev.find((i) => key(i) === key(item))
       if (existing) {
         return prev.map((i) => (key(i) === key(item) ? { ...i, qty: i.qty + item.qty } : i))
@@ -88,7 +89,18 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setOpen(true)
   }
 
-  const value = { items, addItem, removeItem, updateQty, clear, count, total, open, setOpen, beginCheckout }
+  const value = { 
+    items, 
+    addItem, 
+    removeItem, 
+    updateQty, 
+    clear, 
+    count, 
+    total, 
+    open, 
+    setOpen, 
+    beginCheckout 
+  }
 
   return (
     <AuthProvider>
@@ -115,7 +127,9 @@ function CartSheet() {
       <SheetContent side="right" className="w-full sm:w-[460px] p-0">
         <div className="flex items-center justify-between px-6 h-16 border-b">
           <h2 className="text-base font-medium tracking-wide">Carrito</h2>
-          
+          <button onClick={() => setOpen(false)} className="p-1 rounded-full hover:bg-muted">
+            <X className="h-5 w-5" />
+          </button>
         </div>
         <div className="max-h-[calc(100vh-8rem)] overflow-auto">
           {items.length === 0 ? (
@@ -125,7 +139,12 @@ function CartSheet() {
               {items.map((i) => (
                 <li key={i.id} className="p-6 grid grid-cols-[88px_1fr_auto] gap-4 items-start">
                   <div className="relative h-24 w-20 rounded bg-muted overflow-hidden">
-                    <Image src={i.image || "/placeholder.svg"} alt={`Imagen de ${i.title}`} fill className="object-cover" />
+                    <Image 
+                      src={i.image || "/placeholder.svg"} 
+                      alt={`Imagen de ${i.title}`} 
+                      fill 
+                      className="object-cover" 
+                    />
                   </div>
                   <div className="text-sm grid gap-1">
                     <div className="font-medium">{i.title}</div>
@@ -136,11 +155,21 @@ function CartSheet() {
                       {i.monogram ? ` · Monograma: ${i.monogram}` : ""}
                     </div>
                     <div className="flex items-center gap-2 mt-1">
-                      <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateQty(i.id, i.qty - 1)}>
+                      <Button 
+                        variant="outline" 
+                        size="icon" 
+                        className="h-7 w-7" 
+                        onClick={() => updateQty(i.id, i.qty - 1)}
+                      >
                         <Minus className="h-3.5 w-3.5" />
                       </Button>
                       <span className="w-6 text-center">{i.qty}</span>
-                      <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateQty(i.id, i.qty + 1)}>
+                      <Button 
+                        variant="outline" 
+                        size="icon" 
+                        className="h-7 w-7" 
+                        onClick={() => updateQty(i.id, i.qty + 1)}
+                      >
                         <Plus className="h-3.5 w-3.5" />
                       </Button>
                     </div>
@@ -169,10 +198,19 @@ function CartSheet() {
           </div>
           <Separator />
           <div className="grid gap-2">
-            <Button className="w-full rounded-none h-11" disabled={items.length === 0} onClick={beginCheckout}>
+            <Button 
+              className="w-full rounded-none h-11" 
+              disabled={items.length === 0} 
+              onClick={beginCheckout}
+            >
               Continuar
             </Button>
-            <Button variant="outline" className="w-full rounded-none h-11" onClick={clear} disabled={items.length === 0}>
+            <Button 
+              variant="outline" 
+              className="w-full rounded-none h-11" 
+              onClick={clear} 
+              disabled={items.length === 0}
+            >
               Vaciar carrito
             </Button>
           </div>

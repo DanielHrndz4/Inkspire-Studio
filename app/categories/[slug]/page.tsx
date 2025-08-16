@@ -5,8 +5,7 @@ import SiteHeader from "@/components/site-header"
 import SiteFooter from "@/components/site-footer"
 import ProductCard from "@/components/product-card"
 import Breadcrumbs from "@/components/breadcrumbs"
-import { categories } from "@/lib/categories"
-import { listProductsByCategorySlug } from "@/lib/data"
+import { listProductsByCategory, products } from "@/lib/data"
 import { notFound, useSearchParams, usePathname } from "next/navigation"
 import { CartProvider } from "@/components/cart"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
@@ -22,24 +21,29 @@ type Props = { params: { slug: string } }
 export default function CategoryDetailPage({ params }: Props) {
   const searchParams = useSearchParams()
   const pathname = usePathname()
-  const cat = categories.find((c) => c.slug === params.slug)
+  const categories = products.map((p) => p.category)
+  const uniqueCategories = categories.reduce<string[]>((acc, cat) => {
+    if (!acc.includes(cat)) acc.push(cat)
+    return acc
+  }, [])
+  const cat = uniqueCategories.find((c) => c.name === params.name)
   if (!cat) return notFound()
 
   const initialAudience = (searchParams.get("audiencia") ?? "").toLowerCase()
   const initialQuery = searchParams.get("q") ?? ""
   const initialSort = (searchParams.get("sort") ?? "relevance").toLowerCase()
 
-  const baseItemsRaw = useMemo(() => listProductsByCategorySlug(cat.slug), [cat.slug])
+  const baseItemsRaw = useMemo(() => listProductsByCategory(cat.title), [cat.title])
   const visibility = useMemo(() => getVisibilityMap(), [])
   const baseItems = useMemo(
-    () => baseItemsRaw.filter((p) => visibility[p.slug] !== false),
+    () => baseItemsRaw.filter((p) => visibility[p.id] !== false),
     [baseItemsRaw, visibility]
   )
 
   // Estado de filtros
   const [q, setQ] = useState(initialQuery)
   const [colors, setColors] = useState<string[]>([])
-  const [fabrics, setFabrics] = useState<string[]>([])
+  const [materials, setMaterials] = useState<string[]>([])
   const [audiencia, setAudiencia] = useState<string>(initialAudience)
   const [sort, setSort] = useState<string>(initialSort)
 
@@ -52,13 +56,17 @@ export default function CategoryDetailPage({ params }: Props) {
   // Opciones disponibles
   const colorsAll = useMemo(() => {
     const set = new Set<string>()
-    baseItems.forEach((p) => p.colors.forEach((c) => set.add(c)))
+    baseItems.forEach((p) => {
+      p.product.forEach(variant => {
+        set.add(variant.color)
+      })
+    })
     return Array.from(set)
   }, [baseItems])
 
-  const fabricsAll = useMemo(() => {
+  const materialsAll = useMemo(() => {
     const set = new Set<string>()
-    baseItems.forEach((p) => p.fabrics.forEach((f) => set.add(f)))
+    baseItems.forEach((p) => set.add(p.material))
     return Array.from(set)
   }, [baseItems])
 
@@ -66,17 +74,31 @@ export default function CategoryDetailPage({ params }: Props) {
   const filteredItems = useMemo(() => {
     let items = baseItems
 
-    if (audiencia) items = items.filter((p) => (p.tags ?? []).includes(audiencia))
+    if (audiencia) {
+      items = items.filter((p) => 
+        p.type === "hoodie" && audiencia === "hombres" ||
+        p.type === "t-shirt" && audiencia === "mujeres" ||
+        (p.category?.name?.toLowerCase() ?? "").includes(audiencia)
+      )
+    }
 
     const term = q.trim().toLowerCase()
     if (term) {
       items = items.filter(
-        (p) => p.title.toLowerCase().includes(term) || p.description.toLowerCase().includes(term)
+        (p) => p.title.toLowerCase().includes(term) || 
+               p.description.toLowerCase().includes(term)
       )
     }
 
-    if (colors.length > 0) items = items.filter((p) => p.colors.some((c) => colors.includes(c)))
-    if (fabrics.length > 0) items = items.filter((p) => p.fabrics.some((f) => fabrics.includes(f)))
+    if (colors.length > 0) {
+      items = items.filter((p) => 
+        p.product.some(variant => colors.includes(variant.color))
+      )
+    }
+
+    if (materials.length > 0) {
+      items = items.filter((p) => materials.includes(p.material))
+    }
 
     switch (sort) {
       case "price-asc":
@@ -89,7 +111,7 @@ export default function CategoryDetailPage({ params }: Props) {
         break
     }
     return items
-  }, [baseItems, audiencia, q, colors, fabrics, sort])
+  }, [baseItems, audiencia, q, colors, materials, sort])
 
   // Sincronizar a URL (q, audiencia, sort)
   useEffect(() => {
@@ -108,7 +130,7 @@ export default function CategoryDetailPage({ params }: Props) {
 
   const resetFilters = () => {
     setColors([])
-    setFabrics([])
+    setMaterials([])
     setAudiencia(initialAudience || "")
     setQ("")
     setSort("relevance")
@@ -169,7 +191,7 @@ export default function CategoryDetailPage({ params }: Props) {
                 </div>
               </div>
 
-              <Accordion type="multiple" defaultValue={["color", "fabric"]}>
+              <Accordion type="multiple" defaultValue={["color", "material"]}>
                 <AccordionItem value="color">
                   <AccordionTrigger className="text-base">
                     Color
@@ -192,22 +214,22 @@ export default function CategoryDetailPage({ params }: Props) {
                   </AccordionContent>
                 </AccordionItem>
 
-                <AccordionItem value="fabric">
+                <AccordionItem value="material">
                   <AccordionTrigger className="text-base">
-                    Tejido
+                    Material
                   </AccordionTrigger>
                   <AccordionContent>
                     <div className="grid gap-2">
-                      {fabricsAll.length === 0 && (
-                        <div className="text-xs text-muted-foreground">Sin opciones de tejido</div>
+                      {materialsAll.length === 0 && (
+                        <div className="text-xs text-muted-foreground">Sin opciones de material</div>
                       )}
-                      {fabricsAll.map((f) => (
-                        <Label key={f} className="flex items-center gap-2 font-normal">
+                      {materialsAll.map((m) => (
+                        <Label key={m} className="flex items-center gap-2 font-normal">
                           <Checkbox
-                            checked={fabrics.includes(f)}
-                            onCheckedChange={() => toggle(fabrics, f, setFabrics)}
+                            checked={materials.includes(m)}
+                            onCheckedChange={() => toggle(materials, m, setMaterials)}
                           />
-                          {f}
+                          {m}
                         </Label>
                       ))}
                     </div>
@@ -215,7 +237,7 @@ export default function CategoryDetailPage({ params }: Props) {
                 </AccordionItem>
               </Accordion>
 
-              {(colors.length > 0 || fabrics.length > 0 || audiencia || q) && (
+              {(colors.length > 0 || materials.length > 0 || audiencia || q) && (
                 <button
                   onClick={resetFilters}
                   className="text-xs px-3 py-2 rounded-md border mt-2 w-fit hover:bg-muted"
@@ -227,7 +249,7 @@ export default function CategoryDetailPage({ params }: Props) {
 
             <section className="grid gap-6">
               {/* Chips activos */}
-              {(colors.length > 0 || fabrics.length > 0 || audiencia || q) && (
+              {(colors.length > 0 || materials.length > 0 || audiencia || q) && (
                 <div className="flex flex-wrap gap-2">
                   {q && <span className="text-xs px-2 py-1 rounded-full border">Búsqueda: {q}</span>}
                   {audiencia && (
@@ -240,9 +262,9 @@ export default function CategoryDetailPage({ params }: Props) {
                       Color: {c}
                     </span>
                   ))}
-                  {fabrics.map((f) => (
-                    <span key={`f-${f}`} className="text-xs px-2 py-1 rounded-full border">
-                      Tejido: {f}
+                  {materials.map((m) => (
+                    <span key={`m-${m}`} className="text-xs px-2 py-1 rounded-full border">
+                      Material: {m}
                     </span>
                   ))}
                 </div>

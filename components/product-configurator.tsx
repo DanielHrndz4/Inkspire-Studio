@@ -5,12 +5,12 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { type Product } from "@/lib/types"
 import { formatCurrency } from "@/lib/format"
 import { useCart } from "./cart"
+import { Products } from "@/interface/product.interface"
 
 type Props = {
-  product?: Product
+  product?: Products
 }
 
 const SIZES = ["XS", "S", "M", "L", "XL", "XXL"]
@@ -20,34 +20,36 @@ const COMMON_COLORS = ["Blanco", "Negro", "Celeste", "Azul Marino"]
 export default function ProductConfigurator({ product }: Props) {
   const p = product ?? {
     id: "placeholder",
-    slug: "camisa-essential",
     title: "Camisa Essential",
     price: 89,
-    images: ["/placeholder.svg?height=900&width=900"],
-    category: "Hombre",
-    colors: ["Blanco", "Negro"],
-    fabrics: ["Algodón"],
+    type: "t-shirt",
+    category: "Camisas",
+    material: "Algodón",
+    discountPercentage: 0,
+    product: {
+      color: "Blanco",
+      size: ["S", "M", "L"],
+      images: ["/placeholder.svg"]
+    },
     description: "Corte atemporal con materiales premium.",
   }
 
-  const [size, setSize] = useState("M")
+  const [size, setSize] = useState(p.product.size[1] ?? "M") // Default to middle size if available
   const [fit, setFit] = useState("Slim")
-  const [color, setColor] = useState(p.colors[0] ?? "Blanco")
+  const [color, setColor] = useState(p.product.color ?? "Blanco")
   const [monogram, setMonogram] = useState("")
 
   const { addItem } = useCart()
 
   const preview = useMemo(() => {
-    // Buscar imagen por color si existe alguna coincidencia por nombre
-    const imageByColor = p.images.find((img) => img.toLowerCase().includes(color.toLowerCase()))
-    return imageByColor ?? p.images[0]
-  }, [p.images, color])
+    // Use first image since we now have single color per product
+    return p.product.images[0] ?? "/placeholder.svg"
+  }, [p.product.images])
 
   const handleAdd = () => {
-    const id = `${p.slug}-${size}-${fit}-${color}-${monogram || "nm"}-${Math.random().toString(36).slice(2, 8)}`
+    const id = `${p.id}-${size}-${fit}-${color}-${monogram || "nm"}-${Math.random().toString(36).slice(2, 8)}`
     addItem({
       id,
-      slug: p.slug,
       title: p.title,
       price: p.price,
       image: preview,
@@ -56,6 +58,7 @@ export default function ProductConfigurator({ product }: Props) {
       fit,
       color,
       monogram: monogram.trim() || undefined,
+      productId: p.id, // Added product ID for reference
     })
   }
 
@@ -69,17 +72,15 @@ export default function ProductConfigurator({ product }: Props) {
         <div className="grid gap-3">
           <Label className="text-xs uppercase tracking-widest">Color</Label>
           <div className="flex flex-wrap gap-2">
-            {(p.colors.length > 0 ? p.colors : COMMON_COLORS).map((c) => (
-              <Button
-                key={c}
-                variant={c === color ? "default" : "outline"}
-                className="rounded-full h-9 px-4"
-                onClick={() => setColor(c)}
-              >
-                {c}
-              </Button>
-            ))}
+            <Button
+              variant="default"
+              className="rounded-full h-9 px-4"
+              disabled
+            >
+              {p.product.color}
+            </Button>
           </div>
+          <p className="text-xs text-muted-foreground">Color actual: {p.product.color}</p>
         </div>
 
         <div className="grid gap-3">
@@ -99,7 +100,7 @@ export default function ProductConfigurator({ product }: Props) {
         <div className="grid gap-3">
           <Label className="text-xs uppercase tracking-widest">Talla</Label>
           <div className="flex flex-wrap gap-2">
-            {SIZES.map((s) => (
+            {(p.product.size.length > 0 ? p.product.size : SIZES).map((s) => (
               <Button
                 key={s}
                 variant={s === size ? "default" : "outline"}

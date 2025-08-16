@@ -4,16 +4,16 @@ import SiteHeader from "@/components/site-header"
 import SiteFooter from "@/components/site-footer"
 import ProductConfigurator from "@/components/product-configurator"
 import ProductCard from "@/components/product-card"
-import { products, getProductBySlug } from "@/lib/data"
+import { getProductById, products } from "@/lib/data" // Changed from getProductBySlug to getProductById
 import { CartProvider } from "@/components/cart"
 
 type PageProps = {
-  params: { slug?: string }
+  params: { id?: string } // Changed from slug to id
 }
 
 export default function ProductPage({ params }: PageProps) {
-  const slug = params?.slug ?? ""
-  const product = getProductBySlug(slug)
+  const id = params?.id ?? ""
+  const product = getProductById(id) // Changed from getProductBySlug to getProductById
   if (!product) return notFound()
 
   return (
@@ -24,12 +24,22 @@ export default function ProductPage({ params }: PageProps) {
           {/* Galería */}
           <div className="grid gap-4">
             <div className="relative aspect-[4/5] w-full overflow-hidden rounded-md bg-muted">
-              <Image src={product.images[0] || "/placeholder.svg"} alt={`Imagen principal de ${product.title}`} fill className="object-cover" />
+              <Image 
+                src={product.product.images[0] || "/placeholder.svg"} 
+                alt={`Imagen principal de ${product.title}`} 
+                fill 
+                className="object-cover" 
+              />
             </div>
             <div className="grid grid-cols-4 gap-4">
-              {product.images.slice(1, 5).map((img, i) => (
+              {product.product.images.slice(1, 5).map((img, i) => (
                 <div key={i} className="relative aspect-square rounded-md overflow-hidden bg-muted">
-                  <Image src={img || "/placeholder.svg"} alt={`Detalle ${i + 1} de ${product.title}`} fill className="object-cover" />
+                  <Image 
+                    src={img || "/placeholder.svg"} 
+                    alt={`Detalle ${i + 1} de ${product.title}`} 
+                    fill 
+                    className="object-cover" 
+                  />
                 </div>
               ))}
             </div>
@@ -46,7 +56,7 @@ export default function ProductPage({ params }: PageProps) {
               <h3 className="text-lg tracking-tight mb-6">También te puede gustar</h3>
               <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 {products
-                  .filter((p) => p.slug !== product.slug)
+                  .filter((p) => p.id !== product.id) // Changed from slug to id
                   .slice(0, 4)
                   .map((p) => (
                     <ProductCard key={p.id} product={p} />

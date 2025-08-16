@@ -9,7 +9,7 @@ import { CartProvider } from "@/components/cart"
 import ProductToolbar from "@/components/product-toolbar"
 import FiltersPanel from "@/components/filters-panel"
 import ProductSkeleton from "@/components/product-skeleton"
-import { products as allProducts, getAllColors, getAllFabrics } from "@/lib/data"
+import { products as allProducts, getAllColors } from "@/lib/data"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
@@ -21,7 +21,6 @@ type SortKey = "relevance" | "price-asc" | "price-desc" | "title-asc" | "title-d
 export default function ProductsPage() {
   // Datos base
   const colorsAll = useMemo(() => getAllColors(), [])
-  const fabricsAll = useMemo(() => getAllFabrics(), [])
   const minPrice = useMemo(() => Math.min(...allProducts.map((p) => p.price)), [])
   const maxPrice = useMemo(() => Math.max(...allProducts.map((p) => p.price)), [])
 
@@ -47,10 +46,9 @@ export default function ProductsPage() {
     const q = query.trim().toLowerCase()
     let list = allProducts.filter((p) => {
       const matchQ = q.length === 0 || p.title.toLowerCase().includes(q) || p.description.toLowerCase().includes(q)
-      const matchC = colors.length === 0 || p.colors.some((c) => colors.includes(c))
-      const matchF = fabrics.length === 0 || p.fabrics.some((f) => fabrics.includes(f))
+      const matchC = colors.length === 0 || colors.includes(p.product.color)
       const matchP = p.price >= price[0] && p.price <= price[1]
-      return matchQ && matchC && matchF && matchP
+      return matchQ && matchC && matchP
     })
 
     switch (sort) {
@@ -135,7 +133,6 @@ export default function ProductsPage() {
           <aside className="hidden md:block md:sticky md:top-20 md:h-fit">
             <FiltersPanel
               allColors={colorsAll}
-              allFabrics={fabricsAll}
               selectedColors={colors}
               selectedFabrics={fabrics}
               onToggleColor={(c) => toggle(colors, c, setColors)}
@@ -183,7 +180,6 @@ export default function ProductsPage() {
                 <div className="py-4">
                   <FiltersPanel
                     allColors={colorsAll}
-                    allFabrics={fabricsAll}
                     selectedColors={colors}
                     selectedFabrics={fabrics}
                     onToggleColor={(c) => toggle(colors, c, setColors)}

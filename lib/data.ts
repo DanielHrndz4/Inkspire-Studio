@@ -1,166 +1,292 @@
-import { type Product } from "./types"
+import { Products } from "@/interface/product.interface";
 
-export const products: Product[] = [
+export const products: Products[] = [
   {
     id: "p1",
-    slug: "camisa-classic-white",
     title: "Classic White",
-    price: 89,
-    images: ["/images/products/classic-white.png", "/images/fabric-detail.png"],
-    category: "Camisas",
-    colors: ["Blanco"],
-    fabrics: ["Algodón Egipcio"],
     description: "Camisa blanca clásica en algodón egipcio. Suavidad y resistencia en un corte atemporal.",
-    tags: ["camisas", "tipografia", "hombres"],
+    type: "long-sleeve",
+    category: {
+      name: "Camisas",
+      image: "/images/categories/shirts.jpg"
+    },
+    material: "Algodón Egipcio",
+    price: 89,
+    discountPercentage: 0,
+    product: [
+      {
+        color: "Blanco",
+        size: ["S", "M", "L", "XL"],
+        images: ["/images/products/classic-white.png", "/images/fabric-detail.png"]
+      }
+    ]
   },
   {
     id: "p2",
-    slug: "camisa-black-oxford",
     title: "Black Oxford",
-    price: 95,
-    images: ["/images/products/black-oxford.png", "/images/fabric-detail.png"],
-    category: "Camisas",
-    colors: ["Negro"],
-    fabrics: ["Oxford"],
     description: "Textura oxford en negro profundo. Versátil y elegante para el día y la noche.",
-    tags: ["camisas", "hombres"],
+    type: "long-sleeve",
+    category: {
+      name: "Camisas",
+      image: "/images/categories/shirts.jpg"
+    },
+    material: "Oxford",
+    price: 95,
+    discountPercentage: 0,
+    product: [
+      {
+        color: "Negro",
+        size: ["S", "M", "L", "XL"],
+        images: ["/images/products/black-oxford.png", "/images/fabric-detail.png"]
+      }
+    ]
   },
   {
     id: "p3",
-    slug: "camisa-sky-blue",
     title: "Sky Blue",
-    price: 92,
-    images: ["/images/products/sky-blue.png", "/images/fabric-detail.png"],
-    category: "Camisas",
-    colors: ["Celeste"],
-    fabrics: ["Algodón"],
     description: "Celeste suave que ilumina cualquier look. Ideal para oficina y eventos casuales.",
-    tags: ["camisas", "mujeres"],
+    type: "long-sleeve",
+    category: {
+      name: "Camisas",
+      image: "/images/categories/shirts.jpg"
+    },
+    material: "Algodón",
+    price: 92,
+    discountPercentage: 0,
+    product: [
+      {
+        color: "Celeste",
+        size: ["S", "M", "L", "XL"],
+        images: ["/images/products/sky-blue.png", "/images/fabric-detail.png"]
+      }
+    ]
   },
   {
     id: "p4",
-    slug: "camisa-striped-navy",
     title: "Striped Navy",
-    price: 99,
-    images: ["/images/products/striped-navy.png", "/images/fabric-detail.png"],
-    category: "Camisas",
-    colors: ["Azul Marino", "Blanco"],
-    fabrics: ["Popelina"],
     description: "Rayas sutiles en azul marino para un estilo distinguido y contemporáneo.",
-    tags: ["camisas", "hombres"],
+    type: "long-sleeve",
+    category: {
+      name: "Camisas",
+      image: "/images/categories/shirts.jpg"
+    },
+    material: "Popelina",
+    price: 99,
+    discountPercentage: 0,
+    product: [
+      {
+        color: "Azul Marino",
+        size: ["S", "M", "L", "XL"],
+        images: ["/images/products/striped-navy.png", "/images/fabric-detail.png"]
+      }
+    ]
   },
-  // Hoodies
   {
     id: "h1",
-    slug: "hoodie-black-premium",
     title: "Hoodie Black Premium",
-    price: 75,
-    images: ["/images/products/hoodie-black.png"],
-    category: "Hoodies",
-    colors: ["Negro"],
-    fabrics: ["Algodón Orgánico"],
     description: "Hoodie negro de gramaje premium con interior perchado.",
-    tags: ["hoodies", "hombres", "tipografia"],
+    type: "hoodie",
+    category: {
+      name: "Hoodies",
+      image: "/images/categories/hoodies.jpg"
+    },
+    material: "Algodón Orgánico",
+    price: 75,
+    discountPercentage: 0,
+    product: [
+      {
+        color: "Negro",
+        size: ["S", "M", "L", "XL"],
+        images: ["/images/products/hoodie-black.png"]
+      }
+    ]
   },
   {
     id: "h2",
-    slug: "hoodie-grey-classic",
     title: "Hoodie Grey Classic",
-    price: 72,
-    images: ["/images/products/hoodie-grey.png"],
-    category: "Hoodies",
-    colors: ["Gris"],
-    fabrics: ["Algodón", "Poliéster Reciclado"],
     description: "Clásico gris con caída perfecta y tacto suave.",
-    tags: ["hoodies", "mujeres"],
+    type: "hoodie",
+    category: {
+      name: "Hoodies",
+      image: "/images/categories/hoodies.jpg"
+    },
+    material: "Algodón, Poliéster Reciclado",
+    price: 72,
+    discountPercentage: 0,
+    product: [
+      {
+        color: "Gris",
+        size: ["S", "M", "L", "XL"],
+        images: ["/images/products/hoodie-grey.png"]
+      }
+    ]
   },
-  // Anime
   {
     id: "a1",
-    slug: "camisa-anime-ink-dragon",
     title: "Anime Ink Dragon",
-    price: 89,
-    images: ["/images/products/anime-dragon.png"],
-    category: "Camisas",
-    colors: ["Blanco", "Negro"],
-    fabrics: ["Algodón"],
     description: "Ilustración estilo sumi-e de dragón. Trazo expresivo y contrastes fuertes.",
-    tags: ["anime", "camisas", "hombres"],
+    type: "t-shirt",
+    category: {
+      name: "Camisas",
+      image: "/images/categories/shirts.jpg"
+    },
+    material: "Algodón",
+    price: 89,
+    discountPercentage: 0,
+    product: [
+      {
+        color: "Blanco",
+        size: ["S", "M", "L", "XL"],
+        images: ["/images/products/anime-dragon.png"]
+      }
+    ]
   },
   {
     id: "a2",
-    slug: "hoodie-anime-neo-tokyo",
     title: "Neo Tokyo Hoodie",
-    price: 79,
-    images: ["/images/products/anime-neotokyo.png"],
-    category: "Hoodies",
-    colors: ["Negro"],
-    fabrics: ["Algodón Orgánico"],
     description: "Gráfica neón inspirada en metrópolis futurista.",
-    tags: ["anime", "hoodies", "mujeres"],
+    type: "hoodie",
+    category: {
+      name: "Hoodies",
+      image: "/images/categories/hoodies.jpg"
+    },
+    material: "Algodón Orgánico",
+    price: 79,
+    discountPercentage: 0,
+    product: [
+      {
+        color: "Negro",
+        size: ["S", "M", "L", "XL"],
+        images: ["/images/products/anime-neotokyo.png"]
+      }
+    ]
   },
-  // Carros
   {
     id: "c1",
-    slug: "camisa-racing-lines",
     title: "Racing Lines",
-    price: 95,
-    images: ["/images/products/cars-racing-lines.png"],
-    category: "Camisas",
-    colors: ["Blanco"],
-    fabrics: ["Popelina"],
     description: "Líneas dinámicas inspiradas en el automovilismo.",
-    tags: ["carros", "camisas", "hombres"],
+    type: "t-shirt",
+    category: {
+      name: "Camisas",
+      image: "/images/categories/shirts.jpg"
+    },
+    material: "Popelina",
+    price: 95,
+    discountPercentage: 0,
+    product: [
+      {
+        color: "Blanco",
+        size: ["S", "M", "L", "XL"],
+        images: ["/images/products/cars-racing-lines.png"]
+      }
+    ]
   },
   {
     id: "c2",
-    slug: "hoodie-turbo-blue",
     title: "Turbo Blue",
-    price: 82,
-    images: ["/images/products/cars-turbo-blue.png"],
-    category: "Hoodies",
-    colors: ["Azul"],
-    fabrics: ["Algodón"],
     description: "Tipografía técnica con acentos en azul turbo.",
-    tags: ["carros", "hoodies", "hombres", "tipografia"],
+    type: "hoodie",
+    category: {
+      name: "Hoodies",
+      image: "/images/categories/hoodies.jpg"
+    },
+    material: "Algodón",
+    price: 82,
+    discountPercentage: 0,
+    product: [
+      {
+        color: "Azul",
+        size: ["S", "M", "L", "XL"],
+        images: ["/images/products/cars-turbo-blue.png"]
+      }
+    ]
   },
-  // Niños
   {
     id: "k1",
-    slug: "camiseta-kids-white",
     title: "Kids White Tee",
-    price: 39,
-    images: ["/images/products/kids-shirt.png"],
-    category: "Camisas",
-    colors: ["Blanco"],
-    fabrics: ["Algodón"],
     description: "Camiseta para niños en algodón suave, ideal para personalizar.",
-    tags: ["camisas", "niños"],
-  },
-]
+    type: "t-shirt",
+    category: {
+      name: "Camisas",
+      image: "/images/categories/shirts.jpg"
+    },
+    material: "Algodón",
+    price: 39,
+    discountPercentage: 0,
+    product: [
+      {
+        color: "Blanco",
+        size: ["XS", "S", "M"],
+        images: ["/images/products/kids-shirt.png"]
+      }
+    ]
+  }
+];
 
-export function getProductBySlug(slug: string): Product | undefined {
-  return products.find((p) => p.slug === slug)
+export function getProductByTitle(title: string): Products | undefined {
+  return products.find((p) => p.title.toLowerCase() === title.toLowerCase());
+}
+
+export function getProductById(id: string): Products | undefined {
+  return products.find((p) => p.id === id);
+}
+
+export function countProductsByCategory(category: string): number {
+  if (!category) return 0; // Si category es undefined, null o string vacío
+  
+  const lowerCategory = category.toLowerCase();
+  return products.filter((product) => 
+    product.category?.name?.toLowerCase() === lowerCategory
+  ).length;
 }
 
 export function getAllColors(): string[] {
-  const set = new Set<string>()
-  products.forEach((p) => p.colors.forEach((c) => set.add(c)))
-  return Array.from(set)
+  const colors = new Set<string>();
+  products.forEach((product) => {
+    product.product.forEach((variant) => {
+      colors.add(variant.color);
+    });
+  });
+  return Array.from(colors);
 }
 
-export function getAllFabrics(): string[] {
-  const set = new Set<string>()
-  products.forEach((p) => p.fabrics.forEach((f) => set.add(f)))
-  return Array.from(set)
+export function getAllMaterials(): string[] {
+  const materials = new Set<string>();
+  products.forEach((product) => {
+    materials.add(product.material);
+  });
+  return Array.from(materials);
 }
 
-export function countProductsByCategorySlug(slug: string) {
-  const s = slug.toLowerCase()
-  return products.filter((p) => p.category.toLowerCase() === s || (p.tags ?? []).includes(s)).length
+export function listProductsByCategory(category: string): Products[] {
+  const lowerCategory = category.toLowerCase();
+  return products.filter((product) => 
+    product.category.name.toLowerCase() === lowerCategory
+  );
 }
 
-export function listProductsByCategorySlug(slug: string) {
-  const s = slug.toLowerCase()
-  return products.filter((p) => p.category.toLowerCase() === s || (p.tags ?? []).includes(s))
+export function getProductsByColor(color: string): Products[] {
+  const lowerColor = color.toLowerCase();
+  return products.filter((product) =>
+    product.product.some((variant) => 
+      variant.color.toLowerCase() === lowerColor
+    )
+  );
+}
+
+export function getProductsBySize(size: string): Products[] {
+  const upperSize = size.toUpperCase();
+  return products.filter((product) =>
+    product.product.some((variant) => 
+      variant.size.includes(upperSize)
+    )
+  );
+}
+
+// Función adicional para obtener productos por tipo
+export function getProductsByType(type: string): Products[] {
+  const lowerType = type.toLowerCase();
+  return products.filter((product) => 
+    product.type.toLowerCase() === lowerType
+  );
 }
