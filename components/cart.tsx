@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useContext, useEffect, useMemo, useState } from "react"
+import { createContext, useContext, useMemo } from "react"
 import { X, Minus, Plus, Trash2 } from 'lucide-react'
 import { Sheet, SheetContent } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
@@ -9,98 +9,39 @@ import Image from "next/image"
 import { formatCurrency } from "@/lib/format"
 import CheckoutDialog from "@/components/checkout-dialog"
 import { AuthProvider } from "@/components/auth"
+import { useCartStore } from "@/store/cartStore"
 
-export type CartItem = {
-  id: string
-  productId: string  // Added product ID reference
-  title: string
-  price: number
-  image: string
-  qty: number
-  // Options
-  size?: string
-  fit?: string
-  color?: string
-  monogram?: string
-}
-
-type CartContextType = {
-  items: CartItem[]
-  addItem: (item: CartItem) => void
-  removeItem: (id: string) => void
-  updateQty: (id: string, qty: number) => void
-  clear: () => void
-  count: number
-  total: number
-  open: boolean
-  setOpen: (o: boolean) => void
-  beginCheckout: () => void
-}
-
-const CartContext = createContext<CartContextType | undefined>(undefined)
+const CartContext = createContext<any | undefined>(undefined)
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
-  const [items, setItems] = useState<CartItem[]>([])
-  const [open, setOpen] = useState(false)
-  const [checkoutOpen, setCheckoutOpen] = useState(false)
+  const {
+    items,
+    addItem,
+    removeItem,
+    updateQty,
+    clear,
+    open,
+    setOpen,
+    beginCheckout,
+    checkoutOpen,
+    setCheckoutOpen
+  } = useCartStore();
 
-  // Load from localStorage
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem("atelier_cart")
-      if (raw) setItems(JSON.parse(raw))
-    } catch (e) {
-      // noop
-    }
-  }, [])
-  
-  // Persist to localStorage
-  useEffect(() => {
-    try {
-      localStorage.setItem("atelier_cart", JSON.stringify(items))
-    } catch (e) {
-      // noop
-    }
-  }, [items])
+  const count = useMemo(() => items.reduce((acc, i) => acc + i.qty, 0), [items]);
+  const total = useMemo(() => items.reduce((acc, i) => acc + i.qty * i.price, 0), [items]);
 
-  const addItem = (item: CartItem) => {
-    setItems((prev) => {
-      // Combine if same product and same options
-      const key = (i: CartItem) => `${i.productId}|${i.size}|${i.fit}|${i.color}|${i.monogram ?? ""}`
-      const existing = prev.find((i) => key(i) === key(item))
-      if (existing) {
-        return prev.map((i) => (key(i) === key(item) ? { ...i, qty: i.qty + item.qty } : i))
-      }
-      return [{ ...item }, ...prev]
-    })
-    setOpen(true)
-  }
-
-  const removeItem = (id: string) => setItems((prev) => prev.filter((i) => i.id !== id))
-  const updateQty = (id: string, qty: number) =>
-    setItems((prev) => prev.map((i) => (i.id === id ? { ...i, qty: Math.max(1, qty) } : i)))
-  const clear = () => setItems([])
-
-  const count = useMemo(() => items.reduce((acc, i) => acc + i.qty, 0), [items])
-  const total = useMemo(() => items.reduce((acc, i) => acc + i.qty * i.price, 0), [items])
-
-  const beginCheckout = () => {
-    setCheckoutOpen(true)
-    setOpen(true)
-  }
-
-  const value = { 
-    items, 
-    addItem, 
-    removeItem, 
-    updateQty, 
-    clear, 
-    count, 
-    total, 
-    open, 
-    setOpen, 
-    beginCheckout 
-  }
+  const value = {
+    items,
+    addItem,
+    removeItem,
+    updateQty,
+    clear,
+    count,
+    total,
+    open,
+    setOpen,
+    beginCheckout
+  };
 
   return (
     <AuthProvider>
@@ -110,34 +51,51 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         <CheckoutDialog open={checkoutOpen} onOpenChange={setCheckoutOpen} />
       </CartContext.Provider>
     </AuthProvider>
-  )
+  );
 }
 
 export function useCart() {
-  const ctx = useContext(CartContext)
-  if (!ctx) throw new Error("useCart must be used within CartProvider")
-  return ctx
+  const ctx = useContext(CartContext);
+  if (!ctx) throw new Error("useCart must be used within CartProvider");
+  return ctx;
 }
 
 function CartSheet() {
-  const { open, setOpen, items, updateQty, removeItem, total, clear, beginCheckout } = useCart()
+  const { 
+    open, 
+    setOpen, 
+    items, 
+    updateQty, 
+    removeItem, 
+    total, 
+    clear, 
+    beginCheckout 
+  } = useCart();
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetContent side="right" className="w-full sm:w-[460px] p-0">
         <div className="flex items-center justify-between px-6 h-16 border-b">
           <h2 className="text-base font-medium tracking-wide">Carrito</h2>
-          <button onClick={() => setOpen(false)} className="p-1 rounded-full hover:bg-muted">
+          <button 
+            onClick={() => setOpen(false)} 
+            className="p-1 rounded-full hover:bg-muted"
+          >
             <X className="h-5 w-5" />
           </button>
         </div>
         <div className="max-h-[calc(100vh-8rem)] overflow-auto">
           {items.length === 0 ? (
-            <div className="p-6 text-sm text-muted-foreground">Tu carrito está vacío.</div>
+            <div className="p-6 text-sm text-muted-foreground">
+              Tu carrito está vacío.
+            </div>
           ) : (
             <ul className="divide-y">
-              {items.map((i) => (
-                <li key={i.id} className="p-6 grid grid-cols-[88px_1fr_auto] gap-4 items-start">
+              {items.map((i:any) => (
+                <li 
+                  key={i.id} 
+                  className="p-6 grid grid-cols-[88px_1fr_auto] gap-4 items-start"
+                >
                   <div className="relative h-24 w-20 rounded bg-muted overflow-hidden">
                     <Image 
                       src={i.image || "/placeholder.svg"} 
@@ -150,9 +108,7 @@ function CartSheet() {
                     <div className="font-medium">{i.title}</div>
                     <div className="text-muted-foreground">
                       {i.color ? `${i.color} · ` : ""}
-                      {i.fit ? `${i.fit} · ` : ""}
                       {i.size ? `Talla ${i.size}` : ""}
-                      {i.monogram ? ` · Monograma: ${i.monogram}` : ""}
                     </div>
                     <div className="flex items-center gap-2 mt-1">
                       <Button 
@@ -217,5 +173,5 @@ function CartSheet() {
         </div>
       </SheetContent>
     </Sheet>
-  )
+  );
 }

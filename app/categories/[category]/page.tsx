@@ -12,28 +12,31 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import PaginatedGrid from "@/components/paginated-grid"
 import { getVisibilityMap } from "@/lib/admin-store"
+import { getCategories } from "@/utils/get-categories"
+import { use } from "react";
 
-type Props = { params: { slug: string } }
+interface CategoryDetailPageProps {
+  params: Promise<{ category: string }>;
+}
 
-export default function CategoryDetailPage({ params }: Props) {
+export default function CategoryDetailPage({ params }: CategoryDetailPageProps) {
   const searchParams = useSearchParams()
   const pathname = usePathname()
-  const categories = products.map((p) => p.category)
-  const uniqueCategories = categories.reduce<string[]>((acc, cat) => {
-    if (!acc.includes(cat)) acc.push(cat)
-    return acc
-  }, [])
-  const cat = uniqueCategories.find((c) => c.name === params.name)
+  const { category: paramCat } = use(params);
+  const cleanTextCat = paramCat.replace("-", " ")
+  
+  // Buscar la categoría actual
+  const cat = products.filter((p) => p.category.name.toLocaleLowerCase() == paramCat)
   if (!cat) return notFound()
+    console.log(cat)
 
   const initialAudience = (searchParams.get("audiencia") ?? "").toLowerCase()
   const initialQuery = searchParams.get("q") ?? ""
   const initialSort = (searchParams.get("sort") ?? "relevance").toLowerCase()
 
-  const baseItemsRaw = useMemo(() => listProductsByCategory(cat.title), [cat.title])
+  const baseItemsRaw = useMemo(() => listProductsByCategory(paramCat), [paramCat])
   const visibility = useMemo(() => getVisibilityMap(), [])
   const baseItems = useMemo(
     () => baseItemsRaw.filter((p) => visibility[p.id] !== false),
@@ -86,14 +89,12 @@ export default function CategoryDetailPage({ params }: Props) {
     if (term) {
       items = items.filter(
         (p) => p.title.toLowerCase().includes(term) || 
-               p.description.toLowerCase().includes(term)
-      )
+               p.description.toLowerCase().includes(term))
     }
 
     if (colors.length > 0) {
       items = items.filter((p) => 
-        p.product.some(variant => colors.includes(variant.color))
-      )
+        p.product.some(variant => colors.includes(variant.color)))
     }
 
     if (materials.length > 0) {
@@ -131,7 +132,7 @@ export default function CategoryDetailPage({ params }: Props) {
   const resetFilters = () => {
     setColors([])
     setMaterials([])
-    setAudiencia(initialAudience || "")
+    setAudiencia("")
     setQ("")
     setSort("relevance")
   }
@@ -145,16 +146,15 @@ export default function CategoryDetailPage({ params }: Props) {
             items={[
               { label: "Inicio", href: "/" },
               { label: "Categorías", href: "/categories" },
-              { label: cat.title },
+              { label: paramCat },
             ]}
           />
 
           <header className="grid gap-2">
-            <h1 className="text-2xl md:text-3xl tracking-tight">
-              {cat.title}
-              {audiencia ? ` · ${capitalize(audiencia)}` : ""}
+            <h1 className="text-2xl md:text-3xl tracking-tight capitalize">
+              {cleanTextCat}
             </h1>
-            {cat.description ? <p className="text-sm text-muted-foreground">{cat.description}</p> : null}
+            {/* {cat.description ? <p className="text-sm text-muted-foreground">{cat.description}</p> : null} */}
           </header>
 
           <section className="grid gap-8 md:grid-cols-[280px_1fr]">
@@ -162,7 +162,7 @@ export default function CategoryDetailPage({ params }: Props) {
               {/* Buscador */}
               <div className="grid gap-2">
                 <Label htmlFor="q" className="text-xs uppercase tracking-widest text-muted-foreground">
-                  {`Buscar en ${cat.title.toLowerCase()}`}
+                  {`Buscar en ${cleanTextCat}`}
                 </Label>
                 <Input
                   id="q"

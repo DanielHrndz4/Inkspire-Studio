@@ -1,53 +1,46 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { formatCurrency } from "@/lib/format"
 import { useCart } from "./cart"
 import { Products } from "@/interface/product.interface"
 
 type Props = {
-  product?: Products
+  product: Products
+  selectedColor: string
+  onColorChange: (color: string) => void
+  selectedVariant: Products['product'][0]
+  onImageSelect?: (imageIndex: number) => void // Nueva prop para manejar selección de imagen
 }
 
 const SIZES = ["XS", "S", "M", "L", "XL", "XXL"]
-const FITS = ["Slim", "Regular"]
-const COMMON_COLORS = ["Blanco", "Negro", "Celeste", "Azul Marino"]
 
-export default function ProductConfigurator({ product }: Props) {
-  const p = product ?? {
-    id: "placeholder",
-    title: "Camisa Essential",
-    price: 89,
-    type: "t-shirt",
-    category: "Camisas",
-    material: "Algodón",
-    discountPercentage: 0,
-    product: {
-      color: "Blanco",
-      size: ["S", "M", "L"],
-      images: ["/placeholder.svg"]
-    },
-    description: "Corte atemporal con materiales premium.",
-  }
-
-  const [size, setSize] = useState(p.product.size[1] ?? "M") // Default to middle size if available
+export default function ProductConfigurator({ 
+  product: p, 
+  selectedColor, 
+  onColorChange,
+  selectedVariant,
+  onImageSelect
+}: Props) {
+  const [size, setSize] = useState(selectedVariant.size[0] ?? "M")
   const [fit, setFit] = useState("Slim")
-  const [color, setColor] = useState(p.product.color ?? "Blanco")
   const [monogram, setMonogram] = useState("")
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0) // Estado para imagen seleccionada
 
   const { addItem } = useCart()
 
+  // Imagen de preview depende del color e imagen seleccionada
   const preview = useMemo(() => {
-    // Use first image since we now have single color per product
-    return p.product.images[0] ?? "/placeholder.svg"
-  }, [p.product.images])
+    return selectedVariant.images[selectedImageIndex] ?? "/placeholder.svg"
+  }, [selectedVariant, selectedImageIndex])
 
   const handleAdd = () => {
-    const id = `${p.id}-${size}-${fit}-${color}-${monogram || "nm"}-${Math.random().toString(36).slice(2, 8)}`
+    const id = `${p.id}-${size}-${fit}-${selectedColor}-${monogram || "nm"}-${Math.random()
+      .toString(36)
+      .slice(2, 8)}`
     addItem({
       id,
       title: p.title,
@@ -56,10 +49,24 @@ export default function ProductConfigurator({ product }: Props) {
       qty: 1,
       size,
       fit,
-      color,
+      color: selectedColor,
       monogram: monogram.trim() || undefined,
-      productId: p.id, // Added product ID for reference
+      productId: p.id,
     })
+  }
+
+  // Reset size and image selection when variant changes
+  useEffect(() => {
+    setSize(selectedVariant.size[0] ?? "M")
+    setSelectedImageIndex(0) // Resetear a la primera imagen al cambiar color
+  }, [selectedVariant])
+
+  // Manejar selección de imagen
+  const handleImageSelect = (index: number) => {
+    setSelectedImageIndex(index)
+    if (onImageSelect) {
+      onImageSelect(index) // Notificar al componente padre si es necesario
+    }
   }
 
   return (
@@ -69,38 +76,37 @@ export default function ProductConfigurator({ product }: Props) {
       <p className="text-sm text-muted-foreground">{p.description}</p>
 
       <div className="grid gap-6">
+        {/* Colores */}
         <div className="grid gap-3">
           <Label className="text-xs uppercase tracking-widest">Color</Label>
           <div className="flex flex-wrap gap-2">
-            <Button
-              variant="default"
-              className="rounded-full h-9 px-4"
-              disabled
-            >
-              {p.product.color}
-            </Button>
-          </div>
-          <p className="text-xs text-muted-foreground">Color actual: {p.product.color}</p>
-        </div>
-
-        <div className="grid gap-3">
-          <Label className="text-xs uppercase tracking-widest">Corte</Label>
-          <RadioGroup value={fit} onValueChange={setFit} className="flex gap-3">
-            {FITS.map((f) => (
-              <div key={f} className="flex items-center space-x-2 border rounded-md px-3 py-2">
-                <RadioGroupItem id={`fit-${f}`} value={f} />
-                <Label htmlFor={`fit-${f}`} className="cursor-pointer">
-                  {f}
-                </Label>
-              </div>
+            {p.product.map((variant) => (
+              <Button
+                key={variant.color}
+                variant={variant.color === selectedColor ? "default" : "outline"}
+                className="rounded-full h-9 px-4"
+                onClick={() => {
+                  onColorChange(variant.color)
+                  setSelectedImageIndex(0) // Resetear imagen al cambiar color
+                }}
+              >
+                {variant.color}
+              </Button>
             ))}
-          </RadioGroup>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Color actual: {selectedColor}
+          </p>
         </div>
 
+        {/* Tallas */}
         <div className="grid gap-3">
           <Label className="text-xs uppercase tracking-widest">Talla</Label>
           <div className="flex flex-wrap gap-2">
-            {(p.product.size.length > 0 ? p.product.size : SIZES).map((s) => (
+            {(selectedVariant.size.length > 0
+              ? selectedVariant.size
+              : SIZES
+            ).map((s) => (
               <Button
                 key={s}
                 variant={s === size ? "default" : "outline"}
@@ -113,22 +119,40 @@ export default function ProductConfigurator({ product }: Props) {
           </div>
         </div>
 
-        <div className="grid gap-2">
-          <Label className="text-xs uppercase tracking-widest">Monograma (opcional)</Label>
-          <Input
-            maxLength={3}
-            placeholder="Ej. JMG"
-            value={monogram}
-            onChange={(e) => setMonogram(e.target.value.toUpperCase())}
-          />
-          <p className="text-xs text-muted-foreground">Hasta 3 caracteres. Se borda en el puño izquierdo.</p>
-        </div>
+        {/* Miniaturas de imágenes */}
+        {selectedVariant.images.length > 1 && (
+          <div className="grid gap-3">
+            <Label className="text-xs uppercase tracking-widest">Vistas</Label>
+            <div className="flex flex-wrap gap-2">
+              {selectedVariant.images.map((img, index) => (
+                <button
+                  key={index}
+                  className={`relative aspect-square w-16 rounded-md overflow-hidden border-2 ${
+                    index === selectedImageIndex 
+                      ? "border-primary" 
+                      : "border-transparent"
+                  }`}
+                  onClick={() => handleImageSelect(index)}
+                >
+                  <img
+                    src={img || "/placeholder.svg"}
+                    alt={`Vista ${index + 1} de ${p.title}`}
+                    className="w-full h-full object-cover"
+                  />
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
+        {/* Botón agregar */}
         <div className="grid gap-2">
           <Button className="h-11 rounded-none" onClick={handleAdd}>
             Agregar al carrito
           </Button>
-          <p className="text-xs text-muted-foreground">Envío gratis a partir de {formatCurrency(120)}.</p>
+          <p className="text-xs text-muted-foreground">
+            Envío gratis a partir de {formatCurrency(120)}.
+          </p>
         </div>
       </div>
     </div>

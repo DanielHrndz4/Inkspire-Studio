@@ -7,15 +7,15 @@ export type Category = {
 
 export const categories: Category[] = [
   {
-    slug: "camisas",
-    title: "Camisas",
-    image: "/images/categories/camisas.png",
+    slug: "messi-collection",
+    title: "Messi Collection",
+    image: "/images/categories/messi-collection.jpg",
     description: "Corte, tejido y color a tu medida.",
   },
   {
-    slug: "hoodies",
-    title: "Hoodies",
-    image: "/images/categories/hoodies.png",
+    slug: "cr7-collection",
+    title: "CR7 Collection",
+    image: "/images/categories/cr7-collection.jpg",
     description: "Comodidad premium y personalización total.",
   },
   {
@@ -27,19 +27,19 @@ export const categories: Category[] = [
   {
     slug: "carros",
     title: "Carros",
-    image: "/images/categories/cars.png",
+    image: "/images/categories/cars.jpg",
     description: "Motores y velocidad con estilo.",
   },
   {
     slug: "tipografia",
     title: "Tipografía",
-    image: "/images/categories/typography.png",
+    image: "/images/categories/typography.jpg",
     description: "Diseños tipográficos minimalistas.",
   },
   {
     slug: "marvel",
     title: "Marvel",
-    image: "/images/categories/typography.png",
+    image: "/images/categories/marvel.jpg",
     description: "Superhéroes y villanos en cada prenda.",
   },
 ]

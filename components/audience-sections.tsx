@@ -3,15 +3,22 @@ import Link from "next/link"
 import ProductCard from "@/components/product-card"
 import { products } from "@/lib/data"
 
-type AudienceKey = "hombres" | "mujeres" | "niños"
+type AudienceKey = "men" | "women" | "kids"
 
 const AUDIENCES: { key: AudienceKey; title: string; href: string; image: string }[] = [
-  { key: "hombres", title: "Hombres", href: "/categories/camisas?audiencia=hombres", image: "/minimal-mens-shirts.png" },
-  { key: "mujeres", title: "Mujeres", href: "/categories/camisas?audiencia=mujeres", image: "/minimal-inkspire-shirts.png" },
-  { key: "niños", title: "Niños", href: "/categories/camisas?audiencia=niños", image: "/minimal-kids-shirts.png" },
+  { key: "men", title: "Hombres", href: "/categories/camisas?audiencia=hombres", image: "/minimal-mens-shirts.png" },
+  { key: "women", title: "Mujeres", href: "/categories/camisas?audiencia=mujeres", image: "/minimal-inkspire-shirts.png" },
+  { key: "kids", title: "Niños", href: "/categories/camisas?audiencia=niños", image: "/minimal-kids-shirts.png" },
 ]
 
 export default function AudienceSections() {
+  // Función para verificar si un producto pertenece a una audiencia
+  const hasAudienceTag = (product: any, audience: AudienceKey): boolean => {
+    return product.product.some((variant: any) => 
+      variant.tags && variant.tags.includes(audience)
+    )
+  }
+
   return (
     <section aria-label="Por audiencia" className="bg-white">
       <div className="container mx-auto px-4 py-12 grid gap-8">
@@ -27,11 +34,19 @@ export default function AudienceSections() {
 
         <div className="grid gap-8">
           {AUDIENCES.map(({ key, title, href, image }) => {
-            const subset = products.filter((p) => (p.tags ?? []).includes(key)).slice(0, 3)
+            // Filtrar productos que tengan la tag correspondiente en alguna variante
+            const subset = products.filter((p) => hasAudienceTag(p, key)).slice(0, 3)
+            
             return (
               <div key={key} className="grid lg:grid-cols-2 gap-6 items-start">
                 <Link href={href} className="relative aspect-[16/9] w-full overflow-hidden rounded-md">
-                  <Image src={image || "/placeholder.svg"} alt={`Colección ${title}`} fill className="object-cover" />
+                  <Image 
+                    src={image || "/placeholder.svg"} 
+                    alt={`Colección ${title}`} 
+                    fill 
+                    className="object-cover" 
+                    sizes="(max-width: 768px) 100vw, 50vw"
+                  />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                   <div className="absolute bottom-0 left-0 p-6 text-white">
                     <div className="text-xs uppercase tracking-widest opacity-80">{title}</div>

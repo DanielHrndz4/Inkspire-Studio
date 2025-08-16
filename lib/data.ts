@@ -7,8 +7,8 @@ export const products: Products[] = [
     description: "Camisa blanca clásica en algodón egipcio. Suavidad y resistencia en un corte atemporal.",
     type: "long-sleeve",
     category: {
-      name: "Camisas",
-      image: "/images/categories/shirts.jpg"
+      name: "Anime",
+      image: "/images/categories/anime.png"
     },
     material: "Algodón Egipcio",
     price: 89,
@@ -17,9 +17,10 @@ export const products: Products[] = [
       {
         color: "Blanco",
         size: ["S", "M", "L", "XL"],
-        images: ["/images/products/classic-white.png", "/images/fabric-detail.png"]
+        images: ["/images/products/classic-white.png", "/images/fabric-detail.png"],
+        tags: ["men", "women"]
       }
-    ]
+    ],
   },
   {
     id: "p2",
@@ -27,8 +28,8 @@ export const products: Products[] = [
     description: "Textura oxford en negro profundo. Versátil y elegante para el día y la noche.",
     type: "long-sleeve",
     category: {
-      name: "Camisas",
-      image: "/images/categories/shirts.jpg"
+      name: "Anime",
+      image: "/images/categories/anime.png"
     },
     material: "Oxford",
     price: 95,
@@ -37,9 +38,10 @@ export const products: Products[] = [
       {
         color: "Negro",
         size: ["S", "M", "L", "XL"],
-        images: ["/images/products/black-oxford.png", "/images/fabric-detail.png"]
+        images: ["/images/products/black-oxford.png", "/images/fabric-detail.png"],
+        tags: ["men"]
       }
-    ]
+    ],
   },
   {
     id: "p3",
@@ -47,8 +49,8 @@ export const products: Products[] = [
     description: "Celeste suave que ilumina cualquier look. Ideal para oficina y eventos casuales.",
     type: "long-sleeve",
     category: {
-      name: "Camisas",
-      image: "/images/categories/shirts.jpg"
+      name: "Anime",
+      image: "/images/categories/anime.png"
     },
     material: "Algodón",
     price: 92,
@@ -57,9 +59,10 @@ export const products: Products[] = [
       {
         color: "Celeste",
         size: ["S", "M", "L", "XL"],
-        images: ["/images/products/sky-blue.png", "/images/fabric-detail.png"]
+        images: ["/images/products/sky-blue.png", "/images/fabric-detail.png"],
+        tags: ["men", "women"]
       }
-    ]
+    ],
   },
   {
     id: "p4",
@@ -67,8 +70,8 @@ export const products: Products[] = [
     description: "Rayas sutiles en azul marino para un estilo distinguido y contemporáneo.",
     type: "long-sleeve",
     category: {
-      name: "Camisas",
-      image: "/images/categories/shirts.jpg"
+      name: "Anime",
+      image: "/images/categories/anime.png"
     },
     material: "Popelina",
     price: 99,
@@ -77,9 +80,10 @@ export const products: Products[] = [
       {
         color: "Azul Marino",
         size: ["S", "M", "L", "XL"],
-        images: ["/images/products/striped-navy.png", "/images/fabric-detail.png"]
+        images: ["/images/products/striped-navy.png", "/images/fabric-detail.png"],
+        tags: ["men", "women"]
       }
-    ]
+    ],
   },
   {
     id: "h1",
@@ -88,7 +92,7 @@ export const products: Products[] = [
     type: "hoodie",
     category: {
       name: "Hoodies",
-      image: "/images/categories/hoodies.jpg"
+      image: "/images/categories/hoodies.png"
     },
     material: "Algodón Orgánico",
     price: 75,
@@ -97,9 +101,10 @@ export const products: Products[] = [
       {
         color: "Negro",
         size: ["S", "M", "L", "XL"],
-        images: ["/images/products/hoodie-black.png"]
+        images: ["/images/products/hoodie-black.png"],
+        tags: ["men", "women"]
       }
-    ]
+    ],
   },
   {
     id: "h2",
@@ -108,7 +113,7 @@ export const products: Products[] = [
     type: "hoodie",
     category: {
       name: "Hoodies",
-      image: "/images/categories/hoodies.jpg"
+      image: "/images/categories/hoodies.png"
     },
     material: "Algodón, Poliéster Reciclado",
     price: 72,
@@ -117,9 +122,10 @@ export const products: Products[] = [
       {
         color: "Gris",
         size: ["S", "M", "L", "XL"],
-        images: ["/images/products/hoodie-grey.png"]
+        images: ["/images/products/hoodie-grey.png"],
+        tags: ["men", "women"]
       }
-    ]
+    ],
   },
   {
     id: "a1",
@@ -127,8 +133,8 @@ export const products: Products[] = [
     description: "Ilustración estilo sumi-e de dragón. Trazo expresivo y contrastes fuertes.",
     type: "t-shirt",
     category: {
-      name: "Camisas",
-      image: "/images/categories/shirts.jpg"
+      name: "Anime",
+      image: "/images/categories/anime.png"
     },
     material: "Algodón",
     price: 89,
@@ -137,9 +143,10 @@ export const products: Products[] = [
       {
         color: "Blanco",
         size: ["S", "M", "L", "XL"],
-        images: ["/images/products/anime-dragon.png"]
+        images: ["/images/products/anime-dragon.png"],
+        tags: ["men", "women"]
       }
-    ]
+    ],
   },
   {
     id: "a2",
@@ -148,7 +155,7 @@ export const products: Products[] = [
     type: "hoodie",
     category: {
       name: "Hoodies",
-      image: "/images/categories/hoodies.jpg"
+      image: "/images/categories/hoodies.png"
     },
     material: "Algodón Orgánico",
     price: 79,
@@ -157,9 +164,10 @@ export const products: Products[] = [
       {
         color: "Negro",
         size: ["S", "M", "L", "XL"],
-        images: ["/images/products/anime-neotokyo.png"]
+        images: ["/images/products/anime-neotokyo.png"],
+        tags: ["men", "women"]
       }
-    ]
+    ],
   },
   {
     id: "c1",
@@ -167,8 +175,8 @@ export const products: Products[] = [
     description: "Líneas dinámicas inspiradas en el automovilismo.",
     type: "t-shirt",
     category: {
-      name: "Camisas",
-      image: "/images/categories/shirts.jpg"
+      name: "Anime",
+      image: "/images/categories/anime.png"
     },
     material: "Popelina",
     price: 95,
@@ -177,9 +185,10 @@ export const products: Products[] = [
       {
         color: "Blanco",
         size: ["S", "M", "L", "XL"],
-        images: ["/images/products/cars-racing-lines.png"]
+        images: ["/images/products/cars-racing-lines.png"],
+        tags: ["men", "women"]
       }
-    ]
+    ],
   },
   {
     id: "c2",
@@ -188,7 +197,7 @@ export const products: Products[] = [
     type: "hoodie",
     category: {
       name: "Hoodies",
-      image: "/images/categories/hoodies.jpg"
+      image: "/images/categories/hoodies.png"
     },
     material: "Algodón",
     price: 82,
@@ -197,9 +206,10 @@ export const products: Products[] = [
       {
         color: "Azul",
         size: ["S", "M", "L", "XL"],
-        images: ["/images/products/cars-turbo-blue.png"]
+        images: ["/images/products/cars-turbo-blue.png"],
+        tags: ["men", "women"]
       }
-    ]
+    ],
   },
   {
     id: "k1",
@@ -207,8 +217,8 @@ export const products: Products[] = [
     description: "Camiseta para niños en algodón suave, ideal para personalizar.",
     type: "t-shirt",
     category: {
-      name: "Camisas",
-      image: "/images/categories/shirts.jpg"
+      name: "Anime",
+      image: "/images/categories/anime.png"
     },
     material: "Algodón",
     price: 39,
@@ -217,11 +227,19 @@ export const products: Products[] = [
       {
         color: "Blanco",
         size: ["XS", "S", "M"],
-        images: ["/images/products/kids-shirt.png"]
+        images: ["/images/products/kids-shirt.png"],
+        tags: ["kids"]
+      },
+      {
+        color: "Negro",
+        size: ["S", "M"],
+        images: ["/images/categories/anime.png","/images/products/kids-shirt.png"],
+        tags: ["kids"]
       }
-    ]
+    ],
   }
 ];
+
 
 export function getProductByTitle(title: string): Products | undefined {
   return products.find((p) => p.title.toLowerCase() === title.toLowerCase());

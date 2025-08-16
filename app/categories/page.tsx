@@ -3,14 +3,10 @@ import SiteFooter from "@/components/site-footer"
 import CategoryCard from "@/components/category-card"
 import { CartProvider } from "@/components/cart"
 import { countProductsByCategory, products } from "@/lib/data"
+import { getCategories } from "@/utils/get-categories"
 
 export default function CategoriesPage() {
-  const categories = products.map((p)=>p.category)
-  const uniqueCategories = categories.reduce<string[]>((acc, cat) => {
-    if (!acc.includes(cat)) acc.push(cat)
-    return acc
-  }, [])
-  console.log(uniqueCategories)
+  const uniqueCategories = getCategories(products)
   return (
     <CartProvider>
       <div className="flex min-h-[100dvh] flex-col">
@@ -23,11 +19,10 @@ export default function CategoriesPage() {
           <section className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {uniqueCategories.map((cat) => (
               <CategoryCard
-                key={cat.slug}
-                slug={cat.slug}
-                title={cat.title}
+                key={cat.name}
+                name={cat.name}
                 image={cat.image}
-                count={countProductsByCategory(cat.slug)}
+                count={cat.count}
               />
             ))}
           </section>

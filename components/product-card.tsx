@@ -16,22 +16,27 @@ type Props = {
 const PLACEHOLDER_PRODUCT: Products = {
   id: "placeholder",
   title: "Camisa Essential",
+  description: "",
   price: 89.0,
   type: "t-shirt",
-  category: "Camisas",
+  category: {
+    name: "Camisas",
+    image: ""
+  },
   material: "Algodón",
   discountPercentage: 0,
-  product: {
-    color: "Blanco",
-    size: ["S", "M", "L"],
-    images: ["/minimal-editorial-shirt.png"]
-  },
-  description: ""
+  product: [
+    {
+      color: "Blanco",
+      size: ["S", "M", "L"],
+      images: ["/minimal-editorial-shirt.png"]
+    },
+  ]
 }
 
 export default function ProductCard({ product = PLACEHOLDER_PRODUCT, showQuickBuy = true }: Props) {
   const { addItem, setOpen, beginCheckout } = useCart()
-  const primaryImage = product.product.images[0] || "/placeholder.svg"
+  const primaryImage = product.product[0].images[0] || "/placeholder.svg"
 
   const handleAdd = (e: React.MouseEvent) => {
     e.preventDefault()
@@ -43,8 +48,8 @@ export default function ProductCard({ product = PLACEHOLDER_PRODUCT, showQuickBu
       price: product.price,
       image: primaryImage,
       qty: 1,
-      color: product.product.color,
-      size: product.product.size[0] // Default to first available size
+      color: product.product[0].color,
+      size: product.product[0].size[0] // Default to first available size
     })
   }
 
@@ -66,7 +71,7 @@ export default function ProductCard({ product = PLACEHOLDER_PRODUCT, showQuickBu
             className="object-cover transition-transform duration-700 group-hover:scale-[1.03]"
             priority={false}
           />
-          
+
           {showQuickBuy && (
             <Button
               variant="secondary"
@@ -90,7 +95,7 @@ export default function ProductCard({ product = PLACEHOLDER_PRODUCT, showQuickBu
             </div>
           </div>
           <p className="text-xs text-muted-foreground mt-1">
-            {product.material} · {product.product.color}
+            {product.material} · {product.product[0].color}
           </p>
         </Link>
       </div>
