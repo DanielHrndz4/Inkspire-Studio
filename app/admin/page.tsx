@@ -159,15 +159,78 @@ function InventoryTab() {
   )
 }
 
+interface VariantForm {
+  color: string
+  sizes: string
+  images: string
+}
+
 function NewProductTab() {
-  const [json, setJson] = useState("")
+  const [title, setTitle] = useState("")
+  const [description, setDescription] = useState("")
+  const [type, setType] = useState("")
+  const [categoryName, setCategoryName] = useState("")
+  const [categoryImage, setCategoryImage] = useState("")
+  const [material, setMaterial] = useState("")
+  const [price, setPrice] = useState("")
+  const [discount, setDiscount] = useState("")
+  const [variants, setVariants] = useState<VariantForm[]>([
+    { color: "", sizes: "", images: "" },
+  ])
+
+  const handleVariantChange = (
+    index: number,
+    field: keyof VariantForm,
+    value: string,
+  ) => {
+    setVariants((prev) => {
+      const copy = [...prev]
+      copy[index] = { ...copy[index], [field]: value }
+      return copy
+    })
+  }
+
+  const addVariant = () => {
+    setVariants((prev) => [...prev, { color: "", sizes: "", images: "" }])
+  }
+
+  const removeVariant = (index: number) => {
+    setVariants((prev) => prev.filter((_, i) => i !== index))
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
-      const data = JSON.parse(json)
+      const data = {
+        title,
+        description,
+        type,
+        category: { name: categoryName, image: categoryImage },
+        material,
+        price: parseFloat(price),
+        discountPercentage: discount ? parseFloat(discount) : 0,
+        product: variants.map((v) => ({
+          color: v.color,
+          size: v.sizes
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean),
+          images: v.images
+            .split(/\n|,/) // allow comma or newline separated
+            .map((s) => s.trim())
+            .filter(Boolean),
+        })),
+      }
       await createDbProduct(data)
-      setJson("")
+      setTitle("")
+      setDescription("")
+      setType("")
+      setCategoryName("")
+      setCategoryImage("")
+      setMaterial("")
+      setPrice("")
+      setDiscount("")
+      setVariants([{ color: "", sizes: "", images: "" }])
       alert("Producto creado")
     } catch (err) {
       console.error(err)
@@ -176,9 +239,118 @@ function NewProductTab() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="grid gap-4 max-w-2xl">
-      <Label htmlFor="json">Datos del producto (JSON)</Label>
-      <Textarea id="json" value={json} onChange={(e) => setJson(e.target.value)} className="min-h-[300px]" />
+    <form onSubmit={handleSubmit} className="grid gap-6 max-w-2xl">
+      <div className="grid gap-2">
+        <Label htmlFor="title">Título</Label>
+        <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} required />
+      </div>
+      <div className="grid gap-2">
+        <Label htmlFor="description">Descripción</Label>
+        <Textarea
+          id="description"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+        />
+      </div>
+      <div className="grid gap-2">
+        <Label htmlFor="type">Tipo</Label>
+        <Input id="type" value={type} onChange={(e) => setType(e.target.value)} />
+      </div>
+      <div className="grid gap-2">
+        <Label htmlFor="material">Material</Label>
+        <Input id="material" value={material} onChange={(e) => setMaterial(e.target.value)} />
+      </div>
+      <div className="grid gap-2">
+        <Label htmlFor="price">Precio</Label>
+        <Input
+          id="price"
+          type="number"
+          step="0.01"
+          value={price}
+          onChange={(e) => setPrice(e.target.value)}
+          required
+        />
+      </div>
+      <div className="grid gap-2">
+        <Label htmlFor="discount">Descuento %</Label>
+        <Input
+          id="discount"
+          type="number"
+          step="0.01"
+          value={discount}
+          onChange={(e) => setDiscount(e.target.value)}
+        />
+      </div>
+      <div className="grid gap-2">
+        <Label htmlFor="categoryName">Categoría</Label>
+        <Input
+          id="categoryName"
+          value={categoryName}
+          onChange={(e) => setCategoryName(e.target.value)}
+          required
+        />
+      </div>
+      <div className="grid gap-2">
+        <Label htmlFor="categoryImage">Imagen de categoría</Label>
+        <Input
+          id="categoryImage"
+          value={categoryImage}
+          onChange={(e) => setCategoryImage(e.target.value)}
+        />
+      </div>
+
+      <div className="grid gap-4">
+        <h3 className="font-medium">Variantes</h3>
+        {variants.map((v, idx) => (
+          <div key={idx} className="grid gap-2 border p-4 rounded-md">
+            <div className="grid gap-2 sm:grid-cols-2">
+              <div className="grid gap-1">
+                <Label htmlFor={`color-${idx}`}>Color</Label>
+                <Input
+                  id={`color-${idx}`}
+                  value={v.color}
+                  onChange={(e) => handleVariantChange(idx, "color", e.target.value)}
+                  required
+                />
+              </div>
+              <div className="grid gap-1">
+                <Label htmlFor={`sizes-${idx}`}>Tallas (coma separadas)</Label>
+                <Input
+                  id={`sizes-${idx}`}
+                  value={v.sizes}
+                  onChange={(e) => handleVariantChange(idx, "sizes", e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="grid gap-1">
+              <Label htmlFor={`images-${idx}`}>Imágenes (una por línea)</Label>
+              <Textarea
+                id={`images-${idx}`}
+                value={v.images}
+                onChange={(e) => handleVariantChange(idx, "images", e.target.value)}
+              />
+            </div>
+            {variants.length > 1 && (
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={() => removeVariant(idx)}
+                className="w-fit rounded-none"
+              >
+                Eliminar variante
+              </Button>
+            )}
+          </div>
+        ))}
+        <Button
+          type="button"
+          onClick={addVariant}
+          variant="outline"
+          className="w-fit rounded-none"
+        >
+          Añadir variante
+        </Button>
+      </div>
       <Button type="submit" className="rounded-none">
         Crear producto
       </Button>

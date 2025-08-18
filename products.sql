@@ -39,3 +39,16 @@ ALTER TABLE public.product_variants ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Allow anon insert" ON public.categories FOR INSERT TO anon WITH CHECK (true);
 CREATE POLICY "Allow anon insert" ON public.products FOR INSERT TO anon WITH CHECK (true);
 CREATE POLICY "Allow anon insert" ON public.product_variants FOR INSERT TO anon WITH CHECK (true);
+
+-- Basic policies for other operations
+CREATE POLICY "Allow anon select" ON public.categories FOR SELECT TO anon USING (true);
+CREATE POLICY "Allow anon update" ON public.categories FOR UPDATE TO anon USING (true) WITH CHECK (true);
+CREATE POLICY "Allow anon delete" ON public.categories FOR DELETE TO anon USING (true);
+
+CREATE POLICY "Allow anon select" ON public.products FOR SELECT TO anon USING (true);
+CREATE POLICY "Allow anon update" ON public.products FOR UPDATE TO anon USING (true) WITH CHECK (true);
+CREATE POLICY "Allow anon delete" ON public.products FOR DELETE TO anon USING (true);
+
+CREATE POLICY "Allow anon select" ON public.product_variants FOR SELECT TO anon USING (true);
+CREATE POLICY "Allow anon update" ON public.product_variants FOR UPDATE TO anon USING (true) WITH CHECK (true);
+CREATE POLICY "Allow anon delete" ON public.product_variants FOR DELETE TO anon USING (true);
