@@ -27,6 +27,34 @@ export const listProducts = async (): Promise<any[]> => {
   )
 }
 
+export const getProductById = async (id: string): Promise<Products | null> => {
+  const { data, error } = await supabase
+    .from("products")
+    .select(
+      "id, title, description, type, material, price, discount_percentage, category:categories(name,image), product_variants(color,sizes,images)"
+    )
+    .eq("id", id)
+    .single()
+  if (error) throw error
+  if (!data) return null
+  return {
+    id: data.id,
+    title: data.title,
+    description: data.description,
+    type: data.type,
+    material: data.material,
+    price: data.price,
+    discountPercentage: data.discount_percentage,
+    category: { name: data.category?.name, image: data.category?.image },
+    product: (data.product_variants || []).map((v: any) => ({
+      color: v.color,
+      size: v.sizes || [],
+      images: v.images || [],
+      tags: ["men", "women", "kids"],
+    })),
+  }
+}
+
 export const createProduct = async (input: Products) => {
   const { data: category, error: catError } = await supabase
     .from("categories")
