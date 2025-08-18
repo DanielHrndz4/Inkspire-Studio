@@ -1,4 +1,5 @@
 import { supabase } from "@/utils/supabase/server";
+import type { ProductRecord } from "./products.supabase";
 
 export interface CategoryRecord {
   id: string;
@@ -7,24 +8,6 @@ export interface CategoryRecord {
 }
 
 export interface CategoryWithCount extends CategoryRecord {
-  count: number;
-}
-
-export interface ProductRecord {
-  id: string;
-  title: string;
-  description: string | null;
-  type: string | null;
-  material: string | null;
-  price: number;
-  discount_percentage: number;
-  category_id: string | null;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface CategoryProductsResponse {
-  products: ProductRecord[];
   count: number;
 }
 
@@ -52,22 +35,43 @@ export const getProductsByCategoryName = async (
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
 
-  // Obtenemos los productos paginados
+  // Obtenemos los productos paginados con sus variantes y categoría
   const {
-    data: products,
-    error: productsError,
+    data,
+    error,
     count,
   } = await supabase
     .from("products")
-    .select("*", { count: "exact" })
+    .select(
+      "id, title, description, type, material, price, discount_percentage, category:categories(name,image), product_variants(color,sizes,images)",
+      { count: "exact" }
+    )
     .eq("category_id", categoryData.id)
     .order("created_at", { ascending: false })
     .range(from, to);
 
-  if (productsError) throw productsError;
+  if (error) throw error;
+
+  const products: ProductRecord[] =
+    data?.map((p: any) => ({
+      id: p.id,
+      title: p.title,
+      description: p.description,
+      type: p.type,
+      material: p.material,
+      price: p.price,
+      discountPercentage: p.discount_percentage,
+      category: { name: p.category?.name, image: p.category?.image },
+      product: (p.product_variants || []).map((v: any) => ({
+        color: v.color,
+        size: v.sizes || [],
+        images: v.images || [],
+        tags: ["men", "women", "kids"],
+      })),
+    })) || [];
 
   return {
-    products: products || [],
+    products,
     count: count || 0,
   };
 };
