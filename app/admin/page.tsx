@@ -17,7 +17,6 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import {
-  ProductRecord,
   listProducts,
   createProduct as createDbProduct,
   updateProduct as updateDbProduct,
@@ -31,7 +30,7 @@ import {
 } from "@/hooks/supabase/categories.supabase"
 import { AdminOrder, listOrders, subscribe } from "@/lib/admin-store"
 import { CartProvider } from "@/components/cart"
-import { ProductTag } from "@/interface/product.interface"
+import { Products, ProductTag } from "@/interface/product.interface"
 
 const TAG_OPTIONS: ProductTag[] = ["women", "men", "kids"]
 
@@ -89,7 +88,7 @@ export default function AdminPage() {
 }
 
 function InventoryTab() {
-  const [items, setItems] = useState<ProductRecord[]>([])
+  const [items, setItems] = useState<Products[]>([])
   const [q, setQ] = useState("")
 
   const load = async () => {
@@ -266,7 +265,7 @@ function NewProductTab() {
           tags: v.tags,
         })),
       }
-      const response:any = await createDbProduct(data)
+      const response: any = await createDbProduct(data as any)
       console.log(response)
       setTitle("")
       setDescription("")
@@ -445,7 +444,7 @@ function NewProductTab() {
                 />
               </div>
             </div>
-            <div className="grid gap-1">
+            <div className="grid gap-1 py-3">
               <Label>Tags</Label>
               <div className="flex flex-wrap gap-4">
                 {TAG_OPTIONS.map((tag) => (

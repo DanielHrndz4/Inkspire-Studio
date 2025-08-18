@@ -119,7 +119,7 @@ export default function CategoryDetailPage({ params }: CategoryDetailPageProps) 
         if (parsedAudience === "all") return true
 
         // Verificar si alguna variante del producto tiene el tag correspondiente
-        return p.product.some((variant: any) => variant.product.tags.includes(parsedAudience))
+        return p.product.some((variant: any) => variant.tags?.includes(parsedAudience))
       })
     }
 
