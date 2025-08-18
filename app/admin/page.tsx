@@ -9,6 +9,13 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import {
   ProductRecord,
   listProducts,
   createProduct as createDbProduct,
@@ -16,6 +23,11 @@ import {
   deleteProduct as deleteDbProduct,
 } from "@/hooks/supabase/products.supabase"
 import { uploadProductImage } from "@/hooks/supabase/storage.supabase"
+import {
+  CategoryRecord,
+  createCategory,
+  listCategories,
+} from "@/hooks/supabase/categories.supabase"
 import { AdminOrder, listOrders, subscribe } from "@/lib/admin-store"
 import { CartProvider } from "@/components/cart"
 
@@ -172,12 +184,38 @@ function NewProductTab() {
   const [type, setType] = useState("")
   const [categoryName, setCategoryName] = useState("")
   const [categoryImage, setCategoryImage] = useState("")
+  const [categories, setCategories] = useState<CategoryRecord[]>([])
+  const [showCategoryForm, setShowCategoryForm] = useState(false)
+  const [newCategoryName, setNewCategoryName] = useState("")
+  const [newCategoryImage, setNewCategoryImage] = useState("")
   const [material, setMaterial] = useState("")
   const [price, setPrice] = useState("")
   const [discount, setDiscount] = useState("")
   const [variants, setVariants] = useState<VariantForm[]>([
     { color: "", sizes: "", images: "" },
   ])
+
+  useEffect(() => {
+    listCategories().then(setCategories).catch(console.error)
+  }, [])
+
+  const handleCreateCategory = async () => {
+    try {
+      const cat = await createCategory({
+        name: newCategoryName,
+        image: newCategoryImage,
+      })
+      setCategories((prev) => [...prev, cat])
+      setCategoryName(cat.name)
+      setCategoryImage(cat.image || "")
+      setNewCategoryName("")
+      setNewCategoryImage("")
+      setShowCategoryForm(false)
+    } catch (err) {
+      console.error(err)
+      alert("Error al crear categoría")
+    }
+  }
 
   const handleVariantChange = (
     index: number,
@@ -256,7 +294,19 @@ function NewProductTab() {
       </div>
       <div className="grid gap-2">
         <Label htmlFor="type">Tipo</Label>
-        <Input id="type" value={type} onChange={(e) => setType(e.target.value)} />
+        <Select value={type} onValueChange={setType}>
+          <SelectTrigger id="type" className="w-full">
+            <SelectValue placeholder="Selecciona tipo" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="t-shirt">t-shirt</SelectItem>
+            <SelectItem value="hoodie">hoodie</SelectItem>
+            <SelectItem value="polo">polo</SelectItem>
+            <SelectItem value="croptop">croptop</SelectItem>
+            <SelectItem value="oversized">oversized</SelectItem>
+            <SelectItem value="long-sleeve">long-sleeve</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
       <div className="grid gap-2">
         <Label htmlFor="material">Material</Label>
@@ -284,21 +334,68 @@ function NewProductTab() {
         />
       </div>
       <div className="grid gap-2">
-        <Label htmlFor="categoryName">Categoría</Label>
-        <Input
-          id="categoryName"
+        <Label htmlFor="category">Categoría</Label>
+        <Select
           value={categoryName}
-          onChange={(e) => setCategoryName(e.target.value)}
-          required
-        />
-      </div>
-      <div className="grid gap-2">
-        <Label htmlFor="categoryImage">Imagen de categoría</Label>
-        <Input
-          id="categoryImage"
-          value={categoryImage}
-          onChange={(e) => setCategoryImage(e.target.value)}
-        />
+          onValueChange={(val) => {
+            setCategoryName(val)
+            const cat = categories.find((c) => c.name === val)
+            setCategoryImage(cat?.image || "")
+          }}
+        >
+          <SelectTrigger id="category" className="w-full">
+            <SelectValue placeholder="Selecciona categoría" />
+          </SelectTrigger>
+          <SelectContent>
+            {categories.map((c) => (
+              <SelectItem key={c.id} value={c.name}>
+                {c.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {categoryImage && (
+          <img
+            src={categoryImage}
+            alt={categoryName}
+            className="mt-2 h-24 w-24 object-cover"
+          />
+        )}
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => setShowCategoryForm((p) => !p)}
+          className="w-fit rounded-none"
+        >
+          Crear categoría
+        </Button>
+        {showCategoryForm && (
+          <div className="mt-2 grid gap-2 border p-4 rounded-md">
+            <div className="grid gap-1">
+              <Label htmlFor="newCategoryName">Nombre</Label>
+              <Input
+                id="newCategoryName"
+                value={newCategoryName}
+                onChange={(e) => setNewCategoryName(e.target.value)}
+              />
+            </div>
+            <div className="grid gap-1">
+              <Label htmlFor="newCategoryImage">Imagen</Label>
+              <Input
+                id="newCategoryImage"
+                value={newCategoryImage}
+                onChange={(e) => setNewCategoryImage(e.target.value)}
+              />
+            </div>
+            <Button
+              type="button"
+              onClick={handleCreateCategory}
+              className="w-fit rounded-none"
+            >
+              Guardar categoría
+            </Button>
+          </div>
+        )}
       </div>
 
       <div className="grid gap-4">
