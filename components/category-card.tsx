@@ -9,7 +9,7 @@ type Props = {
 
 export default function CategoryCard({ name, image, count = 0 }: Props) {
   return (
-    <Link href={`/categories/${name.replace(' ', '-').toLocaleLowerCase()}`} className="group relative overflow-hidden rounded-md">
+    <Link href={`/categories/${name.toLocaleLowerCase()}`} className="group relative overflow-hidden rounded-md">
       <div className="relative aspect-[16/9] w-full">
         <Image src={image || "/placeholder.svg?height=900&width=1600&query=categoria"} alt={`Categoría ${name}`} fill className="object-cover transition-transform duration-700 group-hover:scale-[1.03]" />
       </div>

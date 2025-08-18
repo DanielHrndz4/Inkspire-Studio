@@ -26,14 +26,11 @@ export default function CategoryDetailPage({ params }: CategoryDetailPageProps) 
   const searchParams = useSearchParams()
   const pathname = usePathname()
   const { category: paramCat } = use(params);
-  const cleanTextCat = paramCat.replace("-", " ")
-
-  console.log(pathname)
+  const cleanTextCat = paramCat ? decodeURIComponent(paramCat) : '';
 
   // Buscar la categoría actual
   const cat = products.filter((p) => p.category.name.toLocaleLowerCase() == paramCat)
   if (!cat) return notFound()
-  console.log(cat)
 
   const initialAudience = (searchParams.get("audiencia") ?? "").toLowerCase()
   const initialQuery = searchParams.get("q") ?? ""
@@ -176,7 +173,7 @@ export default function CategoryDetailPage({ params }: CategoryDetailPageProps) 
             items={[
               { label: "Inicio", href: "/" },
               { label: "Categorías", href: "/categories" },
-              { label: paramCat },
+              { label: cleanTextCat },
             ]}
           />
 
