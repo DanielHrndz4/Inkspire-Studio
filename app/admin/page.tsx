@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Checkbox } from "@/components/ui/checkbox"
 import { Textarea } from "@/components/ui/textarea"
 import {
   Select,
@@ -30,6 +31,9 @@ import {
 } from "@/hooks/supabase/categories.supabase"
 import { AdminOrder, listOrders, subscribe } from "@/lib/admin-store"
 import { CartProvider } from "@/components/cart"
+import { ProductTag } from "@/interface/product.interface"
+
+const TAG_OPTIONS: ProductTag[] = ["women", "men", "kids"]
 
 export default function AdminPage() {
   return (
@@ -176,6 +180,7 @@ interface VariantForm {
   color: string
   sizes: string
   images: string
+  tags: ProductTag[]
 }
 
 function NewProductTab() {
@@ -192,7 +197,7 @@ function NewProductTab() {
   const [price, setPrice] = useState("")
   const [discount, setDiscount] = useState("")
   const [variants, setVariants] = useState<VariantForm[]>([
-    { color: "", sizes: "", images: "" },
+    { color: "", sizes: "", images: "", tags: [] },
   ])
 
   useEffect(() => {
@@ -220,7 +225,7 @@ function NewProductTab() {
   const handleVariantChange = (
     index: number,
     field: keyof VariantForm,
-    value: string,
+    value: string | string[],
   ) => {
     setVariants((prev) => {
       const copy = [...prev]
@@ -230,7 +235,7 @@ function NewProductTab() {
   }
 
   const addVariant = () => {
-    setVariants((prev) => [...prev, { color: "", sizes: "", images: "" }])
+    setVariants((prev) => [...prev, { color: "", sizes: "", images: "", tags: [] }])
   }
 
   const removeVariant = (index: number) => {
@@ -258,6 +263,7 @@ function NewProductTab() {
             .split(/\n|,/) // allow comma or newline separated
             .map((s) => s.trim())
             .filter(Boolean),
+          tags: v.tags,
         })),
       }
       const response:any = await createDbProduct(data)
@@ -270,7 +276,7 @@ function NewProductTab() {
       setMaterial("")
       setPrice("")
       setDiscount("")
-      setVariants([{ color: "", sizes: "", images: "" }])
+      setVariants([{ color: "", sizes: "", images: "", tags: [] }])
       alert("Producto creado")
     } catch (err) {
       console.error(err)
@@ -437,6 +443,32 @@ function NewProductTab() {
                   value={v.sizes}
                   onChange={(e) => handleVariantChange(idx, "sizes", e.target.value)}
                 />
+              </div>
+            </div>
+            <div className="grid gap-1">
+              <Label>Tags</Label>
+              <div className="flex flex-wrap gap-4">
+                {TAG_OPTIONS.map((tag) => (
+                  <div key={tag} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`tag-${tag}-${idx}`}
+                      checked={v.tags.includes(tag)}
+                      onCheckedChange={(checked) => {
+                        const isChecked = checked === true
+                        const newTags = isChecked
+                          ? [...v.tags, tag]
+                          : v.tags.filter((t) => t !== tag)
+                        handleVariantChange(idx, "tags", newTags)
+                      }}
+                    />
+                    <Label
+                      htmlFor={`tag-${tag}-${idx}`}
+                      className="text-sm font-normal capitalize"
+                    >
+                      {tag}
+                    </Label>
+                  </div>
+                ))}
               </div>
             </div>
             <div className="grid gap-1">
