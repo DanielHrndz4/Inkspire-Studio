@@ -14,7 +14,8 @@ import { Input } from "@/components/ui/input"
 import PaginatedGrid from "@/components/paginated-grid"
 import { getVisibilityMap } from "@/lib/admin-store"
 import { getProductsByCategoryName } from "@/hooks/supabase/categories.supabase"
-import { listProducts, type ProductRecord } from "@/hooks/supabase/products.supabase"
+import { listProducts } from "@/hooks/supabase/products.supabase"
+import { Products } from "@/interface/product.interface"
 
 interface CategoryDetailPageProps {
   params: Promise<{ category: string }>;
@@ -33,23 +34,29 @@ export default function CategoryDetailPage({ params }: CategoryDetailPageProps) 
   // Obtener el mapa de visibilidad
   const visibility = useMemo(() => getVisibilityMap(), [])
 
-  const [baseItemsRaw, setBaseItemsRaw] = useState<ProductRecord[]>([])
+  const [baseItemsRaw, setBaseItemsRaw] = useState<Products[]>([])
+  const load = async () => {
+    try {
+      if (paramCat === "tshirts") {
+        const all = await listProducts()
+        setBaseItemsRaw(all.filter(p => p.type === "t-shirt"))
+      } else {
+        console.log(paramCat)
+        const { products } = await getProductsByCategoryName(paramCat)
+        if (products.length === 0) {
+          // Manejar caso donde no hay productos
+          console.warn(`No products found for category: ${paramCat}`)
+        }
+        setBaseItemsRaw(products)
+      }
+    } catch (err) {
+      console.error("Error loading products:", err)
+      // Mostrar mensaje de error al usuario si es necesario
+      setBaseItemsRaw([])
+    }
+  }
 
   useEffect(() => {
-    const load = async () => {
-      try {
-        if (paramCat === "tshirts") {
-          const all = await listProducts()
-          setBaseItemsRaw(all.filter(p => p.type === "t-shirt"))
-        } else {
-          const { products } = await getProductsByCategoryName(paramCat)
-          setBaseItemsRaw(products)
-        }
-      } catch (err) {
-        console.error("Error loading products:", err)
-        setBaseItemsRaw([])
-      }
-    }
     load()
   }, [paramCat])
 
@@ -75,7 +82,7 @@ export default function CategoryDetailPage({ params }: CategoryDetailPageProps) 
   const colorsAll = useMemo(() => {
     const set = new Set<string>()
     baseItems.forEach((p) => {
-      p.product.forEach(variant => {
+      p.product.forEach((variant: any) => {
         set.add(variant.color)
       })
     })
@@ -84,7 +91,7 @@ export default function CategoryDetailPage({ params }: CategoryDetailPageProps) 
 
   const materialsAll = useMemo(() => {
     const set = new Set<string>()
-    baseItems.forEach((p) => set.add(p.material))
+    baseItems.forEach((p) => set.add(p.material || ""))
     return Array.from(set)
   }, [baseItems])
 
@@ -112,7 +119,7 @@ export default function CategoryDetailPage({ params }: CategoryDetailPageProps) 
         if (parsedAudience === "all") return true
 
         // Verificar si alguna variante del producto tiene el tag correspondiente
-        return p.product.some(variant => variant.tags.includes(parsedAudience))
+        return p.product.some((variant: any) => variant.product.tags.includes(parsedAudience))
       })
     }
 
@@ -121,16 +128,16 @@ export default function CategoryDetailPage({ params }: CategoryDetailPageProps) 
     if (term) {
       items = items.filter(
         (p) => p.title.toLowerCase().includes(term) ||
-          p.description.toLowerCase().includes(term))
+          p.description?.toLowerCase().includes(term))
     }
 
     if (colors.length > 0) {
       items = items.filter((p) =>
-        p.product.some(variant => colors.includes(variant.color)))
+        p.product.some((variant: any) => colors.includes(variant.color)))
     }
 
     if (materials.length > 0) {
-      items = items.filter((p) => materials.includes(p.material))
+      items = items.filter((p) => materials.includes(p.material || ""))
     }
 
     switch (sort) {

@@ -1,30 +1,7 @@
+import { Products } from "@/interface/product.interface"
 import { supabase } from "@/utils/supabase/server"
 
-export interface VariantInput {
-  color: string
-  size: string[]
-  images: string[]
-}
-
-export interface ProductInput {
-  title: string
-  description?: string
-  type?: string
-  category: {
-    name: string
-    image?: string
-  }
-  material?: string
-  price: number
-  discountPercentage?: number
-  product: VariantInput[]
-}
-
-export interface ProductRecord extends ProductInput {
-  id: string
-}
-
-export const listProducts = async (): Promise<ProductRecord[]> => {
+export const listProducts = async (): Promise<any[]> => {
   const { data, error } = await supabase
     .from("products")
     .select(
@@ -50,7 +27,7 @@ export const listProducts = async (): Promise<ProductRecord[]> => {
   )
 }
 
-export const createProduct = async (input: ProductInput) => {
+export const createProduct = async (input: Products) => {
   const { data: category, error: catError } = await supabase
     .from("categories")
     .upsert([{ name: input.category.name, image: input.category.image }], { onConflict: "name" })
@@ -84,7 +61,7 @@ export const createProduct = async (input: ProductInput) => {
   return product
 }
 
-export const updateProduct = async (id: string, input: Partial<ProductInput>) => {
+export const updateProduct = async (id: string, input: Partial<Products>) => {
   let category_id: string | undefined
   if (input.category) {
     const { data: category, error: catError } = await supabase

@@ -260,7 +260,7 @@ function NewProductTab() {
             .filter(Boolean),
         })),
       }
-      const response = await createDbProduct(data)
+      const response:any = await createDbProduct(data)
       console.log(response)
       setTitle("")
       setDescription("")

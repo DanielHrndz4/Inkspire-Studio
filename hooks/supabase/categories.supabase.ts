@@ -1,5 +1,5 @@
+import { Products } from "@/interface/product.interface";
 import { supabase } from "@/utils/supabase/server";
-import type { ProductRecord } from "./products.supabase";
 
 export interface CategoryRecord {
   id: string;
@@ -12,7 +12,7 @@ export interface CategoryWithCount extends CategoryRecord {
 }
 
 export interface CategoryProductsResponse {
-  products: ProductRecord[];
+  products: Products[];
   count: number;
 }
 
@@ -21,26 +21,25 @@ export const getProductsByCategoryName = async (
   page: number = 1,
   pageSize: number = 10
 ): Promise<CategoryProductsResponse> => {
-  // Primero obtenemos el ID de la categoría por su nombre
+  // Decodificar el nombre recibido y pasarlo a minúsculas
+  const decodedCategoryName = decodeURIComponent(categoryName).toLowerCase();
+
+  // Buscar la categoría ignorando mayúsculas/minúsculas
   const { data: categoryData, error: categoryError } = await supabase
     .from("categories")
-    .select("id")
-    .eq("name", categoryName)
+    .select("id, name")
+    .ilike("name", decodedCategoryName) // comparación insensible a mayúsculas
     .single();
 
   if (categoryError) throw categoryError;
   if (!categoryData) return { products: [], count: 0 };
 
-  // Calcular el rango para la paginación
+  // Calcular rango para paginación
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
 
-  // Obtenemos los productos paginados con sus variantes y categoría
-  const {
-    data,
-    error,
-    count,
-  } = await supabase
+  // Obtener productos con variantes
+  const { data, error, count } = await supabase
     .from("products")
     .select(
       "id, title, description, type, material, price, discount_percentage, category:categories(name,image), product_variants(color,sizes,images)",
@@ -52,7 +51,7 @@ export const getProductsByCategoryName = async (
 
   if (error) throw error;
 
-  const products: ProductRecord[] =
+  const products: Products[] =
     data?.map((p: any) => ({
       id: p.id,
       title: p.title,
@@ -75,6 +74,7 @@ export const getProductsByCategoryName = async (
     count: count || 0,
   };
 };
+
 export const listCategoriesWithProductCount = async (): Promise<
   CategoryWithCount[]
 > => {
