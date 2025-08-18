@@ -15,6 +15,7 @@ import {
   updateProduct as updateDbProduct,
   deleteProduct as deleteDbProduct,
 } from "@/hooks/supabase/products.supabase"
+import { uploadProductImage } from "@/hooks/supabase/storage.supabase"
 import { AdminOrder, listOrders, subscribe } from "@/lib/admin-store"
 import { CartProvider } from "@/components/cart"
 
@@ -328,6 +329,22 @@ function NewProductTab() {
                 id={`images-${idx}`}
                 value={v.images}
                 onChange={(e) => handleVariantChange(idx, "images", e.target.value)}
+              />
+              <Input
+                id={`images-upload-${idx}`}
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={async (e) => {
+                  const files = Array.from(e.target.files ?? [])
+                  if (!files.length) return
+                  const urls = await Promise.all(files.map(uploadProductImage))
+                  const existing = v.images
+                    .split(/\n|,/) // reuse same splitting logic
+                    .map((s) => s.trim())
+                    .filter(Boolean)
+                  handleVariantChange(idx, "images", [...existing, ...urls].join("\n"))
+                }}
               />
             </div>
             {variants.length > 1 && (
