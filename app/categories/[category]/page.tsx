@@ -16,6 +16,7 @@ import PaginatedGrid from "@/components/paginated-grid"
 import { getVisibilityMap } from "@/lib/admin-store"
 import { getCategories } from "@/utils/get-categories"
 import { use } from "react";
+import { parse } from "path"
 
 interface CategoryDetailPageProps {
   params: Promise<{ category: string }>;
@@ -26,21 +27,33 @@ export default function CategoryDetailPage({ params }: CategoryDetailPageProps) 
   const pathname = usePathname()
   const { category: paramCat } = use(params);
   const cleanTextCat = paramCat.replace("-", " ")
-  
+
+  console.log(pathname)
+
   // Buscar la categoría actual
   const cat = products.filter((p) => p.category.name.toLocaleLowerCase() == paramCat)
   if (!cat) return notFound()
-    console.log(cat)
+  console.log(cat)
 
   const initialAudience = (searchParams.get("audiencia") ?? "").toLowerCase()
   const initialQuery = searchParams.get("q") ?? ""
   const initialSort = (searchParams.get("sort") ?? "relevance").toLowerCase()
 
-  const baseItemsRaw = useMemo(() => listProductsByCategory(paramCat), [paramCat])
-  const visibility = useMemo(() => getVisibilityMap(), [])
+  // Obtener el mapa de visibilidad
+  const visibility = useMemo(() => getVisibilityMap(), []);
+
+  // Modifica esta parte del código donde obtienes los baseItems
+  const baseItemsRaw = useMemo(() => {
+    // Si la categoría es "tshirts", filtrar por type en lugar de category
+    if (paramCat === "tshirts") {
+      return products.filter(p => p.type === "t-shirt" && visibility[p.id] !== false)
+    }
+    return listProductsByCategory(paramCat)
+  }, [paramCat, visibility])
+
   const baseItems = useMemo(
-    () => baseItemsRaw.filter((p) => visibility[p.id] !== false),
-    [baseItemsRaw, visibility]
+    () => baseItemsRaw,
+    [baseItemsRaw]
   )
 
   // Estado de filtros
@@ -73,27 +86,44 @@ export default function CategoryDetailPage({ params }: CategoryDetailPageProps) 
     return Array.from(set)
   }, [baseItems])
 
+  const parseAudience = (audience: string) => {
+    switch (audience.toLowerCase()) {
+      case "hombres":
+        return "men"
+      case "mujeres":
+        return "women"
+      case "niños":
+        return "kids"
+      default:
+        return "all"
+    }
+  }
+
   // Aplicar filtros
   const filteredItems = useMemo(() => {
     let items = baseItems
 
     if (audiencia) {
-      items = items.filter((p) => 
-        p.type === "hoodie" && audiencia === "hombres" ||
-        p.type === "t-shirt" && audiencia === "mujeres" ||
-        (p.category?.name?.toLowerCase() ?? "").includes(audiencia)
-      )
+      const parsedAudience = parseAudience(audiencia)
+      items = items.filter((p) => {
+        // Si es "all", mostrar todos los productos
+        if (parsedAudience === "all") return true
+
+        // Verificar si alguna variante del producto tiene el tag correspondiente
+        return p.product.some(variant => variant.tags.includes(parsedAudience))
+      })
     }
 
+    // Resto de los filtros permanece igual...
     const term = q.trim().toLowerCase()
     if (term) {
       items = items.filter(
-        (p) => p.title.toLowerCase().includes(term) || 
-               p.description.toLowerCase().includes(term))
+        (p) => p.title.toLowerCase().includes(term) ||
+          p.description.toLowerCase().includes(term))
     }
 
     if (colors.length > 0) {
-      items = items.filter((p) => 
+      items = items.filter((p) =>
         p.product.some(variant => colors.includes(variant.color)))
     }
 

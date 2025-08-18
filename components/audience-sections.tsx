@@ -6,9 +6,9 @@ import { products } from "@/lib/data"
 type AudienceKey = "men" | "women" | "kids"
 
 const AUDIENCES: { key: AudienceKey; title: string; href: string; image: string }[] = [
-  { key: "men", title: "Hombres", href: "/categories/camisas?audiencia=hombres", image: "/minimal-mens-shirts.png" },
-  { key: "women", title: "Mujeres", href: "/categories/camisas?audiencia=mujeres", image: "/minimal-inkspire-shirts.png" },
-  { key: "kids", title: "Niños", href: "/categories/camisas?audiencia=niños", image: "/minimal-kids-shirts.png" },
+  { key: "men", title: "Hombres", href: "/categories/tshirts?audiencia=hombres", image: "/minimal-mens-shirts.png" },
+  { key: "women", title: "Mujeres", href: "/categories/tshirts?audiencia=mujeres", image: "/minimal-inkspire-shirts.png" },
+  { key: "kids", title: "Niños", href: "/categories/tshirts?audiencia=niños", image: "/minimal-kids-shirts.png" },
 ]
 
 export default function AudienceSections() {

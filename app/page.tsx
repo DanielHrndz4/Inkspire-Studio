@@ -29,7 +29,7 @@ export default function Page() {
           <section className="relative">
             <div className="relative aspect-[21/9] w-full overflow-hidden bg-muted">
               <Image
-                src="/images/hero-1.png"
+                src="/images/cars-collection.png"
                 alt="Inkspire Studio - personalización premium"
                 fill
                 priority

@@ -276,11 +276,12 @@ export function getAllMaterials(): string[] {
   return Array.from(materials);
 }
 
-export function listProductsByCategory(category: string): Products[] {
-  const lowerCategory = category.toLowerCase();
-  return products.filter((product) => 
-    product.category.name.toLowerCase() === lowerCategory
-  );
+// En tu archivo de datos (lib/data.ts o similar)
+export function listProductsByCategory(category: string) {
+  if (category === "tshirts") {
+    return products.filter(p => p.type === "t-shirt")
+  }
+  return products.filter(p => p.category.name.toLowerCase() === category)
 }
 
 export function getProductsByColor(color: string): Products[] {
