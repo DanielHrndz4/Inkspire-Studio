@@ -1,4 +1,4 @@
-type ProductTag = "women" | "men" | "kids";
+export type ProductTag = "women" | "men" | "kids";
 
 interface Product {
   color: string;
