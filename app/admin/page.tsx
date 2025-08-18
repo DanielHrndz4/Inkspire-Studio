@@ -8,19 +8,14 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import Image from "next/image"
 import {
-  AdminProduct,
-  AdminOrder,
-  listAllProducts,
-  listOrders,
-  createProduct,
-  deleteProduct,
-  setVisibility,
-  setStock,
-  subscribe,
-} from "@/lib/admin-store"
-import { categories } from "@/lib/categories"
+  ProductRecord,
+  listProducts,
+  createProduct as createDbProduct,
+  updateProduct as updateDbProduct,
+  deleteProduct as deleteDbProduct,
+} from "@/hooks/supabase/products.supabase"
+import { AdminOrder, listOrders, subscribe } from "@/lib/admin-store"
 import { CartProvider } from "@/components/cart"
 
 export default function AdminPage() {
@@ -33,7 +28,7 @@ export default function AdminPage() {
             <div className="grid gap-2">
               <h1 className="text-2xl md:text-3xl tracking-tight">Panel de Administración</h1>
               <p className="text-sm text-muted-foreground">
-                Gestiona inventario, visibilidad y monitorea órdenes en tiempo real. (Demo sin autenticación de servidor)
+                Gestiona inventario y monitorea órdenes en tiempo real.
               </p>
             </div>
             <form
@@ -77,25 +72,22 @@ export default function AdminPage() {
 }
 
 function InventoryTab() {
-  const [items, setItems] = useState<AdminProduct[]>([])
+  const [items, setItems] = useState<ProductRecord[]>([])
   const [q, setQ] = useState("")
 
+  const load = async () => {
+    const data = await listProducts()
+    setItems(data)
+  }
+
   useEffect(() => {
-    setItems(listAllProducts())
-    const unsub = subscribe((e) => {
-      if (e.type.startsWith("product:")) setItems(listAllProducts())
-    })
-    return () => unsub()
+    load()
   }, [])
 
   const filtered = useMemo(() => {
     const term = q.trim().toLowerCase()
     return items.filter(
-      (p) =>
-        !term ||
-        p.title.toLowerCase().includes(term) ||
-        p.slug.toLowerCase().includes(term) ||
-        (p.description ?? "").toLowerCase().includes(term)
+      (p) => !term || p.title.toLowerCase().includes(term) || (p.description ?? "").toLowerCase().includes(term)
     )
   }, [items, q])
 
@@ -104,7 +96,7 @@ function InventoryTab() {
       <div className="flex flex-col sm:flex-row sm:items-center gap-3">
         <div className="grid gap-1 flex-1">
           <Label htmlFor="search" className="text-xs uppercase tracking-widest text-muted-foreground">Buscar</Label>
-          <Input id="search" placeholder="Nombre, slug, descripción..." value={q} onChange={(e) => setQ(e.target.value)} />
+          <Input id="search" placeholder="Nombre..." value={q} onChange={(e) => setQ(e.target.value)} />
         </div>
         <div className="text-sm text-muted-foreground">{filtered.length} productos</div>
       </div>
@@ -115,70 +107,48 @@ function InventoryTab() {
             <tr className="text-left">
               <th className="p-3">Producto</th>
               <th className="p-3">Precio</th>
-              <th className="p-3">Slug</th>
-              <th className="p-3">Stock</th>
-              <th className="p-3">Visible</th>
-              <th className="p-3">Origen</th>
               <th className="p-3"></th>
             </tr>
           </thead>
           <tbody>
             {filtered.map((p) => (
-              <tr key={p.slug} className="border-t">
-                <td className="p-3">
-                  <div className="flex items-center gap-3">
-                    <div className="relative h-12 w-10 rounded bg-muted overflow-hidden">
-                      <Image src={p.images?.[0] || "/placeholder.svg"} alt={p.title} fill className="object-cover" />
-                    </div>
-                    <div>
-                      <div className="font-medium">{p.title}</div>
-                      <div className="text-xs text-muted-foreground">{p.category}</div>
-                    </div>
-                  </div>
-                </td>
+              <tr key={p.id} className="border-t">
+                <td className="p-3">{p.title}</td>
                 <td className="p-3">€ {p.price.toFixed(2)}</td>
-                <td className="p-3">{p.slug}</td>
-                <td className="p-3">
-                  <div className="flex items-center gap-2">
-                    <Input
-                      type="number"
-                      min={0}
-                      className="h-8 w-24"
-                      value={String(p.stock ?? "")}
-                      onChange={(e) => setStock(p.slug, Number(e.target.value) || 0)}
-                    />
-                  </div>
-                </td>
-                <td className="p-3">
-                  <label className="inline-flex items-center gap-2 text-xs">
-                    <input
-                      type="checkbox"
-                      checked={p.visible !== false}
-                      onChange={(e) => setVisibility(p.slug, e.target.checked)}
-                    />
-                    <span>{p.visible !== false ? "Sí" : "No"}</span>
-                  </label>
-                </td>
-                <td className="p-3">
-                  <span className={`px-2 py-0.5 rounded border ${p.isCustom ? "" : ""}`}>
-                    {p.isCustom ? "Admin" : "Base"}
-                  </span>
-                </td>
-                <td className="p-3">
-                  {p.isCustom ? (
-                    <Button variant="outline" size="sm" onClick={() => deleteProduct(p.slug)}>
-                      Eliminar
-                    </Button>
-                  ) : (
-                    <span className="text-xs text-muted-foreground">—</span>
-                  )}
+                <td className="p-3 flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={async () => {
+                      const title = prompt("Título", p.title) || p.title
+                      const priceStr = prompt("Precio", p.price.toString()) || p.price.toString()
+                      const price = Number(priceStr)
+                      await updateDbProduct(p.id, { title, price })
+                      await load()
+                    }}
+                    className="rounded-none"
+                  >
+                    Editar
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={async () => {
+                      if (!confirm("¿Eliminar producto?")) return
+                      await deleteDbProduct(p.id)
+                      await load()
+                    }}
+                    className="rounded-none"
+                  >
+                    Eliminar
+                  </Button>
                 </td>
               </tr>
             ))}
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={7} className="p-6 text-center text-muted-foreground">
-                  Sin resultados.
+                <td colSpan={3} className="p-6 text-center text-muted-foreground">
+                  No hay productos.
                 </td>
               </tr>
             )}
@@ -189,152 +159,202 @@ function InventoryTab() {
   )
 }
 
+interface VariantForm {
+  color: string
+  sizes: string
+  images: string
+}
+
 function NewProductTab() {
   const [title, setTitle] = useState("")
-  const [slug, setSlug] = useState("")
-  const [price, setPrice] = useState<number | "">("")
-  const [category, setCategory] = useState(categories[0]?.title ?? "Camisas")
-  const [colors, setColors] = useState("")
-  const [fabrics, setFabrics] = useState("")
   const [description, setDescription] = useState("")
-  const [imageDataUrl, setImageDataUrl] = useState<string | null>(null)
-  const [visible, setVisible] = useState(true)
-  const [stock, setStockState] = useState<number | "">("")
+  const [type, setType] = useState("")
+  const [categoryName, setCategoryName] = useState("")
+  const [categoryImage, setCategoryImage] = useState("")
+  const [material, setMaterial] = useState("")
+  const [price, setPrice] = useState("")
+  const [discount, setDiscount] = useState("")
+  const [variants, setVariants] = useState<VariantForm[]>([
+    { color: "", sizes: "", images: "" },
+  ])
 
-  const handleFile = (file?: File) => {
-    if (!file) return setImageDataUrl(null)
-    const reader = new FileReader()
-    reader.onload = () => {
-      if (typeof reader.result === "string") setImageDataUrl(reader.result)
-    }
-    reader.readAsDataURL(file)
-  }
-
-  const reset = () => {
-    setTitle("")
-    setSlug("")
-    setPrice("")
-    setCategory(categories[0]?.title ?? "Camisas")
-    setColors("")
-    setFabrics("")
-    setDescription("")
-    setImageDataUrl(null)
-    setVisible(true)
-    setStockState("")
-  }
-
-  const submit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!title || !slug || !price || !imageDataUrl) return
-    const newP = createProduct({
-      slug,
-      title,
-      price: Number(price),
-      images: [imageDataUrl],
-      category,
-      colors: colors.split(",").map((s) => s.trim()).filter(Boolean),
-      fabrics: fabrics.split(",").map((s) => s.trim()).filter(Boolean),
-      description: description || "—",
-      visible,
-      stock: typeof stock === "number" ? stock : undefined,
+  const handleVariantChange = (
+    index: number,
+    field: keyof VariantForm,
+    value: string,
+  ) => {
+    setVariants((prev) => {
+      const copy = [...prev]
+      copy[index] = { ...copy[index], [field]: value }
+      return copy
     })
-    // Reset after creation
-    reset()
-    alert(`Producto creado: ${newP.title}`)
+  }
+
+  const addVariant = () => {
+    setVariants((prev) => [...prev, { color: "", sizes: "", images: "" }])
+  }
+
+  const removeVariant = (index: number) => {
+    setVariants((prev) => prev.filter((_, i) => i !== index))
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    try {
+      const data = {
+        title,
+        description,
+        type,
+        category: { name: categoryName, image: categoryImage },
+        material,
+        price: parseFloat(price),
+        discountPercentage: discount ? parseFloat(discount) : 0,
+        product: variants.map((v) => ({
+          color: v.color,
+          size: v.sizes
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean),
+          images: v.images
+            .split(/\n|,/) // allow comma or newline separated
+            .map((s) => s.trim())
+            .filter(Boolean),
+        })),
+      }
+      await createDbProduct(data)
+      setTitle("")
+      setDescription("")
+      setType("")
+      setCategoryName("")
+      setCategoryImage("")
+      setMaterial("")
+      setPrice("")
+      setDiscount("")
+      setVariants([{ color: "", sizes: "", images: "" }])
+      alert("Producto creado")
+    } catch (err) {
+      console.error(err)
+      alert("Error al crear producto")
+    }
   }
 
   return (
-    <form onSubmit={submit} className="grid gap-6 md:grid-cols-2">
-      <div className="grid gap-4">
-        <div className="grid gap-1">
-          <Label>Título</Label>
-          <Input value={title} onChange={(e) => setTitle(e.target.value)} required />
-        </div>
-        <div className="grid gap-1">
-          <Label>Slug</Label>
-          <Input value={slug} onChange={(e) => setSlug(e.target.value)} placeholder="camisa-mi-modelo" required />
-        </div>
-        <div className="grid gap-1">
-          <Label>Precio (EUR)</Label>
-          <Input
-            type="number"
-            min="0"
-            step="0.01"
-            value={price}
-            onChange={(e) => setPrice(e.target.value === "" ? "" : Number(e.target.value))}
-            required
-          />
-        </div>
-        <div className="grid gap-1">
-          <Label>Categoría</Label>
-          <select className="h-10 rounded-md border bg-background px-3"
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-          >
-            {categories.map((c) => (
-              <option key={c.slug} value={c.title}>{c.title}</option>
-            ))}
-          </select>
-        </div>
-        <div className="grid gap-1">
-          <Label>Colores (separados por coma)</Label>
-          <Input value={colors} onChange={(e) => setColors(e.target.value)} placeholder="Blanco, Negro, Celeste" />
-        </div>
-        <div className="grid gap-1">
-          <Label>Tejidos (separados por coma)</Label>
-          <Input value={fabrics} onChange={(e) => setFabrics(e.target.value)} placeholder="Algodón, Oxford" />
-        </div>
-        <div className="grid gap-1">
-          <Label>Descripción</Label>
-          <Textarea rows={5} value={description} onChange={(e) => setDescription(e.target.value)} />
-        </div>
-        <div className="grid gap-2">
-          <Label>Visibilidad</Label>
-          <label className="inline-flex items-center gap-2 text-sm">
-            <input type="checkbox" checked={visible} onChange={(e) => setVisible(e.target.checked)} />
-            <span>Visible en tienda</span>
-          </label>
-        </div>
-        <div className="grid gap-1">
-          <Label>Stock</Label>
-          <Input
-            type="number"
-            min="0"
-            value={stock}
-            onChange={(e) => setStockState(e.target.value === "" ? "" : Number(e.target.value))}
-            placeholder="Ej. 25"
-          />
-        </div>
-        <div className="flex gap-3">
-          <Button type="submit" className="rounded-none">Crear producto</Button>
-          <Button type="button" variant="outline" onClick={reset} className="rounded-none">Limpiar</Button>
-        </div>
+    <form onSubmit={handleSubmit} className="grid gap-6 max-w-2xl">
+      <div className="grid gap-2">
+        <Label htmlFor="title">Título</Label>
+        <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} required />
+      </div>
+      <div className="grid gap-2">
+        <Label htmlFor="description">Descripción</Label>
+        <Textarea
+          id="description"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+        />
+      </div>
+      <div className="grid gap-2">
+        <Label htmlFor="type">Tipo</Label>
+        <Input id="type" value={type} onChange={(e) => setType(e.target.value)} />
+      </div>
+      <div className="grid gap-2">
+        <Label htmlFor="material">Material</Label>
+        <Input id="material" value={material} onChange={(e) => setMaterial(e.target.value)} />
+      </div>
+      <div className="grid gap-2">
+        <Label htmlFor="price">Precio</Label>
+        <Input
+          id="price"
+          type="number"
+          step="0.01"
+          value={price}
+          onChange={(e) => setPrice(e.target.value)}
+          required
+        />
+      </div>
+      <div className="grid gap-2">
+        <Label htmlFor="discount">Descuento %</Label>
+        <Input
+          id="discount"
+          type="number"
+          step="0.01"
+          value={discount}
+          onChange={(e) => setDiscount(e.target.value)}
+        />
+      </div>
+      <div className="grid gap-2">
+        <Label htmlFor="categoryName">Categoría</Label>
+        <Input
+          id="categoryName"
+          value={categoryName}
+          onChange={(e) => setCategoryName(e.target.value)}
+          required
+        />
+      </div>
+      <div className="grid gap-2">
+        <Label htmlFor="categoryImage">Imagen de categoría</Label>
+        <Input
+          id="categoryImage"
+          value={categoryImage}
+          onChange={(e) => setCategoryImage(e.target.value)}
+        />
       </div>
 
-      <div className="grid gap-3">
-        <Label>Imagen principal</Label>
-        <label className="relative aspect-[4/5] w-full overflow-hidden rounded-md border bg-muted cursor-pointer">
-          {imageDataUrl ? (
-            <Image src={imageDataUrl || "/placeholder.svg"} alt="Vista previa" fill className="object-cover" />
-          ) : (
-            <div className="absolute inset-0 grid place-items-center text-sm text-muted-foreground">
-              Subir imagen
+      <div className="grid gap-4">
+        <h3 className="font-medium">Variantes</h3>
+        {variants.map((v, idx) => (
+          <div key={idx} className="grid gap-2 border p-4 rounded-md">
+            <div className="grid gap-2 sm:grid-cols-2">
+              <div className="grid gap-1">
+                <Label htmlFor={`color-${idx}`}>Color</Label>
+                <Input
+                  id={`color-${idx}`}
+                  value={v.color}
+                  onChange={(e) => handleVariantChange(idx, "color", e.target.value)}
+                  required
+                />
+              </div>
+              <div className="grid gap-1">
+                <Label htmlFor={`sizes-${idx}`}>Tallas (coma separadas)</Label>
+                <Input
+                  id={`sizes-${idx}`}
+                  value={v.sizes}
+                  onChange={(e) => handleVariantChange(idx, "sizes", e.target.value)}
+                />
+              </div>
             </div>
-          )}
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e) => handleFile(e.target.files?.[0] ?? undefined)}
-            className="hidden"
-          />
-        </label>
-        {imageDataUrl && (
-          <Button type="button" variant="ghost" onClick={() => setImageDataUrl(null)}>
-            Quitar imagen
-          </Button>
-        )}
-        <p className="text-xs text-muted-foreground">JPG/PNG/SVG. Recomendado 1200x1500.</p>
+            <div className="grid gap-1">
+              <Label htmlFor={`images-${idx}`}>Imágenes (una por línea)</Label>
+              <Textarea
+                id={`images-${idx}`}
+                value={v.images}
+                onChange={(e) => handleVariantChange(idx, "images", e.target.value)}
+              />
+            </div>
+            {variants.length > 1 && (
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={() => removeVariant(idx)}
+                className="w-fit rounded-none"
+              >
+                Eliminar variante
+              </Button>
+            )}
+          </div>
+        ))}
+        <Button
+          type="button"
+          onClick={addVariant}
+          variant="outline"
+          className="w-fit rounded-none"
+        >
+          Añadir variante
+        </Button>
       </div>
+
+      <Button type="submit" className="rounded-none">
+        Crear producto
+      </Button>
     </form>
   )
 }
@@ -402,7 +422,9 @@ function OrdersTab() {
             ))}
             {orders.length === 0 && (
               <tr>
-                <td colSpan={6} className="p-6 text-center text-muted-foreground">Aún no hay órdenes.</td>
+                <td colSpan={6} className="p-6 text-center text-muted-foreground">
+                  Aún no hay órdenes.
+                </td>
               </tr>
             )}
           </tbody>
