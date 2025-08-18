@@ -1,12 +1,11 @@
 "use client"
 
-import { useMemo, useState, useEffect } from "react"
+import { useMemo, useState, useEffect, use } from "react"
 import SiteHeader from "@/components/site-header"
 import SiteFooter from "@/components/site-footer"
 import ProductCard from "@/components/product-card"
 import Breadcrumbs from "@/components/breadcrumbs"
-import { listProductsByCategory, products } from "@/lib/data"
-import { notFound, useSearchParams, usePathname } from "next/navigation"
+import { useSearchParams, usePathname } from "next/navigation"
 import { CartProvider } from "@/components/cart"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -14,9 +13,8 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import PaginatedGrid from "@/components/paginated-grid"
 import { getVisibilityMap } from "@/lib/admin-store"
-import { getCategories } from "@/utils/get-categories"
-import { use } from "react";
-import { parse } from "path"
+import { getProductsByCategoryName } from "@/hooks/supabase/categories.supabase"
+import { listProducts, type ProductRecord } from "@/hooks/supabase/products.supabase"
 
 interface CategoryDetailPageProps {
   params: Promise<{ category: string }>;
@@ -25,32 +23,39 @@ interface CategoryDetailPageProps {
 export default function CategoryDetailPage({ params }: CategoryDetailPageProps) {
   const searchParams = useSearchParams()
   const pathname = usePathname()
-  const { category: paramCat } = use(params);
-  const cleanTextCat = paramCat ? decodeURIComponent(paramCat) : '';
-
-  // Buscar la categoría actual
-  const cat = products.filter((p) => p.category.name.toLocaleLowerCase() == paramCat)
-  if (!cat) return notFound()
+  const { category: paramCat } = use(params)
+  const cleanTextCat = paramCat ? decodeURIComponent(paramCat) : ""
 
   const initialAudience = (searchParams.get("audiencia") ?? "").toLowerCase()
   const initialQuery = searchParams.get("q") ?? ""
   const initialSort = (searchParams.get("sort") ?? "relevance").toLowerCase()
 
   // Obtener el mapa de visibilidad
-  const visibility = useMemo(() => getVisibilityMap(), []);
+  const visibility = useMemo(() => getVisibilityMap(), [])
 
-  // Modifica esta parte del código donde obtienes los baseItems
-  const baseItemsRaw = useMemo(() => {
-    // Si la categoría es "tshirts", filtrar por type en lugar de category
-    if (paramCat === "tshirts") {
-      return products.filter(p => p.type === "t-shirt" && visibility[p.id] !== false)
+  const [baseItemsRaw, setBaseItemsRaw] = useState<ProductRecord[]>([])
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        if (paramCat === "tshirts") {
+          const all = await listProducts()
+          setBaseItemsRaw(all.filter(p => p.type === "t-shirt"))
+        } else {
+          const { products } = await getProductsByCategoryName(paramCat)
+          setBaseItemsRaw(products)
+        }
+      } catch (err) {
+        console.error("Error loading products:", err)
+        setBaseItemsRaw([])
+      }
     }
-    return listProductsByCategory(paramCat)
-  }, [paramCat, visibility])
+    load()
+  }, [paramCat])
 
   const baseItems = useMemo(
-    () => baseItemsRaw,
-    [baseItemsRaw]
+    () => baseItemsRaw.filter(p => visibility[p.id] !== false),
+    [baseItemsRaw, visibility]
   )
 
   // Estado de filtros
