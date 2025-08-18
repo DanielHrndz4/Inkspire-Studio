@@ -351,7 +351,6 @@ function NewProductTab() {
           Añadir variante
         </Button>
       </div>
-
       <Button type="submit" className="rounded-none">
         Crear producto
       </Button>
