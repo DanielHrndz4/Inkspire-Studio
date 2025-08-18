@@ -348,7 +348,7 @@ function NewProductTab() {
           </SelectTrigger>
           <SelectContent>
             {categories.map((c) => (
-              <SelectItem key={c.id} value={c.name}>
+              <SelectItem key={c.id} value={c.name || `category-${c.id}`}> {/* Asegura que el value no sea vacío */}
                 {c.name}
               </SelectItem>
             ))}
@@ -379,32 +379,32 @@ function NewProductTab() {
                 onChange={(e) => setNewCategoryName(e.target.value)}
               />
             </div>
-              <div className="grid gap-1">
-                <Label htmlFor="newCategoryImage">Imagen</Label>
-                <Input
-                  id="newCategoryImage"
-                  value={newCategoryImage}
-                  onChange={(e) => setNewCategoryImage(e.target.value)}
+            <div className="grid gap-1">
+              <Label htmlFor="newCategoryImage">Imagen</Label>
+              <Input
+                id="newCategoryImage"
+                value={newCategoryImage}
+                onChange={(e) => setNewCategoryImage(e.target.value)}
+              />
+              <Input
+                id="newCategoryImageUpload"
+                type="file"
+                accept="image/*"
+                onChange={async (e) => {
+                  const file = e.target.files?.[0]
+                  if (!file) return
+                  const url = await uploadProductImage(file)
+                  setNewCategoryImage(url)
+                }}
+              />
+              {newCategoryImage && (
+                <img
+                  src={newCategoryImage}
+                  alt={newCategoryName}
+                  className="mt-2 h-24 w-24 object-cover"
                 />
-                <Input
-                  id="newCategoryImageUpload"
-                  type="file"
-                  accept="image/*"
-                  onChange={async (e) => {
-                    const file = e.target.files?.[0]
-                    if (!file) return
-                    const url = await uploadProductImage(file)
-                    setNewCategoryImage(url)
-                  }}
-                />
-                {newCategoryImage && (
-                  <img
-                    src={newCategoryImage}
-                    alt={newCategoryName}
-                    className="mt-2 h-24 w-24 object-cover"
-                  />
-                )}
-              </div>
+              )}
+            </div>
             <Button
               type="button"
               onClick={handleCreateCategory}
