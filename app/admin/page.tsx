@@ -410,13 +410,23 @@ function NewProductTab() {
                 />
               )}
             </div>
-            <Button
-              type="button"
-              onClick={handleCreateCategory}
-              className="w-fit rounded-none"
-            >
-              Guardar categoría
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                onClick={handleCreateCategory}
+                className="w-fit rounded-none"
+              >
+                Guardar categoría
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowCategoryForm(false)}
+                className="w-fit rounded-none"
+              >
+                Cancelar
+              </Button>
+            </div>
           </div>
         )}
       </div>
