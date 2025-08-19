@@ -4,11 +4,10 @@ import { useEffect, useMemo, useState } from "react"
 import SiteHeader from "@/components/site-header"
 import SiteFooter from "@/components/site-footer"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Textarea } from "@/components/ui/textarea"
-import Image from "next/image"
+import TShirtViewer from "@/components/tshirt-viewer"
 import { useCart } from "@/components/cart"
 import { formatCurrency } from "@/lib/format"
 import { Upload } from 'lucide-react'
@@ -21,6 +20,14 @@ const COLORS: Record<Garment, string[]> = {
   Hoodie: ["Negro", "Gris", "Blanco", "Azul"],
 }
 const SIZES = ["XS", "S", "M", "L", "XL", "XXL"] as const
+const COLOR_VALUES: Record<string, string> = {
+  Blanco: "#ffffff",
+  Negro: "#000000",
+  Celeste: "#87ceeb",
+  "Azul Marino": "#000080",
+  Gris: "#808080",
+  Azul: "#0000ff",
+}
 const AREAS = [
   { id: "pecho", label: "Pecho (pequeño)", extra: 6 },
   { id: "frente", label: "Frente completo", extra: 12 },
@@ -105,7 +112,7 @@ function Customizer() {
       {/* Vista previa */}
       <section className="grid gap-4">
         <div className="relative aspect-[4/5] w-full overflow-hidden rounded-md bg-muted">
-          <Image src={imageDataUrl ?? previewImage} alt="Vista previa de diseño personalizado" fill className="object-cover" />
+          <TShirtViewer color={COLOR_VALUES[color]} />
         </div>
         <p className="text-xs text-muted-foreground">
           La vista previa es ilustrativa. Ajustaremos proporciones y colores en producción.
