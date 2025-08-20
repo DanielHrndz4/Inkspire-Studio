@@ -261,7 +261,6 @@ function Customizer() {
             onSelectElement={setSelectedElement}
             onUpdateElement={handleUpdateElement}
             initialSide={currentArea as any}
-            onSideChange={(area) => setCurrentArea(area)}
           />
         </div>
         <p className="text-xs text-muted-foreground">
@@ -322,6 +321,7 @@ function Customizer() {
                 key={area.id}
                 variant={area.id === currentArea ? "default" : "outline"}
                 className="rounded-md h-9 px-3 text-xs"
+                onClick={() => handleAreaChange(area.id)}
               >
                 {area.label}
               </Button>
