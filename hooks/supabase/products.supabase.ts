@@ -5,7 +5,7 @@ export const listProducts = async (): Promise<any[]> => {
   const { data, error } = await supabase
     .from("products")
     .select(
-      "id, title, description, type, material, price, discount_percentage, category:categories(name,image), product_variants(color,sizes,images)"
+      "id, title, description, type, material, price, discount_percentage, category:categories(name,image), product_variants(color,sizes,images,tags)"
     )
   if (error) throw error
   return (
@@ -22,6 +22,7 @@ export const listProducts = async (): Promise<any[]> => {
         color: v.color,
         size: v.sizes || [],
         images: v.images || [],
+        tags: v.tags || [],
       })),
     })) || []
   )
@@ -31,7 +32,7 @@ export const getProductById = async (id: string): Promise<Products | null> => {
   const { data, error } = await supabase
     .from("products")
     .select(
-      "id, title, description, type, material, price, discount_percentage, category:categories(name,image), product_variants(color,sizes,images)"
+      "id, title, description, type, material, price, discount_percentage, category:categories(name,image), product_variants(color,sizes,images,tags)"
     )
     .eq("id", id)
     .single()
@@ -50,7 +51,7 @@ export const getProductById = async (id: string): Promise<Products | null> => {
       color: v.color,
       size: v.sizes || [],
       images: v.images || [],
-      tags: ["men", "women", "kids"],
+      tags: v.tags || [],
     })),
   }
 }
@@ -83,6 +84,7 @@ export const createProduct = async (input: Products) => {
     color: v.color,
     sizes: v.size,
     images: v.images,
+    tags: v.tags,
   }))
   const { error: variantError } = await supabase.from("product_variants").insert(variants)
   if (variantError) throw variantError
@@ -121,6 +123,7 @@ export const updateProduct = async (id: string, input: Partial<Products>) => {
       color: v.color,
       sizes: v.size,
       images: v.images,
+      tags: v.tags,
     }))
     const { error: variantError } = await supabase.from("product_variants").insert(variants)
     if (variantError) throw variantError

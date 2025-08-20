@@ -42,7 +42,7 @@ export const getProductsByCategoryName = async (
   const { data, error, count } = await supabase
     .from("products")
     .select(
-      "id, title, description, type, material, price, discount_percentage, category:categories(name,image), product_variants(color,sizes,images)",
+      "id, title, description, type, material, price, discount_percentage, category:categories(name,image), product_variants(color,sizes,images,tags)",
       { count: "exact" }
     )
     .eq("category_id", categoryData.id)
@@ -65,7 +65,7 @@ export const getProductsByCategoryName = async (
         color: v.color,
         size: v.sizes || [],
         images: v.images || [],
-        tags: ["men", "women", "kids"],
+        tags: v.tags || [],
       })),
     })) || [];
 
