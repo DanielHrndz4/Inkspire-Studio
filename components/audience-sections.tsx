@@ -2,8 +2,9 @@ import Image from "next/image"
 import Link from "next/link"
 import ProductCard from "@/components/product-card"
 import { products } from "@/lib/data"
+import { ProductTag, Products } from "@/interface/product.interface"
 
-type AudienceKey = "men" | "women" | "kids"
+type AudienceKey = ProductTag
 
 const AUDIENCES: { key: AudienceKey; title: string; href: string; image: string }[] = [
   { key: "men", title: "Hombres", href: "/categories/tshirts?audiencia=hombres", image: "/minimal-mens-shirts.png" },
@@ -13,9 +14,9 @@ const AUDIENCES: { key: AudienceKey; title: string; href: string; image: string 
 
 export default function AudienceSections() {
   // Función para verificar si un producto pertenece a una audiencia
-  const hasAudienceTag = (product: any, audience: AudienceKey): boolean => {
-    return product.product.some((variant: any) => 
-      variant.tags && variant.tags.includes(audience)
+  const hasAudienceTag = (product: Products, audience: AudienceKey): boolean => {
+    return product.product.some((variant) =>
+      variant.tags?.includes(audience)
     )
   }
 

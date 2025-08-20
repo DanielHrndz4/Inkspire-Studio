@@ -4,9 +4,10 @@ import { useEffect, useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Badge } from "@/components/ui/badge"
 import { formatCurrency } from "@/lib/format"
 import { useCart } from "./cart"
-import { Products } from "@/interface/product.interface"
+import { Products, ProductTag } from "@/interface/product.interface"
 
 type Props = {
   product: Products
@@ -18,9 +19,15 @@ type Props = {
 
 const SIZES = ["XS", "S", "M", "L", "XL", "XXL"]
 
-export default function ProductConfigurator({ 
-  product: p, 
-  selectedColor, 
+const TAG_LABELS: Record<ProductTag, string> = {
+  men: "Hombres",
+  women: "Mujeres",
+  kids: "Niños",
+}
+
+export default function ProductConfigurator({
+  product: p,
+  selectedColor,
   onColorChange,
   selectedVariant,
   onImageSelect
@@ -31,6 +38,11 @@ export default function ProductConfigurator({
   const [selectedImageIndex, setSelectedImageIndex] = useState(0) // Estado para imagen seleccionada
 
   const { addItem } = useCart()
+
+  const tags = useMemo(() => {
+    const all = p.product.flatMap((v) => v.tags || [])
+    return Array.from(new Set(all)) as ProductTag[]
+  }, [p])
 
   // Imagen de preview depende del color e imagen seleccionada
   const preview = useMemo(() => {
@@ -74,6 +86,15 @@ export default function ProductConfigurator({
       <div className="text-3xl font-light tracking-tight">{p.title}</div>
       <div className="text-lg">{formatCurrency(p.price)}</div>
       <p className="text-sm text-muted-foreground">{p.description}</p>
+      {tags.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {tags.map((tag) => (
+            <Badge key={tag} variant="outline">
+              {TAG_LABELS[tag]}
+            </Badge>
+          ))}
+        </div>
+      )}
 
       <div className="grid gap-6">
         {/* Colores */}
