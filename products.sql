@@ -21,13 +21,14 @@ CREATE TABLE public.products (
   updated_at timestamptz DEFAULT now()
 );
 
--- Variants for colors, sizes and images
+-- Variants for colors, sizes, images and tags
 CREATE TABLE public.product_variants (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   product_id uuid REFERENCES public.products(id) ON DELETE CASCADE,
   color text,
   sizes text[],
-  images text[]
+  images text[],
+  tags text[]
 );
 
 -- Enable RLS
