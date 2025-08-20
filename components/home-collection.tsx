@@ -3,12 +3,12 @@ import EditorialGrid from "@/components/editorial-grid"
 
 export default function HomeCollection() {
   const tiles = [
-    { type: "link", src: "/images/categories/camisas.png", alt: "Camisas", href: "/categories/camisas", label: "Camisas", kicker: "Capítulo" },
+    { type: "link", src: "/images/ex-supra-mk4.jpeg", alt: "Supra MK4", href: "/categories/supra-mk4", label: "Supra MK4", kicker: "Capítulo" },
     { type: "image", src: "/lookbook-inkspire-1.png", alt: "Editorial 1" },
     { type: "link", src: "/images/categories/hoodies.png", alt: "Hoodies", href: "/categories/hoodies", label: "Hoodies", kicker: "Capítulo" },
     { type: "image", src: "/lookbook-inkspire-2.png", alt: "Editorial 2" },
     { type: "link", src: "/images/categories/anime.png", alt: "Anime", href: "/categories/anime", label: "Anime", kicker: "Temática" },
-    { type: "image", src: "/lookbook-inkspire-3.png", alt: "Editorial 3" },
+    { type: "image", src: "/images/lookbook-cars.jpeg", alt: "Editorial 3" },
     { type: "link", src: "/images/categories/cars.png", alt: "Carros", href: "/categories/carros", label: "Carros", kicker: "Temática" },
     { type: "image", src: "/lookbook-inkspire-4.png", alt: "Editorial 4" },
   ] as const

@@ -1,22 +1,60 @@
+"use client"
+
 import Image from "next/image"
 import Link from "next/link"
 import ProductCard from "@/components/product-card"
-import { products } from "@/lib/data"
 import { ProductTag, Products } from "@/interface/product.interface"
+import { hasAudienceTag, listProducts } from "@/hooks/supabase/products.supabase"
+import { useEffect, useState } from "react"
 
 type AudienceKey = ProductTag
 
 const AUDIENCES: { key: AudienceKey; title: string; href: string; image: string }[] = [
-  { key: "men", title: "Hombres", href: "/categories/tshirts?audiencia=hombres", image: "/minimal-mens-shirts.png" },
-  { key: "women", title: "Mujeres", href: "/categories/tshirts?audiencia=mujeres", image: "/minimal-inkspire-shirts.png" },
-  { key: "kids", title: "Niños", href: "/categories/tshirts?audiencia=niños", image: "/minimal-kids-shirts.png" },
+  { key: "men", title: "Hombres", href: "/categories/tshirts?audiencia=hombres", image: "/images/men-section.jpeg" },
+  { key: "women", title: "Mujeres", href: "/categories/tshirts?audiencia=mujeres", image: "/images/women-section.jpeg" },
+  { key: "kids", title: "Niños", href: "/categories/tshirts?audiencia=niños", image: "/images/kids-section.jpeg" },
 ]
 
 export default function AudienceSections() {
-  // Función para verificar si un producto pertenece a una audiencia
-  const hasAudienceTag = (product: Products, audience: AudienceKey): boolean => {
-    return product.product.some((variant) =>
-      variant.tags?.includes(audience)
+  const [allProducts, setAllProducts] = useState<Products[]>([])
+  const [loading, setLoading] = useState(true)
+
+  // Cargar productos desde Supabase
+  useEffect(() => {
+    const loadProducts = async () => {
+      try {
+        const products = await listProducts()
+        setAllProducts(products)
+      } catch (error) {
+        console.error("Error loading products:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadProducts()
+  }, [])
+
+  // Filtrar productos para cada audiencia
+  const productsByAudience = AUDIENCES.map(audience => {
+    const filteredProducts = allProducts.filter(product => 
+      hasAudienceTag(product, audience.key)
+    );
+    
+    // Tomar solo los primeros 3 productos para mostrar
+    return {
+      ...audience,
+      products: filteredProducts.slice(0, 3)
+    };
+  });
+
+  if (loading) {
+    return (
+      <section aria-label="Por audiencia" className="bg-white">
+        <div className="container mx-auto px-4 py-12 grid gap-8">
+          <div className="text-center py-12">Cargando productos...</div>
+        </div>
+      </section>
     )
   }
 
@@ -34,34 +72,36 @@ export default function AudienceSections() {
         </header>
 
         <div className="grid gap-8">
-          {AUDIENCES.map(({ key, title, href, image }) => {
-            // Filtrar productos que tengan la tag correspondiente en alguna variante
-            const subset = products.filter((p) => hasAudienceTag(p, key)).slice(0, 3)
-            
-            return (
-              <div key={key} className="grid lg:grid-cols-2 gap-6 items-start">
-                <Link href={href} className="relative aspect-[16/9] w-full overflow-hidden rounded-md">
-                  <Image 
-                    src={image || "/placeholder.svg"} 
-                    alt={`Colección ${title}`} 
-                    fill 
-                    className="object-cover" 
-                    sizes="(max-width: 768px) 100vw, 50vw"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                  <div className="absolute bottom-0 left-0 p-6 text-white">
-                    <div className="text-xs uppercase tracking-widest opacity-80">{title}</div>
-                    <div className="text-2xl font-light">Explorar {title.toLowerCase()}</div>
-                  </div>
-                </Link>
-                <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6">
-                  {subset.map((p) => (
-                    <ProductCard key={p.id} product={p} />
-                  ))}
+          {productsByAudience.map(({ key, title, href, image, products: audienceProducts }) => (
+            <div key={key} className="grid lg:grid-cols-2 gap-6 items-start">
+              <Link href={href} className="relative aspect-[16/9] w-full overflow-hidden rounded-md">
+                <Image 
+                  src={image || "/placeholder.svg"} 
+                  alt={`Colección ${title}`} 
+                  fill 
+                  className="object-cover" 
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                <div className="absolute bottom-0 left-0 p-6 text-white">
+                  <div className="text-xs uppercase tracking-widest opacity-80">{title}</div>
+                  <div className="text-2xl font-light">Explorar {title.toLowerCase()}</div>
                 </div>
+              </Link>
+              <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6">
+                {audienceProducts.length > 0 ? (
+                  audienceProducts.map((product) => (
+                    <ProductCard key={product.id} product={product} />
+                  ))
+                ) : (
+                  // Mensaje de respaldo si no hay productos
+                  <div className="col-span-full text-center py-8 text-muted-foreground">
+                    No hay productos disponibles para {title.toLowerCase()} en este momento.
+                  </div>
+                )}
               </div>
-            )
-          })}
+            </div>
+          ))}
         </div>
       </div>
     </section>
