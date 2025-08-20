@@ -25,10 +25,8 @@ export type Viewer2DProps = {
     id: string,
     updates: Partial<{ x: number; y: number; rotation: number; scale: number; area: AreaKey }>
   ) => void
-  /** Lado inicial; por defecto "frente" */
+  /** Lado actual; por defecto "frente" */
   initialSide?: AreaKey
-  /** Callback opcional cuando cambia el lado */
-  onSideChange?: (area: AreaKey) => void
 }
 
 const DEFAULT_SHIRT_PLACEHOLDER =
@@ -116,9 +114,11 @@ export default function TShirtViewer2D({
   onSelectElement,
   onUpdateElement,
   initialSide = "frente",
-  onSideChange,
 }: Viewer2DProps) {
   const [side, setSide] = useState<AreaKey>(initialSide)
+  useEffect(() => {
+    setSide(initialSide)
+  }, [initialSide])
   const containerRef = useRef<HTMLDivElement | null>(null)
   const isPointerDown = useRef(false)
   const draggingId = useRef<string | null>(null)
@@ -137,15 +137,6 @@ export default function TShirtViewer2D({
   const visibleElements = useMemo(() => {
     return customElements.filter((el) => el.placement.area === side)
   }, [customElements, side])
-
-  // Cambio de lado + callback externo (opcional)
-  const changeSide = useCallback(
-    (next: AreaKey) => {
-      setSide(next)
-      onSideChange?.(next)
-    },
-    [onSideChange]
-  )
 
   // Helpers para convertir coordenadas del cursor a % del contenedor
   const clientToPercent = useCallback((clientX: number, clientY: number) => {
@@ -208,22 +199,7 @@ export default function TShirtViewer2D({
   const onBackgroundClick = useCallback(() => onSelectElement(null), [onSelectElement])
 
   return (
-    <div className="w-full h-full flex flex-col gap-3">
-      {/* Controles de lado */}
-      <div className="flex flex-wrap items-center gap-2">
-        {(Object.keys(SIDE_LABELS) as AreaKey[]).map((k) => (
-          <button
-            key={k}
-            onClick={() => changeSide(k)}
-            className={`px-3 py-1 rounded-full text-sm border ${
-              side === k ? "bg-black text-white border-black" : "bg-white text-black border-gray-300"
-            }`}
-          >
-            {SIDE_LABELS[k]}
-          </button>
-        ))}
-      </div>
-
+    <div className="w-full h-full">
       {/* Lienzo 2D */}
       <div
         ref={containerRef}
