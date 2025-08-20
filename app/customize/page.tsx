@@ -59,8 +59,8 @@ const getSideImagesByColor = (color: string): Record<string, string> => {
     "blanco": {
       frente: "/customize/tshirt-front-white.png",
       espalda: "/customize/tshirt-back-white.png",
-      manga_izq: "/customize/tshirt-sleeve-left-white.png",
-      manga_der: "/customize/tshirt-sleeve-right-white.png",
+      manga_izq: "/customize/tshirt-left-white.png",
+      manga_der: "/customize/tshirt-right-white.png",
     },
     "negro": {
       frente: "/customize/tshirt-front-black.png",
