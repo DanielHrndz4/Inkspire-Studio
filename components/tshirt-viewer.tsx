@@ -1,334 +1,308 @@
 "use client"
 
-import { Canvas } from '@react-three/fiber'
-import { OrbitControls, useGLTF, Text } from '@react-three/drei'
-import { useEffect, useRef, useState } from 'react'
-import * as THREE from 'three'
-import dynamic from 'next/dynamic'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
-type ViewerProps = {
-  color: string
+export type AreaKey = "frente" | "espalda" | "manga_izq" | "manga_der"
+
+export type Viewer2DProps = {
+  color?: string
+  sideImages?: (color: string) => Partial<Record<AreaKey, string>>
   customElements: Array<{
     id: string
-    type: 'text' | 'image'
+    type: "text" | "image"
     content: string
     placement: {
-      x: number
-      y: number
-      rotation: number
-      scale: number
-      area: string
+      x: number // porcentaje 0..100 (posición horizontal dentro del contenedor)
+      y: number // porcentaje 0..100 (posición vertical dentro del contenedor)
+      rotation: number // grados
+      scale: number // 1 = 100%
+      area: AreaKey
     }
   }>
   selectedElement: string | null
   onSelectElement: (id: string | null) => void
-  onUpdateElement: (id: string, updates: Partial<{
-    x: number
-    y: number
-    rotation: number
-    scale: number
-    area: string
-  }>) => void
+  onUpdateElement: (
+    id: string,
+    updates: Partial<{ x: number; y: number; rotation: number; scale: number; area: AreaKey }>
+  ) => void
+  /** Lado inicial; por defecto "frente" */
+  initialSide?: AreaKey
+  /** Callback opcional cuando cambia el lado */
+  onSideChange?: (area: AreaKey) => void
 }
 
-const AREA_POSITIONS: Record<string, { x: number; y: number; z: number }> = {
-  pecho: { x: 0, y: 0.00, z: 0.78 },
-  frente: { x: 0, y: 0.00, z: 0.38 },
-  espalda: { x: 0, y: 0.00, z: -0.78 },
-  manga_izq: { x: -0.3, y: 0.00, z: 0.35 },
-  manga_der: { x: 0.3, y: 0.00, z: 0.35 },
+const DEFAULT_SHIRT_PLACEHOLDER =
+  "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0nNTAwJyBoZWlnaHQ9JzUwMCcgeG1sbnM9J2h0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnJz48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9J2cnIHgyPScwJyB5Mj0nMSc+PHN0b3Agb2Zmc2V0PScwJyBzdG9wLWNvbG9yPScjZjVmNWY1Jy8+PHN0b3Agb2Zmc2V0PScxJyBzdG9wLWNvbG9yPScjZWVlJy8+PC9saW5lYXJHcmFkaWVudD48L2RlZnM+PHJlY3Qgd2lkdGg9JzUwMCcgaGVpZ2h0PSc1MDAnIGZpbGw9InVybCgjZykiIHJ4PSc0MCcvPjxyZWN0IHg9JzgwJyB5PSc4MCcgd2lkdGg9JzM0MCcgaGVpZ2h0PSczNDAnIGZpbGw9JyNmZmYnIHJ4PSc2MCcvPjxnIHRyYW5zZm9ybT0ndHJhbnNsYXRlKDI1MCwyNTApJz48Y2lyY2xlIHI9JzQwJyBmaWxsPScjZGRkJy8+PHRleHQgeD0nMCcgeT0nMScgZHk9JzAuOCcgZmlsbD0nIzc3NycgZm9udC1zaXplPScyNHB4JyB0ZXh0LWFuY2hvcj0nLW1pZGRsZSc+U2hpcnQgMiRELXRlc3Q8L3RleHQ+PC9nPjwvc3ZnPiI="
+
+const SIDE_LABELS: Record<AreaKey, string> = {
+  frente: "Frente completo",
+  espalda: "Espalda completa",
+  manga_izq: "Manga izquierda",
+  manga_der: "Manga derecha",
 }
 
-const DEFAULT_IMAGE = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI2YwZjBmMCIgc3Ryb2tlPSIjY2NjIiBzdHJva2Utd2lkdGg9IjIiLz4KICA8Y2lyY2xlIGN4PSIxMDAiIGN5PSIxMDAiIHI9IjQwIiBmaWxsPSIjZGRkIi8+CiAgPHRleHQgeD0iMTAwIiB5PSIxMDUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzY2NiIgdGV4dC1hbmNob3I9Im1pZGRsZSI+SW1hZ2VuPC90ZXh0PgogIDx0ZXh0IHg9IjEwMCIgeT0iMTI1IiBmb250LWZhbWlseT0iQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTQiIGZpbGw9IiM2NjYiIHRleHQtYW5jaG9yPSJtaWRkbGUiPkRlZmF1bHQ8L3RleHQ+Cjwvc3ZnPg=='
+const AREA_TO_BASE: Record<AreaKey, AreaKey> = {
+  "frente": "frente",
+  "espalda": "espalda",
+  "manga_izq": "manga_izq",
+  "manga_der": "manga_der",
+}
 
-function Model({ color, customElements, selectedElement, onSelectElement }: ViewerProps) {
-  const { scene } = useGLTF('/glb/t-shirt_3d.glb')
-  const [textures, setTextures] = useState<Record<string, THREE.Texture>>({})
-  const [defaultTexture, setDefaultTexture] = useState<THREE.Texture | null>(null)
-  const groupRef = useRef<THREE.Group>(null)
-  const textureLoader = useRef(new THREE.TextureLoader())
-
-  useEffect(() => {
-    scene.traverse((child) => {
-      if ((child as THREE.Mesh).isMesh) {
-        const mesh = child as THREE.Mesh
-        const material = mesh.material
-        if (Array.isArray(material)) {
-          material.forEach((m) => {
-            const mat = m as THREE.MeshStandardMaterial
-            mat.color.set(color)
-            mat.needsUpdate = true
-          })
-        } else if (material) {
-          const mat = material as THREE.MeshStandardMaterial
-          mat.color.set(color)
-          mat.needsUpdate = true
-        }
-      }
-    })
-  }, [scene, color])
-
-  // Cargar textura por defecto
-  useEffect(() => {
-    const loadDefaultTexture = () => {
-      textureLoader.current.load(
-        DEFAULT_IMAGE,
-        (texture) => {
-          texture.colorSpace = THREE.SRGBColorSpace
-          texture.anisotropy = 16
-          texture.wrapS = THREE.ClampToEdgeWrapping
-          texture.wrapT = THREE.ClampToEdgeWrapping
-          texture.minFilter = THREE.LinearFilter
-          texture.magFilter = THREE.LinearFilter
-          setDefaultTexture(texture)
-        },
-        undefined,
-        (error) => {
-          console.error("Error loading default texture:", error)
-        }
-      )
+// Función para obtener imágenes específicas según el color
+const getSideImagesByColor = (color: string): Partial<Record<AreaKey, string>> => {
+  const colorName = color.toLowerCase();
+  
+  // Mapeo de colores a imágenes específicas
+  const colorImageMap: Record<string, Partial<Record<AreaKey, string>>> = {
+    "blanco": {
+      frente: "/customize/tshirt-front-white.png",
+      espalda: "/customize/tshirt-back-white.png",
+      manga_izq: "/customize/tshirt-sleeve-left-white.png",
+      manga_der: "/customize/tshirt-sleeve-right-white.png",
+    },
+    "negro": {
+      frente: "/customize/tshirt-front-black.png",
+      espalda: "/customize/tshirt-back-black.png",
+      manga_izq: "/customize/tshirt-sleeve-left-black.png",
+      manga_der: "/customize/tshirt-sleeve-right-black.png",
+    },
+    "celeste": {
+      frente: "/customize/tshirt-front-lightblue.png",
+      espalda: "/customize/tshirt-back-lightblue.png",
+      manga_izq: "/customize/tshirt-sleeve-left-lightblue.png",
+      manga_der: "/customize/tshirt-sleeve-right-lightblue.png",
+    },
+    "azul marino": {
+      frente: "/customize/tshirt-front-navy.png",
+      espalda: "/customize/tshirt-back-navy.png",
+      manga_izq: "/customize/tshirt-sleeve-left-navy.png",
+      manga_der: "/customize/tshirt-sleeve-right-navy.png",
+    },
+    "gris": {
+      frente: "/customize/tshirt-front-gray.png",
+      espalda: "/customize/tshirt-back-gray.png",
+      manga_izq: "/customize/tshirt-sleeve-left-gray.png",
+      manga_der: "/customize/tshirt-sleeve-right-gray.png",
+    },
+    "azul": {
+      frente: "/customize/tshirt-front-blue.png",
+      espalda: "/customize/tshirt-back-blue.png",
+      manga_izq: "/customize/tshirt-sleeve-left-blue.png",
+      manga_der: "/customize/tshirt-sleeve-right-blue.png",
     }
+  };
 
-    loadDefaultTexture()
+  // Retorna las imágenes para el color especificado o las imágenes por defecto para blanco
+  return colorImageMap[colorName] || colorImageMap["blanco"];
+};
 
-    return () => {
-      if (defaultTexture) {
-        defaultTexture.dispose()
-      }
-    }
+function useImage(url?: string) {
+  const [loaded, setLoaded] = useState<string | null>(null)
+  useEffect(() => {
+    if (!url) return setLoaded(null)
+    const img = new Image()
+    img.onload = () => setLoaded(url)
+    img.onerror = () => setLoaded(null)
+    img.src = url
+  }, [url])
+  return loaded
+}
+
+export default function TShirtViewer2D({
+  color = "#ffffff",
+  sideImages = getSideImagesByColor,
+  customElements,
+  selectedElement,
+  onSelectElement,
+  onUpdateElement,
+  initialSide = "frente",
+  onSideChange,
+}: Viewer2DProps) {
+  const [side, setSide] = useState<AreaKey>(initialSide)
+  const containerRef = useRef<HTMLDivElement | null>(null)
+  const isPointerDown = useRef(false)
+  const draggingId = useRef<string | null>(null)
+
+  // Obtener las imágenes según el color actual
+  const colorImages = useMemo(() => {
+    return sideImages(color);
+  }, [sideImages, color])
+
+  // Imagen base según el lado actual (mapeando pecho -> frente)
+  const baseKey = AREA_TO_BASE[side]
+  const baseUrl = colorImages[baseKey]
+  const resolvedBase = useImage(baseUrl) || DEFAULT_SHIRT_PLACEHOLDER
+
+  // Elementos visibles del lado actual
+  const visibleElements = useMemo(() => {
+    return customElements.filter((el) => el.placement.area === side)
+  }, [customElements, side])
+
+  // Cambio de lado + callback externo (opcional)
+  const changeSide = useCallback(
+    (next: AreaKey) => {
+      setSide(next)
+      onSideChange?.(next)
+    },
+    [onSideChange]
+  )
+
+  // Helpers para convertir coordenadas del cursor a % del contenedor
+  const clientToPercent = useCallback((clientX: number, clientY: number) => {
+    const rect = containerRef.current?.getBoundingClientRect()
+    if (!rect) return { x: 50, y: 50 }
+    const x = ((clientX - rect.left) / rect.width) * 100
+    const y = ((clientY - rect.top) / rect.height) * 100
+    return { x: Math.max(0, Math.min(100, x)), y: Math.max(0, Math.min(100, y)) }
   }, [])
 
-  // Cargar texturas para imágenes personalizadas
-  useEffect(() => {
-    const imageElements = customElements.filter(el => el.type === 'image')
+  // Arrastrar: iniciar
+  const onPointerDown = useCallback(
+    (e: React.PointerEvent, id: string) => {
+      e.stopPropagation()
+      ;(e.target as HTMLElement).setPointerCapture?.(e.pointerId)
+      isPointerDown.current = true
+      draggingId.current = id
+      onSelectElement(id)
+    },
+    [onSelectElement]
+  )
 
-    const loadTextures = async () => {
-      const newTextures: Record<string, THREE.Texture> = {}
+  // Arrastrar: mover
+  const onPointerMove = useCallback(
+    (e: React.PointerEvent) => {
+      if (!isPointerDown.current || !draggingId.current) return
+      const id = draggingId.current
+      const { x, y } = clientToPercent(e.clientX, e.clientY)
+      onUpdateElement(id, { x, y })
+    },
+    [clientToPercent, onUpdateElement]
+  )
 
-      for (const element of imageElements) {
-        if (!textures[element.id] && element.content) {
-          try {
-            const texture = await new Promise<THREE.Texture>((resolve, reject) => {
-              textureLoader.current.load(
-                element.content,
-                (texture) => {
-                  texture.colorSpace = THREE.SRGBColorSpace
-                  texture.anisotropy = 50
-                  texture.wrapS = THREE.ClampToEdgeWrapping
-                  texture.wrapT = THREE.ClampToEdgeWrapping
-                  texture.minFilter = THREE.LinearFilter
-                  texture.magFilter = THREE.LinearFilter
-                  resolve(texture)
-                },
-                undefined,
-                reject
-              )
-            })
+  // Arrastrar: terminar
+  const onPointerUp = useCallback(() => {
+    isPointerDown.current = false
+    draggingId.current = null
+  }, [])
 
-            newTextures[element.id] = texture
-          } catch (error) {
-            console.error("Error loading texture:", error)
-          }
-        }
+  // Escala / rotación con rueda
+  const onWheel = useCallback(
+    (e: React.WheelEvent, elId: string) => {
+      e.stopPropagation()
+      const el = customElements.find((c) => c.id === elId)
+      if (!el) return
+      if (e.shiftKey) {
+        // Rotación con Shift + rueda
+        const next = (el.placement.rotation || 0) + (e.deltaY > 0 ? 2 : -2)
+        onUpdateElement(elId, { rotation: Math.max(-360, Math.min(360, next)) })
+      } else {
+        // Escala con rueda
+        const next = (el.placement.scale || 1) * (e.deltaY > 0 ? 0.95 : 1.05)
+        onUpdateElement(elId, { scale: Math.max(0.1, Math.min(10, next)) })
       }
+    },
+    [customElements, onUpdateElement]
+  )
 
-      if (Object.keys(newTextures).length > 0) {
-        setTextures(prev => ({ ...prev, ...newTextures }))
-      }
-    }
+  // Deseleccionar haciendo click en vacío
+  const onBackgroundClick = useCallback(() => onSelectElement(null), [onSelectElement])
 
-    loadTextures()
+  return (
+    <div className="w-full h-full flex flex-col gap-3">
+      {/* Controles de lado */}
+      <div className="flex flex-wrap items-center gap-2">
+        {(Object.keys(SIDE_LABELS) as AreaKey[]).map((k) => (
+          <button
+            key={k}
+            onClick={() => changeSide(k)}
+            className={`px-3 py-1 rounded-full text-sm border ${
+              side === k ? "bg-black text-white border-black" : "bg-white text-black border-gray-300"
+            }`}
+          >
+            {SIDE_LABELS[k]}
+          </button>
+        ))}
+      </div>
 
-    return () => {
-      Object.values(textures).forEach(texture => {
-        if (texture) texture.dispose()
-      })
-    }
-  }, [customElements])
-
-  // Función para mostrar imagen (personalizada o por defecto)
-  const renderImageElement = (element: any, areaPosition: any) => {
-    const { x, y, rotation, scale, area } = element.placement
-    const texture = textures[element.id]
-    const useDefaultImage = !element.content || !texture
-    const displayTexture = useDefaultImage ? defaultTexture : texture
-
-    // VOLTEAR EN EL EJE X SI ESTÁ EN LA ESPALDA
-    const isBack = area === 'espalda'
-    const flipRotation = isBack ? Math.PI : 0 // 180 grados (Math.PI) para espalda
-
-    if (!displayTexture) {
-      return (
-        <mesh
-          key={element.id}
-          position={[
-            areaPosition.x + (x / 1000),
-            areaPosition.y + (y / 1000),
-            areaPosition.z
-          ]}
-          rotation={[rotation * Math.PI / 180, 0, 0]}
-          onClick={(e) => {
-            e.stopPropagation()
-            onSelectElement(element.id)
-          }}
-        >
-          <planeGeometry args={[0.15 * scale, 0.15 * scale]} />
-          <meshBasicMaterial color="gray" transparent opacity={0.3} />
-        </mesh>
-      )
-    }
-
-    const aspect = displayTexture.image ? displayTexture.image.width / displayTexture.image.height : 1
-    const baseSize = 1
-    const width = baseSize * scale * (aspect > 1 ? 1 : aspect)
-    const height = baseSize * scale * (aspect > 1 ? 1 / aspect : 1)
-
-    return (
-      <mesh
-        key={element.id}
-        position={[
-          areaPosition.x + (x / 100),
-          areaPosition.y + (y / 100),
-          areaPosition.z
-        ]}
-        rotation={[0,flipRotation, rotation * Math.PI / 180]} // Aplicar volteo en X para espalda
-        onClick={(e) => {
-          e.stopPropagation()
-          onSelectElement(element.id)
+      {/* Lienzo 2D */}
+      <div
+        ref={containerRef}
+        onClick={onBackgroundClick}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        className="relative w-full grow bg-[var(--viewer-bg,#f6f6f6)] rounded-xl shadow-inner overflow-hidden"
+        style={{
+          backgroundColor: color,
+          // Mantener una proporción vertical similar a una polera (4:5)
+          aspectRatio: "4 / 5",
         }}
       >
-        <planeGeometry args={[width, height]} />
-        <meshBasicMaterial
-          map={displayTexture}
-          transparent={true}
-          alphaTest={0.05}
-          side={THREE.DoubleSide}
-          depthTest={true}
-          depthWrite={false}
+        {/* Imagen base de la camiseta */}
+        <img
+          src={resolvedBase}
+          alt={`${SIDE_LABELS[baseKey]} base`}
+          className="absolute inset-0 w-full h-full object-contain select-none pointer-events-none"
+          draggable={false}
         />
-      </mesh>
-    )
-  }
 
-  // Función para mostrar texto
-  const renderTextElement = (element: any, areaPosition: any) => {
-    const { x, y, rotation, scale, area } = element.placement
-    const isBack = area === 'espalda'
-    const flipRotation = isBack ? Math.PI : 0 // 180 grados para espalda
+        {/* Overlays del lado actual */}
+        {visibleElements.map((el) => {
+          const isSelected = selectedElement === el.id
+          const { x, y, rotation, scale, area } = el.placement
+          // Si es espalda, opcionalmente espejamos X para simular el 3D
+          const mirrorX = area === "espalda" ? -1 : 1
 
-    return (
-      <Text
-        key={element.id}
-        position={[
-          areaPosition.x + (x / 1000),
-          areaPosition.y + (y / 1000),
-          areaPosition.z
-        ]}
-        rotation={[flipRotation, 0, rotation * Math.PI / 180]} // Aplicar volteo en X para espalda
-        scale={scale * 0.1}
-        color="#000000"
-        anchorX="center"
-        anchorY="middle"
-        onClick={(e) => {
-          e.stopPropagation()
-          onSelectElement(element.id)
-        }}
-      >
-        {element.content || "Texto de ejemplo"}
-      </Text>
-    )
-  }
+          const baseStyle: React.CSSProperties = {
+            position: "absolute",
+            left: `${x}%`,
+            top: `${y}%`,
+            transform: `translate(-50%, -50%) rotate(${rotation}deg) scale(${mirrorX * scale}, ${scale})`,
+            transformOrigin: "center center",
+            userSelect: "none",
+            touchAction: "none",
+            cursor: isSelected ? "move" : "grab",
+            outline: isSelected ? "2px solid rgba(59,130,246,0.9)" : "none",
+            borderRadius: 8,
+          }
 
-  return (
-    <group ref={groupRef}>
-      <primitive object={scene} scale={[4, 4, 4]} />
+          if (el.type === "image") {
+            const src = el.content || DEFAULT_IMG_PLACEHOLDER
+            return (
+              <img
+                key={el.id}
+                src={src}
+                alt="custom"
+                style={baseStyle}
+                className="max-w-[60%] max-h-[60%]"
+                onPointerDown={(e) => onPointerDown(e, el.id)}
+                onWheel={(e) => onWheel(e, el.id)}
+                draggable={false}
+              />)
+          }
 
-      {/* Renderizar elementos personalizados */}
-      {customElements.map(element => {
-        const { area } = element.placement
-        const areaPosition = AREA_POSITIONS[area] || AREA_POSITIONS.frente
+          return (
+            <div
+              key={el.id}
+              style={baseStyle}
+              className="px-2 py-1 bg-transparent text-black text-base font-medium whitespace-pre text-center max-w-[70%]"
+              onPointerDown={(e) => onPointerDown(e, el.id)}
+              onWheel={(e) => onWheel(e, el.id)}
+            >
+              {el.content || "Texto de ejemplo"}
+            </div>
+          )
+        })}
 
-        if (element.type === 'text') {
-          return renderTextElement(element, areaPosition)
-        } else {
-          return renderImageElement(element, areaPosition)
-        }
-      })}
-
-      {/* Mostrar imagen por defecto si no hay elementos personalizados */}
-      {customElements.length === 0 && defaultTexture && (
-        <mesh
-          position={[0, 0.3, 0.02]}
-          rotation={[0, 0, 0]}
-        >
-          <planeGeometry args={[0.3, 0.3]} />
-          <meshBasicMaterial
-            map={defaultTexture}
-            transparent={true}
-            alphaTest={0.05}
-            side={THREE.DoubleSide}
-          />
-        </mesh>
-      )}
-    </group>
-  )
-}
-
-function TShirtViewerContent(props: ViewerProps) {
-  const handleCanvasClick = (e: any) => {
-    if (e.object?.type !== 'Mesh' && e.object?.type !== 'Text') {
-      props.onSelectElement(null)
-    }
-  }
-
-  return (
-    <Canvas
-      className="w-full h-full"
-      camera={{ position: [0, 0, 5], fov: 45 }}
-      gl={{
-        antialias: true,
-        alpha: true
-      }}
-      onClick={handleCanvasClick}
-      onCreated={({ gl }) => {
-        gl.setClearColor(0x000000, 0)
-      }}
-    >
-      <ambientLight intensity={0.8} />
-      <directionalLight
-        position={[2, 5, 5]}
-        intensity={1.2}
-        castShadow
-        shadow-mapSize-width={1024}
-        shadow-mapSize-height={1024}
-      />
-      <pointLight position={[-5, 5, 5]} intensity={0.5} />
-      <Model {...props} />
-      <OrbitControls
-        enablePan={false}
-        enableZoom={true}
-        minDistance={3}
-        maxDistance={8}
-        enableDamping={true}
-        dampingFactor={0.1}
-      />
-    </Canvas>
-  )
-}
-
-const TShirtViewer = dynamic(() => Promise.resolve(TShirtViewerContent), {
-  ssr: false,
-  loading: () => (
-    <div className="w-full h-full flex items-center justify-center bg-gray-100 rounded-lg">
-      <div className="animate-pulse text-gray-500">Cargando visualizador 3D...</div>
+        {/* Mensaje por defecto si no hay overlays */}
+        {visibleElements.length === 0 && (
+          <div className="absolute inset-0 grid place-items-center pointer-events-none">
+            
+          </div>
+        )}
+      </div>
     </div>
   )
-})
-
-export default TShirtViewer
-
-if (typeof window !== 'undefined') {
-  import('@react-three/drei').then(({ useGLTF }) => {
-    useGLTF.preload('/glb/t-shirt_3d.glb')
-  })
 }
+
+const DEFAULT_IMG_PLACEHOLDER =
+  "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0nMjAwJyBoZWlnaHQ9JzIwMCcgeG1sbnM9J2h0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnJz48cmVjdCB3aWR0aD0nMjAwJyBoZWlnaHQ9JzIwMCcgZmlsbD0nI2YwZjBmMCcgcng9JzE2Jy8+PGNpcmNsZSBjeD0nMTAwJyBjeT0nMTAwJyByPSc0MCcgZmlsbD0nI2RkZCcvPjx0ZXh0IHg9JzEwMCcgeT0nMTA1JyBmb250LXNpemU9JzE0JyBmaWxsPScjNjY2JyB0ZXh0LWFuY2hvcj0nbWlkZGxlJz5JbWFnZW48L3RleHQ+PHRleHQgeD0nMTAwJyB5PScxMjUnIGZvbnQtc2l6ZT0nMTQnIGZpbGw9JyM2NjYnIHRleHQtYW5jaG9yPSdtaWRkbGUnPkRlZmF1bHQ8L3RleHQ+PC9zdmc+"

@@ -7,12 +7,12 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Textarea } from "@/components/ui/textarea"
-import TShirtViewer from "@/components/tshirt-viewer"
 import { useCart } from "@/components/cart"
 import { formatCurrency } from "@/lib/format"
 import { Upload, Move, RotateCw, ZoomIn, Trash2, Plus } from 'lucide-react'
 import { CartProvider } from "@/components/cart"
 import { Slider } from "@/components/ui/slider"
+import TShirtViewer2D from "@/components/tshirt-viewer"
 
 type Garment = "Camisa" | "Hoodie"
 type Placement = {
@@ -36,20 +36,67 @@ const COLORS: Record<Garment, string[]> = {
 }
 const SIZES = ["XS", "S", "M", "L", "XL", "XXL"] as const
 const COLOR_VALUES: Record<string, string> = {
-  Blanco: "#ffffff",
-  Negro: "#000000",
+  Blanco: "#020202", //Invertimos el color
+  Negro: "#cccccc", //Invertimos el color
   Celeste: "#87ceeb",
   "Azul Marino": "#000080",
   Gris: "#808080",
   Azul: "#0000ff",
 }
 const AREAS = [
-  { id: "pecho", label: "Pecho (pequeño)", extra: 6, defaultPosition: { x: 0, y: 30, z: 0.1 } },
   { id: "frente", label: "Frente completo", extra: 12, defaultPosition: { x: 0, y: 0, z: 0.1 } },
   { id: "espalda", label: "Espalda completa", extra: 12, defaultPosition: { x: 0, y: 0, z: -0.1 } },
   { id: "manga_izq", label: "Manga izquierda", extra: 5, defaultPosition: { x: -30, y: 0, z: 0.1 } },
   { id: "manga_der", label: "Manga derecha", extra: 5, defaultPosition: { x: 30, y: 0, z: 0.1 } },
 ] as const
+
+// Función para obtener imágenes específicas según el color
+const getSideImagesByColor = (color: string): Record<string, string> => {
+  const colorName = color.toLowerCase();
+  
+  // Mapeo de colores a imágenes específicas
+  const colorImageMap: Record<string, Record<string, string>> = {
+    "blanco": {
+      frente: "/customize/tshirt-front-white.png",
+      espalda: "/customize/tshirt-back-white.png",
+      manga_izq: "/customize/tshirt-sleeve-left-white.png",
+      manga_der: "/customize/tshirt-sleeve-right-white.png",
+    },
+    "negro": {
+      frente: "/customize/tshirt-front-black.png",
+      espalda: "/customize/tshirt-back-black.png",
+      manga_izq: "/customize/tshirt-sleeve-left-black.png",
+      manga_der: "/customize/tshirt-sleeve-right-black.png",
+    },
+    "celeste": {
+      frente: "/customize/tshirt-front-lightblue.png",
+      espalda: "/customize/tshirt-back-lightblue.png",
+      manga_izq: "/customize/tshirt-sleeve-left-lightblue.png",
+      manga_der: "/customize/tshirt-sleeve-right-lightblue.png",
+    },
+    "azul marino": {
+      frente: "/customize/tshirt-front-navy.png",
+      espalda: "/customize/tshirt-back-navy.png",
+      manga_izq: "/customize/tshirt-sleeve-left-navy.png",
+      manga_der: "/customize/tshirt-sleeve-right-navy.png",
+    },
+    "gris": {
+      frente: "/customize/tshirt-front-gray.png",
+      espalda: "/customize/tshirt-back-gray.png",
+      manga_izq: "/customize/tshirt-sleeve-left-gray.png",
+      manga_der: "/customize/tshirt-sleeve-right-gray.png",
+    },
+    "azul": {
+      frente: "/customize/tshirt-front-blue.png",
+      espalda: "/customize/tshirt-back-blue.png",
+      manga_izq: "/customize/tshirt-sleeve-left-blue.png",
+      manga_der: "/customize/tshirt-sleeve-right-blue.png",
+    }
+  };
+
+  // Retorna las imágenes para el color especificado o las imágenes por defecto para blanco
+  return colorImageMap[colorName] || colorImageMap["blanco"];
+};
 
 export default function CustomizePage() {
   return (
@@ -71,7 +118,7 @@ function Customizer() {
   const [size, setSize] = useState<string>("M")
   const [customElements, setCustomElements] = useState<CustomElement[]>([])
   const [selectedElement, setSelectedElement] = useState<string | null>(null)
-  const [currentArea, setCurrentArea] = useState<string>("pecho")
+  const [currentArea, setCurrentArea] = useState<string>("frente")
   const [text, setText] = useState<string>("")
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -93,31 +140,34 @@ function Customizer() {
     return base + areaExtras + textExtra + imageExtra
   }, [garment, customElements])
 
-  const previewImage = useMemo(() => {
-    // Imagen base según prenda y color (placeholder)
-    const query = `${garment.toLowerCase()} ${color.toLowerCase()} mockup minimal`
-    return `/placeholder.svg?height=1200&width=1200&query=${encodeURIComponent(query)}`
-  }, [garment, color])
+  const handleUpdateElement = (id: string, updates: Partial<Placement>) => {
+    setCustomElements(prev =>
+      prev.map(el =>
+        el.id === id
+          ? { ...el, placement: { ...el.placement, ...updates } }
+          : el
+      )
+    )
+  }
 
   const onFileChange = (file?: File) => {
     if (!file) {
       return
     }
-    
+
     const reader = new FileReader()
     reader.onload = () => {
       if (typeof reader.result === "string") {
-        const areaData = AREAS.find(a => a.id === currentArea)
         const newElement: CustomElement = {
           id: `img-${Date.now()}`,
           type: 'image',
           content: reader.result,
-          placement: { 
-            x: 0, 
-            y: 0, 
-            rotation: 0, 
+          placement: {
+            x: 50, // Posición central por defecto
+            y: 50, // Posición central por defecto
+            rotation: 0,
             scale: 1,
-            area: currentArea
+            area: currentArea // Usa el área actualmente seleccionada
           }
         }
         setCustomElements(prev => [...prev, newElement])
@@ -129,17 +179,17 @@ function Customizer() {
 
   const addTextElement = () => {
     if (!text.trim()) return
-    
+
     const newElement: CustomElement = {
       id: `text-${Date.now()}`,
       type: 'text',
       content: text,
-      placement: { 
-        x: 0, 
-        y: 0, 
-        rotation: 0, 
+      placement: {
+        x: 50, // Posición central por defecto
+        y: 50, // Posición central por defecto
+        rotation: 0,
         scale: 1,
-        area: currentArea
+        area: currentArea // Usa el área actualmente seleccionada
       }
     }
     setCustomElements(prev => [...prev, newElement])
@@ -148,10 +198,10 @@ function Customizer() {
   }
 
   const updateElementPlacement = (id: string, updates: Partial<Placement>) => {
-    setCustomElements(prev => 
-      prev.map(el => 
-        el.id === id 
-          ? { ...el, placement: { ...el.placement, ...updates } } 
+    setCustomElements(prev =>
+      prev.map(el =>
+        el.id === id
+          ? { ...el, placement: { ...el.placement, ...updates } }
           : el
       )
     )
@@ -169,8 +219,8 @@ function Customizer() {
   const addToCart = () => {
     const title = `${garment} personalizado`
     const id = `custom-${garment}-${color}-${size}-${Math.random().toString(36).slice(2, 8)}`
-    const image = previewImage
-    
+    const image = `/placeholder.svg?height=1200&width=1200&query=${encodeURIComponent(`${garment.toLowerCase()} ${color.toLowerCase()} mockup minimal`)}`
+
     // Guardar los elementos personalizados para la producción
     const customizationData = customElements.map(el => ({
       type: el.type,
@@ -193,17 +243,25 @@ function Customizer() {
     })
   }
 
+  // Función para cambiar el área de colocación
+  const handleAreaChange = (areaId: string) => {
+    setCurrentArea(areaId);
+  }
+
   return (
     <>
       {/* Vista previa */}
       <section className="grid gap-4">
         <div className="relative aspect-[4/5] w-full overflow-hidden rounded-md bg-muted">
-          <TShirtViewer
+          <TShirtViewer2D
             color={COLOR_VALUES[color]}
-            customElements={customElements}
+            sideImages={() => getSideImagesByColor(color)}
+            customElements={customElements as any}
             selectedElement={selectedElement}
             onSelectElement={setSelectedElement}
-            onUpdateElement={updateElementPlacement}
+            onUpdateElement={handleUpdateElement}
+            initialSide={currentArea as any}
+            onSideChange={(area) => setCurrentArea(area)}
           />
         </div>
         <p className="text-xs text-muted-foreground">
@@ -255,16 +313,15 @@ function Customizer() {
           </div>
         </div>
 
-        {/* Área de colocación */}
+        {/* Área de colocación - FUNCIONA CORRECTAMENTE */}
         <div className="grid gap-3">
           <Label className="text-xs uppercase tracking-widest">Área de colocación</Label>
           <div className="flex flex-wrap gap-2">
             {AREAS.map((area) => (
-              <Button 
-                key={area.id} 
-                variant={area.id === currentArea ? "default" : "outline"} 
+              <Button
+                key={area.id}
+                variant={area.id === currentArea ? "default" : "outline"}
                 className="rounded-md h-9 px-3 text-xs"
-                onClick={() => setCurrentArea(area.id)}
               >
                 {area.label}
               </Button>
@@ -281,8 +338,8 @@ function Customizer() {
             <Label className="text-xs uppercase tracking-widest">Elementos añadidos</Label>
             <div className="grid gap-2">
               {customElements.map((element) => (
-                <div 
-                  key={element.id} 
+                <div
+                  key={element.id}
                   className={`flex items-center justify-between p-2 border rounded-md ${selectedElement === element.id ? 'border-primary bg-primary/5' : ''}`}
                   onClick={() => setSelectedElement(element.id)}
                 >
@@ -309,7 +366,7 @@ function Customizer() {
         {selectedElementData && (
           <div className="grid gap-3 p-3 border rounded-md">
             <Label className="text-xs uppercase tracking-widest">Ajustar elemento seleccionado</Label>
-            
+
             <div className="grid gap-2">
               <div className="flex justify-between">
                 <Label>Posición X</Label>
@@ -318,12 +375,12 @@ function Customizer() {
               <Slider
                 value={[selectedElementData.placement.x]}
                 onValueChange={([value]) => updateElementPlacement(selectedElementData.id, { x: value })}
-                min={-100}
+                min={0}
                 max={100}
                 step={1}
               />
             </div>
-            
+
             <div className="grid gap-2">
               <div className="flex justify-between">
                 <Label>Posición Y</Label>
@@ -332,12 +389,12 @@ function Customizer() {
               <Slider
                 value={[selectedElementData.placement.y]}
                 onValueChange={([value]) => updateElementPlacement(selectedElementData.id, { y: value })}
-                min={-100}
+                min={0}
                 max={100}
                 step={1}
               />
             </div>
-            
+
             <div className="grid gap-2">
               <div className="flex justify-between">
                 <Label>Rotación</Label>
@@ -351,7 +408,7 @@ function Customizer() {
                 step={1}
               />
             </div>
-            
+
             <div className="grid gap-2">
               <div className="flex justify-between">
                 <Label>Escala</Label>
@@ -368,7 +425,7 @@ function Customizer() {
 
             <div className="grid gap-2">
               <Label>Área</Label>
-              <select 
+              <select
                 value={selectedElementData.placement.area}
                 onChange={(e) => updateElementPlacement(selectedElementData.id, { area: e.target.value })}
                 className="p-2 border rounded-md"
@@ -385,9 +442,9 @@ function Customizer() {
         <div className="grid gap-2">
           <Label className="text-xs uppercase tracking-widest">Añadir texto</Label>
           <div className="flex gap-2">
-            <Textarea 
-              placeholder="Ej. Inkspire" 
-              value={text} 
+            <Textarea
+              placeholder="Ej. Inkspire"
+              value={text}
               onChange={(e) => setText(e.target.value)}
               className="flex-1"
             />
@@ -402,7 +459,7 @@ function Customizer() {
         <div className="grid gap-2">
           <Label className="text-xs uppercase tracking-widest">Subir imagen</Label>
           <div className="flex items-center gap-3">
-            <Button 
+            <Button
               onClick={() => fileInputRef.current?.click()}
               variant="outline"
               className="gap-2"
