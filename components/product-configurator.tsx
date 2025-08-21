@@ -7,6 +7,8 @@ import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { formatCurrency } from "@/lib/format"
 import { useCart } from "./cart"
+import { useWishlist } from "@/components/wishlist"
+import { Heart } from 'lucide-react'
 import { Products, ProductTag } from "@/interface/product.interface"
 
 type Props = {
@@ -38,6 +40,7 @@ export default function ProductConfigurator({
   const [selectedImageIndex, setSelectedImageIndex] = useState(0) // Estado para imagen seleccionada
 
   const { addItem } = useCart()
+  const { isSaved, toggle } = useWishlist()
 
   const tags = useMemo(() => {
     const all = p.product.flatMap((v) => v.tags || [])
@@ -80,6 +83,8 @@ export default function ProductConfigurator({
       onImageSelect(index) // Notificar al componente padre si es necesario
     }
   }
+
+  const saved = isSaved(p.id)
 
   return (
     <div className="grid gap-6">
@@ -166,10 +171,19 @@ export default function ProductConfigurator({
           </div>
         )}
 
-        {/* Botón agregar */}
+        {/* Botones de acción */}
         <div className="grid gap-2">
           <Button className="h-11 rounded-none" onClick={handleAdd}>
             Agregar al carrito
+          </Button>
+          <Button
+            variant="outline"
+            className="h-11 rounded-none flex items-center gap-2"
+            onClick={() => toggle(p.id)}
+            aria-label={saved ? "Quitar de la wishlist" : "Agregar a la wishlist"}
+          >
+            <Heart className="h-4 w-4" fill={saved ? "currentColor" : "none"} />
+            {saved ? "Quitar de la wishlist" : "Agregar a la wishlist"}
           </Button>
           <p className="text-xs text-muted-foreground">
             Envío gratis a partir de {formatCurrency(120)}.
