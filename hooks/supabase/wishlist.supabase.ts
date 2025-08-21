@@ -1,4 +1,4 @@
-'use server';
+'use client';
 
 import { supabase } from "@/utils/supabase/server";
 
