@@ -27,13 +27,17 @@ export function useWishlist() {
   const [slugs, setSlugs] = useState<string[]>([])
 
   useEffect(() => {
+    // Always seed state from localStorage so saved hearts render immediately
+    setSlugs(read())
+
     const userId = user?.id
-    if (!userId) {
-      setSlugs(read())
-      return
-    }
+    if (!userId) return
+
     fetchWishlist()
-      .then(setSlugs)
+      .then((list) => {
+        setSlugs(list)
+        write(list) // keep localStorage in sync
+      })
       .catch(() => setSlugs([]))
   }, [user?.id]) // depend on the id only
 
@@ -53,6 +57,7 @@ export function useWishlist() {
       await toggleWishlistItem(slug)
       const updated = await fetchWishlist()
       setSlugs(updated)
+      write(updated) // persist for faster client loads
     },
     [user?.id]
   )
@@ -66,6 +71,7 @@ export function useWishlist() {
     }
     await clearWishlistApi()
     setSlugs([])
+    write([])
   }, [user?.id])
 
   return useMemo(() => ({ slugs, isSaved, toggle, clear }), [slugs, isSaved, toggle, clear])
