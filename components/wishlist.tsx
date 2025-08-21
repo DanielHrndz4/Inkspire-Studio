@@ -46,6 +46,7 @@ export function useWishlist() {
   const toggle = useCallback(
     async (slug: string) => {
       const userId = user?.id
+      console.log('user id', user)
       if (!userId) {
         setSlugs((prev) => {
           const next = prev.includes(slug) ? prev.filter((s) => s !== slug) : [slug, ...prev]
