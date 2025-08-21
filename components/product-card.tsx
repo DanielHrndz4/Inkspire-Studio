@@ -2,10 +2,11 @@
 
 import Image from "next/image"
 import Link from "next/link"
-import { ShoppingBag } from 'lucide-react'
+import { ShoppingBag, Heart } from 'lucide-react'
 import { formatCurrency } from "@/lib/format"
 import { Button } from "@/components/ui/button"
 import { useCart } from "@/components/cart"
+import { useWishlist } from "@/components/wishlist"
 import { Products } from "@/interface/product.interface"
 
 type Props = {
@@ -36,7 +37,9 @@ const PLACEHOLDER_PRODUCT: Products = {
 
 export default function ProductCard({ product = PLACEHOLDER_PRODUCT, showQuickBuy = true }: Props) {
   const { addItem, setOpen, beginCheckout } = useCart()
+  const { isSaved, toggle } = useWishlist()
   const primaryImage = product.product[0].images[0] || "/placeholder.svg"
+  const saved = isSaved(product.id)
 
   const handleAdd = (e: React.MouseEvent) => {
     e.preventDefault()
@@ -59,6 +62,12 @@ export default function ProductCard({ product = PLACEHOLDER_PRODUCT, showQuickBu
     beginCheckout()
   }
 
+  const handleWishlist = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    toggle(product.id)
+  }
+
   return (
     <article className="group grid gap-3">
       <Link href={`/product/${product.id}`} className="relative block">
@@ -71,6 +80,16 @@ export default function ProductCard({ product = PLACEHOLDER_PRODUCT, showQuickBu
             className="object-cover transition-transform duration-700 group-hover:scale-[1.03]"
             priority={false}
           />
+
+          <Button
+            variant="secondary"
+            size="icon"
+            aria-label={saved ? "Quitar de la wishlist" : "Agregar a la wishlist"}
+            className="absolute left-2 top-2 h-9 w-9 opacity-95 hover:opacity-100 transition-opacity"
+            onClick={handleWishlist}
+          >
+            <Heart className="h-4 w-4" fill={saved ? "currentColor" : "none"} />
+          </Button>
 
           {showQuickBuy && (
             <Button
