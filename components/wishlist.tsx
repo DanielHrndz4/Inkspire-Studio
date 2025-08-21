@@ -56,6 +56,7 @@ export function useWishlist() {
       }
       await toggleWishlistItem(slug)
       const updated = await fetchWishlist()
+      console.log(updated)
       setSlugs(updated)
       write(updated) // persist for faster client loads
     },
