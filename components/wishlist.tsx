@@ -15,17 +15,11 @@ function read(): string[] {
   try {
     const raw = localStorage.getItem(KEY)
     return raw ? (JSON.parse(raw) as string[]) : []
-  } catch {
-    return []
-  }
+  } catch { return [] }
 }
 
 function write(slugs: string[]) {
-  try {
-    localStorage.setItem(KEY, JSON.stringify(slugs))
-  } catch {
-    // noop
-  }
+  try { localStorage.setItem(KEY, JSON.stringify(slugs)) } catch {}
 }
 
 export function useWishlist() {
@@ -33,20 +27,22 @@ export function useWishlist() {
   const [slugs, setSlugs] = useState<string[]>([])
 
   useEffect(() => {
-    if (!user) {
+    const userId = user?.id
+    if (!userId) {
       setSlugs(read())
       return
     }
-    fetchWishlist(user.id)
+    fetchWishlist()
       .then(setSlugs)
       .catch(() => setSlugs([]))
-  }, [user])
+  }, [user?.id]) // depend on the id only
 
   const isSaved = useCallback((slug: string) => slugs.includes(slug), [slugs])
 
   const toggle = useCallback(
     async (slug: string) => {
-      if (!user) {
+      const userId = user?.id
+      if (!userId) {
         setSlugs((prev) => {
           const next = prev.includes(slug) ? prev.filter((s) => s !== slug) : [slug, ...prev]
           write(next)
@@ -54,22 +50,23 @@ export function useWishlist() {
         })
         return
       }
-      await toggleWishlistItem(user.id, slug)
-      const updated = await fetchWishlist(user.id)
+      await toggleWishlistItem(slug)
+      const updated = await fetchWishlist()
       setSlugs(updated)
     },
-    [user]
+    [user?.id]
   )
 
   const clear = useCallback(async () => {
-    if (!user) {
+    const userId = user?.id
+    if (!userId) {
       setSlugs([])
       write([])
       return
     }
-    await clearWishlistApi(user.id)
+    await clearWishlistApi()
     setSlugs([])
-  }, [user])
+  }, [user?.id])
 
   return useMemo(() => ({ slugs, isSaved, toggle, clear }), [slugs, isSaved, toggle, clear])
 }

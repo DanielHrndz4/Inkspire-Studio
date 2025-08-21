@@ -30,7 +30,8 @@ const PLACEHOLDER_PRODUCT: Products = {
     {
       color: "Blanco",
       size: ["S", "M", "L"],
-      images: ["/minimal-editorial-shirt.png"]
+      images: ["/minimal-editorial-shirt.png"],
+      tags: []
     },
   ]
 }
@@ -65,6 +66,7 @@ export default function ProductCard({ product = PLACEHOLDER_PRODUCT, showQuickBu
   const handleWishlist = (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
+    console.log(product.id)
     toggle(product.id)
   }
 
