@@ -28,20 +28,26 @@ export const useAuthStore = create<AuthState>()(
       isAuthenticated: false,
       isLoading: false,
       login: (userData: User, authToken: string) => {
-        set({ 
-          user: userData, 
+        set({
+          user: userData,
           token: authToken,
           isAuthenticated: true,
-          isLoading: false 
+          isLoading: false
         });
+        try {
+          localStorage.setItem('user_id', userData.id)
+        } catch {}
       },
       logout: () => {
-        set({ 
-          user: null, 
+        set({
+          user: null,
           token: null,
           isAuthenticated: false,
-          isLoading: false 
+          isLoading: false
         });
+        try {
+          localStorage.removeItem('user_id')
+        } catch {}
         location.reload()
       },
       setLoading: (loading: boolean) => set({ isLoading: loading })
