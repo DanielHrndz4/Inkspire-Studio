@@ -10,7 +10,7 @@ import { listAllProducts } from "@/lib/admin-store"
 export default function WishlistPage() {
   const { slugs, clear } = useWishlist()
   // Nota: listAllProducts es cliente, mezcla base + admin (visibilidad se gestiona aparte)
-  const products = listAllProducts().filter((p) => slugs.includes(p.slug))
+  const products = listAllProducts().filter((p) => slugs.includes(p.id))
 
   return (
     <CartProvider>
