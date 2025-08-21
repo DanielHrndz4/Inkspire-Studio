@@ -6,11 +6,10 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import postData from "@/hooks/post"
-import { useDispatch } from "react-redux"
 import { useAuthStore } from "@/store/authStore"
 import signUp from "@/hooks/supabase/signup.supabase"
 import { signIn } from "@/hooks/supabase/signin.supabase"
+import { z } from "zod"
 
 export type User = {
   email: string
@@ -40,6 +39,25 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 const KEY_CURRENT_USER = "inkspire_current_user"
 const KEY_USERS = "inkspire_users"
 const KEY_USER_ORDERS = "inkspire_user_orders"
+
+const loginSchema = z.object({
+  email: z.string().email({ message: "Email inválido" }),
+  password: z.string().min(8, { message: "La contraseña debe tener al menos 8 caracteres" })
+})
+
+const registerSchema = z
+  .object({
+    name: z.string().min(1, { message: "El nombre es requerido" }),
+    lastName: z.string().min(1, { message: "El apellido es requerido" }),
+    phone: z.string().min(10, { message: "El teléfono es requerido" }),
+    email: z.string().email({ message: "Email inválido" }),
+    password: z.string().min(8, { message: "La contraseña debe tener al menos 8 caracteres" }),
+    confirmPassword: z.string().min(8, { message: "La confirmación es requerida" })
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    path: ["confirmPassword"],
+    message: "Las contraseñas no coinciden"
+  })
 
 function getJSON<T>(key: string, fallback: T): T {
   try {
@@ -205,91 +223,90 @@ function AuthModal({
   }, [open])
 
   const handleLogin = async () => {
-    setLoading(true);
-    setError(null);
-    setMessage('');
+    setLoading(true)
+    setError(null)
+    setMessage("")
 
     try {
-      // Validaciones básicas
-      if (!email) throw new Error("El email es necesario");
-      if (!password) throw new Error("La contraseña es requerida");
-
-      // Llamar a tu función signIn existente
-      const result = await signIn({ email, password });
-
-      // Verificar si hay error en la respuesta
-      if ('error' in result) {
-        throw result.error;
+      const parsed = loginSchema.safeParse({ email: email.trim(), password })
+      if (!parsed.success) {
+        throw new Error(parsed.error.issues[0].message)
       }
 
-      // Manejar respuesta exitosa
-      console.log("Login exitoso:", result.user);
+      const result = await signIn({
+        email: parsed.data.email.toLowerCase(),
+        password: parsed.data.password,
+      })
 
-      // Crear objeto user que cumpla con la interfaz User esperada
+      if ("error" in result) {
+        throw result.error
+      }
+
       const authUser = {
-        name: result.user.profile?.name || '',
-        lastname: result.user.profile?.lastname || '',
-        tel: result.user.profile?.tel || '',
-        email: result.user.email || ""
-      };
+        id: result.user.id,
+        name: result.user.profile?.name || "",
+        lastname: result.user.profile?.lastname || "",
+        tel: result.user.profile?.tel || "",
+        email: result.user.email || "",
+      }
 
-      // Actualizar estado global (Zustand)
-      useAuthStore.getState().login(
-        authUser, // Objeto que cumple con la interfaz User
-        result.session?.access_token || "" // JWT
-      );
+      useAuthStore.getState().login(authUser, result.session?.access_token || "")
 
-      // Mensaje de éxito y redirección
-      setMessage("¡Bienvenido!");
+      // Actualiza contexto local para compatibilidad con ensureAuth
+      await onLogin(parsed.data.email, parsed.data.password)
+
+      setMessage("¡Bienvenido!")
       setTimeout(() => {
         location.reload()
-      }, 2000);
-
+      }, 2000)
     } catch (err: any) {
-      console.error("Error en login:", err);
-      const errorMessage = err.message.includes("Invalid login credentials")
+      console.error("Error en login:", err)
+      const errorMessage = err.message?.includes("Invalid login credentials")
         ? "Email o contraseña incorrectos"
-        : err.message;
-      setError(errorMessage);
+        : err.message || "Error al iniciar sesión"
+      setError(errorMessage)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
   };
 
   const handleRegister = async () => {
-    setLoading(true);
-    setError(null);
-    setMessage('');
+    setLoading(true)
+    setError(null)
+    setMessage("")
 
     try {
-      // 1. Validación de contraseñas
-      if (password !== confirmPassword) {
-        throw new Error("Las contraseñas no coinciden");
+      const parsed = registerSchema.safeParse({
+        name,
+        lastName,
+        phone,
+        email: email.trim(),
+        password,
+        confirmPassword,
+      })
+      if (!parsed.success) {
+        throw new Error(parsed.error.issues[0].message)
       }
 
-      // 2. Registro en Supabase
       const { data, error }: any = await signUp({
-        name,
-        lastname: lastName,
-        tel: phone,
-        email,
-        password // Asegúrate de incluir la contraseña
-      });
+        name: parsed.data.name,
+        lastname: parsed.data.lastName,
+        tel: parsed.data.phone,
+        email: parsed.data.email.toLowerCase(),
+        password: parsed.data.password,
+      })
 
       if (error) {
-        throw error;
+        throw error
       }
 
-      // 3. Manejo de la respuesta exitosa
-      console.log("Usuario registrado:", data);
-      setMessage("¡Registro exitoso! Redirigiendo...");
-
-
+      console.log("Usuario registrado:", data)
+      setMessage("¡Registro exitoso! Ahora puedes iniciar sesión.")
     } catch (err) {
-      console.error("Error en registro:", err);
-      setError(err instanceof Error ? err.message : "Error al registrar");
+      console.error("Error en registro:", err)
+      setError(err instanceof Error ? err.message : "Error al registrar")
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
   };
 
