@@ -1,16 +1,34 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import SiteHeader from "@/components/site-header"
 import SiteFooter from "@/components/site-footer"
 import ProductCard from "@/components/product-card"
 import { CartProvider } from "@/components/cart"
 import { useWishlist } from "@/components/wishlist"
-import { listAllProducts } from "@/lib/admin-store"
+import { getProductsByIds } from "@/hooks/supabase/products.supabase"
+import { Products } from "@/interface/product.interface"
 
 export default function WishlistPage() {
   const { slugs, clear } = useWishlist()
-  // Nota: listAllProducts es cliente, mezcla base + admin (visibilidad se gestiona aparte)
-  const products = listAllProducts().filter((p) => slugs.includes(p.id))
+  const [products, setProducts] = useState<Products[]>([])
+
+  useEffect(() => {
+    const load = async () => {
+      if (slugs.length === 0) {
+        setProducts([])
+        return
+      }
+      try {
+        const fetched = await getProductsByIds(slugs)
+        setProducts(fetched)
+      } catch (err) {
+        console.error(err)
+        setProducts([])
+      }
+    }
+    load()
+  }, [slugs])
 
   return (
     <CartProvider>
