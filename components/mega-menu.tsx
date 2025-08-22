@@ -47,90 +47,95 @@ export default function MegaMenu() {
         )
       })}
 
-      {/* Submenú “Explorar” con el resto de enlaces y subcategorías */}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="gap-1">
-            Explorar
-            <ChevronDown className="h-4 w-4" />
-          </Button>
-        </DropdownMenuTrigger>
+      <div className="flex justify-center">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="gap-1">
+              Explorar
+              <ChevronDown className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
 
-        <DropdownMenuContent align="start" sideOffset={10} className="w-[720px] p-0">
-          <div className="px-4 pt-4">
-            <DropdownMenuLabel className="text-xs uppercase tracking-widest text-muted-foreground">
-              Navegación
-            </DropdownMenuLabel>
-          </div>
-
-          <div className="grid grid-cols-2 gap-2 p-2">
-            {/* Columna 1: Grupos de categorías con submenús */}
-            <div className="rounded-md border p-2">
-              <div className="px-2 py-1.5 text-xs uppercase tracking-widest text-muted-foreground">
-                Categorías
-              </div>
-              <DropdownMenuGroup>
-                {CATEGORY_GROUPS.map((group) => {
-                  const GroupIcon = group.icon
-                  return (
-                    <DropdownMenuSub key={group.key}>
-                      <DropdownMenuSubTrigger className="cursor-pointer">
-                        {GroupIcon ? <GroupIcon className="mr-2 h-4 w-4" /> : null}
-                        <span>{group.title}</span>
-                      </DropdownMenuSubTrigger>
-                      <DropdownMenuSubContent>
-                        {group.items.map((it) => (
-                          <DropdownMenuItem asChild key={it.href}>
-                            <Link href={it.href} className="flex items-center gap-2">
-                              <span>{it.label}</span>
-                            </Link>
-                          </DropdownMenuItem>
-                        ))}
-                      </DropdownMenuSubContent>
-                    </DropdownMenuSub>
-                  )
-                })}
-              </DropdownMenuGroup>
+          <DropdownMenuContent
+            align="center"
+            sideOffset={10}
+            className="w-[720px] p-0"
+          >
+            <div className="px-4 pt-4">
+              <DropdownMenuLabel className="text-xs uppercase tracking-widest text-muted-foreground">
+                Navegación
+              </DropdownMenuLabel>
             </div>
 
-            {/* Columna 2: Accesos directos restantes */}
-            <div className="rounded-md border p-2">
-              <div className="px-2 py-1.5 text-xs uppercase tracking-widest text-muted-foreground">
-                Secciones
+            <div className="grid grid-cols-2 gap-2 p-2">
+              {/* Columna 1: Grupos de categorías con submenús */}
+              <div className="rounded-md border p-2">
+                <div className="px-2 py-1.5 text-xs uppercase tracking-widest text-muted-foreground">
+                  Categorías
+                </div>
+                <DropdownMenuGroup>
+                  {CATEGORY_GROUPS.map((group) => {
+                    const GroupIcon = group.icon
+                    return (
+                      <DropdownMenuSub key={group.key}>
+                        <DropdownMenuSubTrigger className="cursor-pointer">
+                          {GroupIcon ? <GroupIcon className="mr-2 h-4 w-4" /> : null}
+                          <span>{group.title}</span>
+                        </DropdownMenuSubTrigger>
+                        <DropdownMenuSubContent>
+                          {group.items.map((it) => (
+                            <DropdownMenuItem asChild key={it.href}>
+                              <Link href={it.href} className="flex items-center gap-2">
+                                <span>{it.label}</span>
+                              </Link>
+                            </DropdownMenuItem>
+                          ))}
+                        </DropdownMenuSubContent>
+                      </DropdownMenuSub>
+                    )
+                  })}
+                </DropdownMenuGroup>
               </div>
-              <div className="grid">
-                {submenuShortcuts.map((sc) => {
-                  const Icon = sc.icon
-                  const isActive =
-                    pathname === sc.href ||
-                    (sc.href !== "/" && pathname?.startsWith(sc.href) &&
-                      (sc.href === "/admin" ? pathname !== "/admin/signin" : true))
-                  return (
-                    <DropdownMenuItem asChild key={sc.href} className="cursor-pointer">
-                      <Link
-                        href={sc.href}
-                        className={cn(
-                          "flex items-center gap-2",
-                          isActive ? "font-medium text-foreground" : "text-foreground"
-                        )}
-                      >
-                        {Icon ? <Icon className="h-4 w-4" /> : null}
-                        <span>{sc.label}</span>
-                      </Link>
-                    </DropdownMenuItem>
-                  )
-                })}
-              </div>
-              <DropdownMenuSeparator />
-              <div className="px-2 py-1">
-                <p className="text-xs text-muted-foreground">
-                  Usa Tab y Enter para navegar. Escape cierra el menú.
-                </p>
+
+              {/* Columna 2: Accesos directos restantes */}
+              <div className="rounded-md border p-2">
+                <div className="px-2 py-1.5 text-xs uppercase tracking-widest text-muted-foreground">
+                  Secciones
+                </div>
+                <div className="grid">
+                  {submenuShortcuts.map((sc) => {
+                    const Icon = sc.icon
+                    const isActive =
+                      pathname === sc.href ||
+                      (sc.href !== "/" && pathname?.startsWith(sc.href) &&
+                        (sc.href === "/admin" ? pathname !== "/admin/signin" : true))
+                    return (
+                      <DropdownMenuItem asChild key={sc.href} className="cursor-pointer">
+                        <Link
+                          href={sc.href}
+                          className={cn(
+                            "flex items-center gap-2",
+                            isActive ? "font-medium text-foreground" : "text-foreground"
+                          )}
+                        >
+                          {Icon ? <Icon className="h-4 w-4" /> : null}
+                          <span>{sc.label}</span>
+                        </Link>
+                      </DropdownMenuItem>
+                    )
+                  })}
+                </div>
+                <DropdownMenuSeparator />
+                <div className="px-2 py-1">
+                  <p className="text-xs text-muted-foreground">
+                    Usa Tab y Enter para navegar. Escape cierra el menú.
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
-        </DropdownMenuContent>
-      </DropdownMenu>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
     </nav>
   )
 }

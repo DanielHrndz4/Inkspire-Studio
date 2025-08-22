@@ -10,6 +10,9 @@ CREATE TABLE public.users (
   PRIMARY KEY (id)
 );
 
+ALTER TABLE public.users
+ADD COLUMN role TEXT CHECK (role IN ('admin', 'user')) DEFAULT 'user';
+
 -- Permisos para el rol anónimo
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Allow user access" ON public.users FOR ALL USING (auth.uid() = id);
