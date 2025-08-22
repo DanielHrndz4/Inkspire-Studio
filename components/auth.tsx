@@ -6,7 +6,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { useAuthStore } from "@/store/authStore"
+import { useAuthStore, type User as AuthStoreUser } from "@/store/authStore"
 import signUp from "@/hooks/supabase/signup.supabase"
 import { signIn } from "@/hooks/supabase/signin.supabase"
 import { z } from "zod"
@@ -242,12 +242,13 @@ function AuthModal({
         throw result.error
       }
 
-      const authUser = {
+      const authUser: AuthStoreUser = {
         id: result.user.id,
         name: result.user.profile?.name || "",
         lastname: result.user.profile?.lastname || "",
         tel: result.user.profile?.tel || "",
         email: result.user.email || "",
+        role: (result.user as any)?.user_metadata?.role || "user",
       }
 
       useAuthStore.getState().login(authUser, result.session?.access_token || "")

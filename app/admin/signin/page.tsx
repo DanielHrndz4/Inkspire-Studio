@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { useAuthStore, type User as AuthStoreUser } from "@/store/authStore"
 
 export default function AdminSignInPage() {
   const router = useRouter()
@@ -13,13 +14,15 @@ export default function AdminSignInPage() {
   const [password, setPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [pending, setPending] = useState(false)
+  const loginStore = useAuthStore((s) => s.login)
+  const user = useAuthStore((s) => s.user)
 
   useEffect(() => {
-    // If already authed, layout will redirect; this is just a safety check.
-    if (localStorage.getItem("admin_authed") === "1") {
+    // If already admin, redirect
+    if (user?.role === "admin") {
       router.replace("/admin")
     }
-  }, [router])
+  }, [router, user])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -33,8 +36,15 @@ export default function AdminSignInPage() {
     // Very simple client-side check
     setTimeout(() => {
       if ((email || "").toLowerCase() === DEMO_EMAIL && password === DEMO_PASS) {
-        localStorage.setItem("admin_authed", "1")
-        localStorage.setItem("admin_email", email)
+        const authUser: AuthStoreUser = {
+          id: "demo-admin",
+          name: "Admin",
+          lastname: "",
+          email,
+          tel: "",
+          role: "admin",
+        }
+        loginStore(authUser, "")
         router.replace("/admin")
       } else {
         setError("Credenciales inválidas. Prueba admin@inkspire.local / admin123")

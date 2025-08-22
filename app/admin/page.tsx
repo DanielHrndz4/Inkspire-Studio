@@ -31,10 +31,15 @@ import {
 import { Order, listAllOrders, updateOrderStatus } from "@/hooks/supabase/orders.supabase"
 import { CartProvider } from "@/components/cart"
 import { Products, ProductTag } from "@/interface/product.interface"
+import { useAuthStore } from "@/store/authStore"
+import { useRouter } from "next/navigation"
 
 const TAG_OPTIONS: ProductTag[] = ["women", "men", "kids"]
 
 export default function AdminPage() {
+  const logout = useAuthStore((s) => s.logout)
+  const router = useRouter()
+
   return (
     <CartProvider>
       <div className="flex min-h-[100dvh] flex-col bg-white">
@@ -50,9 +55,8 @@ export default function AdminPage() {
             <form
               onSubmit={(e) => {
                 e.preventDefault()
-                localStorage.removeItem("admin_authed")
-                localStorage.removeItem("admin_email")
-                window.location.href = "/admin/signin"
+                logout()
+                router.replace("/admin/signin")
               }}
             >
               <Button type="submit" variant="outline" className="rounded-none">
