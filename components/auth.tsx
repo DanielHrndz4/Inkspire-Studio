@@ -10,6 +10,7 @@ import { useAuthStore, type User as AuthStoreUser } from "@/store/authStore"
 import signUp from "@/hooks/supabase/signup.supabase"
 import { signIn } from "@/hooks/supabase/signin.supabase"
 import { z } from "zod"
+import { Eye, EyeOff, AlertCircle, CheckCircle, Loader2 } from "lucide-react"
 
 export type User = {
   email: string
@@ -44,13 +45,35 @@ const loginSchema = z.object({
   password: z.string().min(8, { message: "La contraseña debe tener al menos 8 caracteres" })
 })
 
+function getRegisterErrorMessage(error: any) {
+  const message = error?.message || "";
+
+  if (message.includes("users_id_fkey")) {
+    return "El correo ya está registrado. Intenta con otro o inicia sesión.";
+  }
+
+  if (message.includes("duplicate key value")) {
+    return "Ya existe una cuenta con este correo.";
+  }
+
+  return "El correo ya está registrado. Intenta con otro o inicia sesión.";
+}
+
 const registerSchema = z
   .object({
-    name: z.string().min(1, { message: "El nombre es requerido" }),
-    lastName: z.string().min(1, { message: "El apellido es requerido" }),
-    phone: z.string().min(10, { message: "El teléfono es requerido" }),
+    name: z.string().min(1, { message: "El nombre es requerido" }).max(50, { message: "El nombre es demasiado largo" }),
+    lastName: z.string().min(1, { message: "El apellido es requerido" }).max(50, { message: "El apellido es demasiado largo" }),
+    phone: z.string()
+      .min(10, { message: "El teléfono debe tener al menos 10 dígitos" })
+      .max(15, { message: "El teléfono es demasiado largo" })
+      .regex(/^[+]?[\d\s\-()]+$/, { message: "Formato de teléfono inválido" }),
     email: z.string().email({ message: "Email inválido" }),
-    password: z.string().min(8, { message: "La contraseña debe tener al menos 8 caracteres" }),
+    password: z.string()
+      .min(8, { message: "La contraseña debe tener al menos 8 caracteres" })
+      .regex(/[a-z]/, { message: "La contraseña debe contener al menos una minúscula" })
+      .regex(/[A-Z]/, { message: "La contraseña debe contener al menos una mayúscula" })
+      .regex(/\d/, { message: "La contraseña debe contener al menos un número" })
+      .regex(/[!@#$%^&*(),.?":{}|<>]/, { message: "La contraseña debe contener al menos un carácter especial" }),
     confirmPassword: z.string().min(8, { message: "La confirmación es requerida" })
   })
   .refine((data) => data.password === data.confirmPassword, {
@@ -201,6 +224,9 @@ function AuthModal({
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState<boolean>(false)
   const [message, setMessage] = useState<string | null>(null)
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
 
   useEffect(() => {
     if (!open) {
@@ -211,27 +237,90 @@ function AuthModal({
       setPhone("")
       setConfirmPassword("")
       setError(null)
+      setFieldErrors({})
     }
   }, [open])
+
+  const validateLoginForm = () => {
+    try {
+      loginSchema.parse({ email: email.trim(), password })
+      setFieldErrors({})
+      return true
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        const errors: Record<string, string> = {}
+        err.errors.forEach((error) => {
+          if (error.path) errors[error.path[0]] = error.message
+        })
+        setFieldErrors(errors)
+      }
+      return false
+    }
+  }
+
+  const validateRegisterForm = () => {
+    try {
+      registerSchema.parse({
+        name,
+        lastName,
+        phone,
+        email: email.trim(),
+        password,
+        confirmPassword,
+      })
+      setFieldErrors({})
+      return true
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        const errors: Record<string, string> = {}
+        err.errors.forEach((error) => {
+          if (error.path) errors[error.path[0]] = error.message
+        })
+        setFieldErrors(errors)
+      }
+      return false
+    }
+  }
 
   const handleLogin = async () => {
     setLoading(true)
     setError(null)
     setMessage("")
 
-    try {
-      const parsed = loginSchema.safeParse({ email: email.trim(), password })
-      if (!parsed.success) {
-        throw new Error(parsed.error.issues[0].message)
-      }
+    if (!validateLoginForm()) {
+      setLoading(false)
+      return
+    }
 
+    try {
       const result = await signIn({
-        email: parsed.data.email.toLowerCase(),
-        password: parsed.data.password,
+        email: email.trim().toLowerCase(),
+        password,
       })
 
-      if ("error" in result) {
-        throw result.error
+      if (result && "error" in result) {
+        // Manejo específico de errores de Supabase
+        if (
+          typeof result.error === "object" &&
+          result.error !== null &&
+          "message" in result.error &&
+          typeof (result.error as any).message === "string"
+        ) {
+          const errorMsg = (result.error as any).message;
+          if (errorMsg.includes("Invalid login credentials")) {
+            throw new Error("Email o contraseña incorrectos")
+          } else if (errorMsg.includes("Email not confirmed")) {
+            throw new Error("Por favor, confirma tu correo electrónico antes de iniciar sesión")
+          } else {
+            throw result.error
+          }
+        } else {
+          throw result.error
+        }
+      }
+
+      if (!result || !result.user) {
+        throw new Error("No se pudo obtener la información del usuario. Intenta nuevamente.");
       }
 
       const authUser: AuthStoreUser = {
@@ -246,62 +335,71 @@ function AuthModal({
       useAuthStore.getState().login(authUser, result.session?.access_token || "")
 
       // Actualiza contexto local para compatibilidad con ensureAuth
-      await onLogin(parsed.data.email, parsed.data.password)
+      await onLogin(email.trim(), password)
 
-      setMessage("¡Bienvenido!")
+      setMessage("¡Bienvenido! Redirigiendo...")
       setTimeout(() => {
         location.reload()
       }, 2000)
     } catch (err: any) {
       console.error("Error en login:", err)
-      const errorMessage = err.message?.includes("Invalid login credentials")
-        ? "Email o contraseña incorrectos"
-        : err.message || "Error al iniciar sesión"
-      setError(errorMessage)
+      setError(err.message || "El usuario o contraseña son incorrectos")
     } finally {
       setLoading(false)
     }
-  };
+  }
 
   const handleRegister = async () => {
     setLoading(true)
     setError(null)
     setMessage("")
 
-    try {
-      const parsed = registerSchema.safeParse({
-        name,
-        lastName,
-        phone,
-        email: email.trim(),
-        password,
-        confirmPassword,
-      })
-      if (!parsed.success) {
-        throw new Error(parsed.error.issues[0].message)
-      }
+    if (!validateRegisterForm()) {
+      setLoading(false)
+      return
+    }
 
+    try {
       const { data, error } = await signUp({
-        name: parsed.data.name,
-        lastname: parsed.data.lastName,
-        tel: parsed.data.phone,
-        email: parsed.data.email.toLowerCase(),
-        password: parsed.data.password,
+        name: name.trim(),
+        lastname: lastName.trim(),
+        tel: phone.trim(),
+        email: email.trim().toLowerCase(),
+        password,
       })
 
       if (error) {
-        throw new Error(error)
+        // Manejo específico de errores de Supabase
+        if (error.includes("already registered")) {
+          throw new Error("Este correo electrónico ya está registrado")
+        } else if (error.includes("weak password")) {
+          throw new Error("La contraseña es demasiado débil")
+        } else {
+          throw new Error(getRegisterErrorMessage(error))
+        }
       }
 
       console.log("Usuario registrado:", data)
-      setMessage("¡Registro exitoso! Ahora puedes iniciar sesión.")
-    } catch (err) {
+      setMessage("¡Registro exitoso! Revisa tu correo y confirma tu cuenta para poder iniciar sesión.")
+      
+      // Limpiar formulario después de registro exitoso
+      setTimeout(() => {
+        setName("")
+        setLastName("")
+        setPhone("")
+        setEmail("")
+        setPassword("")
+        setConfirmPassword("")
+        onModeChange("login")
+        setMessage("Por favor, confirma tu correo electrónico antes de iniciar sesión.")
+      }, 3000)
+    } catch (err: any) {
       console.error("Error en registro:", err)
-      setError(err instanceof Error ? err.message : "Error al registrar")
+      setError(err.message || "Error al registrar")
     } finally {
       setLoading(false)
     }
-  };
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -318,42 +416,16 @@ function AuthModal({
           {/* Login Form */}
           <TabsContent value="login" className="space-y-4 pt-4">
             {error && (
-              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded-md flex items-center justify-center space-x-2">
-                <svg
-                  className="w-5 h-5 flex-shrink-0"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  viewBox="0 0 24 24"
-                  aria-hidden="true"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M18.364 5.636l-12.728 12.728M5.636 5.636l12.728 12.728"
-                  />
-                </svg>
-                <span className="text-sm font-medium">{error}</span>
+              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded-md flex items-center space-x-2">
+                <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                <span className="text-sm">{error}</span>
               </div>
             )}
 
             {message && (
-              <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-2 rounded-md flex items-center justify-center space-x-2">
-                <svg
-                  className="w-5 h-5 flex-shrink-0"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  viewBox="0 0 24 24"
-                  aria-hidden="true"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M5 13l4 4L19 7"
-                  />
-                </svg>
-                <span className="text-sm font-medium">{message}</span>
+              <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-2 rounded-md flex items-center space-x-2">
+                <CheckCircle className="w-5 h-5 flex-shrink-0" />
+                <span className="text-sm">{message}</span>
               </div>
             )}
 
@@ -365,66 +437,54 @@ function AuthModal({
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="tucorreo@dominio.com"
+                className={fieldErrors.email ? "border-red-500" : ""}
               />
+              {fieldErrors.email && <p className="text-red-500 text-xs">{fieldErrors.email}</p>}
             </div>
             <div className="grid gap-2">
               <Label htmlFor="login-pass">Contraseña</Label>
-              <Input
-                id="login-pass"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-              />
+              <div className="relative">
+                <Input
+                  id="login-pass"
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className={fieldErrors.password ? "border-red-500 pr-10" : "pr-10"}
+                />
+                <button
+                  type="button"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+              {fieldErrors.password && <p className="text-red-500 text-xs">{fieldErrors.password}</p>}
             </div>
             <Button
               className="w-full rounded-none"
               onClick={handleLogin}
-              disabled={!email || !password}
+              disabled={loading || !email || !password}
             >
-              Entrar
+              {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              {loading ? "Procesando..." : "Entrar"}
             </Button>
           </TabsContent>
 
           {/* Register Form */}
           <TabsContent value="register" className="space-y-4 pt-4">
             {error && (
-              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded-md flex items-center justify-center space-x-2">
-                <svg
-                  className="w-5 h-5 flex-shrink-0"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  viewBox="0 0 24 24"
-                  aria-hidden="true"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M18.364 5.636l-12.728 12.728M5.636 5.636l12.728 12.728"
-                  />
-                </svg>
-                <span className="text-sm font-medium">{error}</span>
+              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded-md flex items-center space-x-2">
+                <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                <span className="text-sm">{error}</span>
               </div>
             )}
 
             {message && (
-              <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-2 rounded-md flex items-center justify-center space-x-2">
-                <svg
-                  className="w-5 h-5 flex-shrink-0"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  viewBox="0 0 24 24"
-                  aria-hidden="true"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M5 13l4 4L19 7"
-                  />
-                </svg>
-                <span className="text-sm font-medium">{message}</span>
+              <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-2 rounded-md flex items-center space-x-2">
+                <CheckCircle className="w-5 h-5 flex-shrink-0" />
+                <span className="text-sm">{message}</span>
               </div>
             )}
 
@@ -435,7 +495,9 @@ function AuthModal({
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Tu nombre"
+                className={fieldErrors.name ? "border-red-500" : ""}
               />
+              {fieldErrors.name && <p className="text-red-500 text-xs">{fieldErrors.name}</p>}
             </div>
             <div className="grid gap-2">
               <Label htmlFor="reg-lastname">Apellidos</Label>
@@ -444,7 +506,9 @@ function AuthModal({
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
                 placeholder="Tus apellidos"
+                className={fieldErrors.lastName ? "border-red-500" : ""}
               />
+              {fieldErrors.lastName && <p className="text-red-500 text-xs">{fieldErrors.lastName}</p>}
             </div>
             <div className="grid gap-2">
               <Label htmlFor="reg-phone">Teléfono</Label>
@@ -454,7 +518,9 @@ function AuthModal({
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder="+52 123 456 7890"
+                className={fieldErrors.phone ? "border-red-500" : ""}
               />
+              {fieldErrors.phone && <p className="text-red-500 text-xs">{fieldErrors.phone}</p>}
             </div>
             <div className="grid gap-2">
               <Label htmlFor="reg-email">Email</Label>
@@ -464,34 +530,64 @@ function AuthModal({
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="tucorreo@dominio.com"
+                className={fieldErrors.email ? "border-red-500" : ""}
               />
+              {fieldErrors.email && <p className="text-red-500 text-xs">{fieldErrors.email}</p>}
             </div>
             <div className="grid gap-2">
               <Label htmlFor="reg-pass">Contraseña</Label>
-              <Input
-                id="reg-pass"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-              />
+              <div className="relative">
+                <Input
+                  id="reg-pass"
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className={fieldErrors.password ? "border-red-500 pr-10" : "pr-10"}
+                />
+                <button
+                  type="button"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+              {fieldErrors.password && <p className="text-red-500 text-xs">{fieldErrors.password}</p>}
+              {password && !fieldErrors.password && (
+                <div className="text-xs text-gray-500 mt-1">
+                  La contraseña debe contener al menos 8 caracteres, una mayúscula, una minúscula, un número y un carácter especial.
+                </div>
+              )}
             </div>
             <div className="grid gap-2">
               <Label htmlFor="reg-confirm-pass">Confirmar contraseña</Label>
-              <Input
-                id="reg-confirm-pass"
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="••••••••"
-              />
+              <div className="relative">
+                <Input
+                  id="reg-confirm-pass"
+                  type={showConfirmPassword ? "text" : "password"}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className={fieldErrors.confirmPassword ? "border-red-500 pr-10" : "pr-10"}
+                />
+                <button
+                  type="button"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                >
+                  {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+              {fieldErrors.confirmPassword && <p className="text-red-500 text-xs">{fieldErrors.confirmPassword}</p>}
             </div>
             <Button
               className="w-full rounded-none"
               onClick={handleRegister}
-              disabled={!email || !password || !name || !lastName || !phone || !confirmPassword}
+              disabled={loading || !email || !password || !name || !lastName || !phone || !confirmPassword}
             >
-              Crear cuenta
+              {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              {loading ? "Procesando..." : "Crear cuenta"}
             </Button>
           </TabsContent>
         </Tabs>

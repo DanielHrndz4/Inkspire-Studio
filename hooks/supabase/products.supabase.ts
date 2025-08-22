@@ -17,6 +17,47 @@ export const getProductsByAudience = async (audience: AudienceKey): Promise<Prod
   return allProducts.filter(product => hasAudienceTag(product, audience));
 }
 
+export const getLatestProducts = async (): Promise<Products[]> => {
+  const { data, error } = await supabase
+    .from("products")
+    .select(`
+      id, 
+      title, 
+      description, 
+      type, 
+      material, 
+      price, 
+      discount_percentage,
+      category:categories(name,image),
+      product_variants(color,sizes,images,tags)
+    `)
+    .order("created_at", { ascending: false }) // 👈 trae los más recientes
+    .limit(4); // 👈 solo 4
+
+  if (error) throw error;
+
+  return (data || []).map((p: any) => ({
+    id: p.id,
+    title: p.title,
+    description: p.description,
+    type: p.type,
+    material: p.material,
+    price: p.price,
+    discountPercentage: p.discount_percentage,
+    category: {
+      name: p.category?.name,
+      image: p.category?.image,
+    },
+    product: (p.product_variants || []).map((v: any) => ({
+      color: v.color,
+      size: v.sizes || [],
+      images: v.images || [],
+      tags: v.tags || [],
+    })),
+  }));
+};
+
+
 // Función para obtener productos con múltiples filtros (incluyendo audiencia)
 export const getFilteredProducts = async (filters: {
   audience?: AudienceKey;

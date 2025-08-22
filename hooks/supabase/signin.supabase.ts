@@ -38,8 +38,9 @@ export async function signIn(signInData: signInProps) {
       session: sessionData.session,
       accessToken: sessionData.session?.access_token,
     };
-  } catch (error) {
-    console.error("Error en signIn:", error);
-    throw new Error("Error al iniciar sesión");
+  } catch (error: any) {
+    if (error.message.includes("Invalid login credentials")) {
+      throw new Error("Email o contraseña incorrectos");
+    }
   }
 }

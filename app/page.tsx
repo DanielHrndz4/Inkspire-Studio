@@ -1,10 +1,11 @@
+"use client"
+
 import Image from "next/image"
 import Link from "next/link"
 import SiteHeader from "@/components/site-header"
 import SiteFooter from "@/components/site-footer"
 import ProductCard from "@/components/product-card"
 import { Button } from "@/components/ui/button"
-import { products } from "@/lib/data"
 import { CartProvider } from "@/components/cart"
 import FeatureStrip from "@/components/feature-strip"
 import HowItWorks from "@/components/how-it-works"
@@ -18,9 +19,19 @@ import HomeCollection from "@/components/home-collection"
 import AudienceSections from "@/components/audience-sections"
 import BackToTop from "@/components/back-to-top"
 import React, { useEffect } from 'react'; 
+import { getLatestProducts } from "@/hooks/supabase/products.supabase"
 
 export default function Page() {
   const featuredCats = categories
+  const [latestProducts, setLatestProducts] = React.useState<any[]>([]);
+
+  useEffect(() => {
+    async function fetchProducts() {
+      const products = await getLatestProducts();
+      setLatestProducts(products);
+    }
+    fetchProducts();
+  }, []);
   return (
     <CartProvider>
       <div className="flex min-h-[100dvh] flex-col bg-white">
@@ -72,12 +83,12 @@ export default function Page() {
                 <h2 className="text-xl md:text-2xl tracking-tight">Nuevos esenciales</h2>
                 <p className="text-sm text-muted-foreground">Una selección de temporada</p>
               </div>
-              <Link href="/products" className="text-sm hover:underline underline-offset-4">
+              <Link href="categories/tshirts" className="text-sm hover:underline underline-offset-4">
                 Ver todos
               </Link>
             </div>
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {products.slice(0, 4).map((p) => (
+              {latestProducts.slice(0, 4).map((p) => (
                 <ProductCard key={p.id} product={p} />
               ))}
             </div>
