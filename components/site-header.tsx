@@ -11,6 +11,7 @@ import MobileNav from "./mobile-nav"
 import { useAuth } from "@/components/auth"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
 import { useAuthStore } from "@/store/authStore"
+import { useWishlist } from "@/components/wishlist"
 
 export default function SiteHeader() {
   const { count, setOpen } = useCart()
@@ -19,6 +20,7 @@ export default function SiteHeader() {
   const user = useAuthStore((state) => state.user)
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
   const logout = useAuthStore((state) => state.logout)
+  useWishlist()
 
   return (
     <header className="sticky top-0 z-40 bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/60 border-b">
