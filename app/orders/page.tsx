@@ -59,7 +59,7 @@ export default function OrdersPage() {
                 <tbody>
                   {orders.map((o) => (
                     <tr key={o.id} className="border-t align-top">
-                      <td className="p-3 font-mono text-xs">{o.id}</td>
+                      <td className="p-3">{o.id}</td>
                       <td className="p-3">{new Date(o.created_at).toLocaleString()}</td>
                       <td className="p-3">
                         <ul className="grid gap-1">

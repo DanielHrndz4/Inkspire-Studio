@@ -130,7 +130,7 @@ function InventoryTab() {
             {filtered.map((p) => (
               <tr key={p.id} className="border-t">
                 <td className="p-3">{p.title}</td>
-                <td className="p-3">€ {p.price.toFixed(2)}</td>
+                <td className="p-3">$ {p.price.toFixed(2)}</td>
                 <td className="p-3 flex gap-2">
                   <Button
                     variant="outline"
@@ -568,7 +568,7 @@ function OrdersTab() {
           <tbody>
             {orders.map((o) => (
               <tr key={o.id} className="border-t align-top">
-                <td className="p-3 font-mono text-xs">{o.id}</td>
+                <td className="p-3">{o.id}</td>
                 <td className="p-3">{new Date(o.created_at).toLocaleString()}</td>
                 <td className="p-3">
                   <ul className="grid gap-1">
@@ -580,7 +580,7 @@ function OrdersTab() {
                     ))}
                   </ul>
                 </td>
-                <td className="p-3 font-medium">€ {o.items.reduce((s, it) => s + it.price * it.qty, 0).toFixed(2)}</td>
+                <td className="p-3 font-medium">$ {o.items.reduce((s, it) => s + it.price * it.qty, 0).toFixed(2)}</td>
                 <td className="p-3">
                   {o.full_name || o.email ? (
                     <>
