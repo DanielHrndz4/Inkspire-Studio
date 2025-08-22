@@ -28,7 +28,7 @@ import {
   createCategory,
   listCategories,
 } from "@/hooks/supabase/categories.supabase"
-import { AdminOrder, listOrders, subscribe } from "@/lib/admin-store"
+import { Order, listAllOrders, updateOrderStatus } from "@/hooks/supabase/orders.supabase"
 import { CartProvider } from "@/components/cart"
 import { Products, ProductTag } from "@/interface/product.interface"
 
@@ -533,17 +533,20 @@ function NewProductTab() {
 }
 
 function OrdersTab() {
-  const [orders, setOrders] = useState<AdminOrder[]>([])
+  const [orders, setOrders] = useState<Order[]>([])
 
   useEffect(() => {
-    setOrders(listOrders())
-    const unsub = subscribe((e) => {
-      if (e.type === "order:new") {
-        setOrders((prev) => [e.payload, ...prev])
-      }
-    })
-    return () => unsub()
+    listAllOrders().then(setOrders).catch(() => setOrders([]))
   }, [])
+
+  const handleStatusChange = async (id: string, status: Order["status"]) => {
+    try {
+      await updateOrderStatus(id, status)
+      setOrders((prev) => prev.map((o) => (o.id === id ? { ...o, status } : o)))
+    } catch (err) {
+      console.error(err)
+    }
+  }
 
   return (
     <section className="grid gap-4">
@@ -566,30 +569,41 @@ function OrdersTab() {
             {orders.map((o) => (
               <tr key={o.id} className="border-t align-top">
                 <td className="p-3 font-mono text-xs">{o.id}</td>
-                <td className="p-3">{new Date(o.createdAt).toLocaleString()}</td>
+                <td className="p-3">{new Date(o.created_at).toLocaleString()}</td>
                 <td className="p-3">
                   <ul className="grid gap-1">
-                    {o.items.map((it) => (
-                      <li key={it.id}>
+                    {o.items.map((it, idx) => (
+                      <li key={idx}>
                         {it.title} × {it.qty}
                         {it.size ? ` · Talla ${it.size}` : ""} {it.color ? ` · ${it.color}` : ""}
                       </li>
                     ))}
                   </ul>
                 </td>
-                <td className="p-3 font-medium">€ {o.total.toFixed(2)}</td>
+                <td className="p-3 font-medium">€ {o.items.reduce((s, it) => s + it.price * it.qty, 0).toFixed(2)}</td>
                 <td className="p-3">
-                  {o.customer?.email || o.customer?.name ? (
+                  {o.full_name || o.email ? (
                     <>
-                      <div>{o.customer?.name}</div>
-                      <div className="text-xs text-muted-foreground">{o.customer?.email}</div>
+                      <div>{o.full_name}</div>
+                      <div className="text-xs text-muted-foreground">{o.email}</div>
                     </>
                   ) : (
                     <span className="text-muted-foreground">—</span>
                   )}
                 </td>
                 <td className="p-3">
-                  <span className="px-2 py-0.5 rounded border">{o.status}</span>
+                  <Select
+                    value={o.status}
+                    onValueChange={(v) => handleStatusChange(o.id, v as Order["status"])}
+                  >
+                    <SelectTrigger className="w-[120px] rounded-none">
+                      <SelectValue placeholder="Estado" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pendiente">pendiente</SelectItem>
+                      <SelectItem value="pagado">pagado</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </td>
               </tr>
             ))}
@@ -603,9 +617,6 @@ function OrdersTab() {
           </tbody>
         </table>
       </div>
-      <p className="text-xs text-muted-foreground">
-        Tip: abre la tienda en otra pestaña, añade productos al carrito y presiona “Finalizar compra”. Verás la orden aquí en tiempo real.
-      </p>
     </section>
   )
 }
