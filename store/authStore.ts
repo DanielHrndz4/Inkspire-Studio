@@ -1,13 +1,14 @@
 // store.ts
 import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
+import { persist } from 'zustand/middleware';
 
-interface User {
+export interface User {
   id: string;
   name: string;
   lastname: string;
   email: string;
   tel: string;
+  role: string;
 }
 
 interface AuthState {
@@ -54,7 +55,18 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: 'auth-storage',
-      storage: createJSONStorage(() => localStorage),
+      storage: {
+        getItem: (name) => {
+          const value = localStorage.getItem(name)
+          return value ? atob(value) : null
+        },
+        setItem: (name, value) => {
+          localStorage.setItem(name, btoa(value))
+        },
+        removeItem: (name) => localStorage.removeItem(name),
+      },
+      serialize: (state) => JSON.stringify(state),
+      deserialize: (str) => JSON.parse(str),
     }
   )
 );
