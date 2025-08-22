@@ -37,7 +37,6 @@ import { useRouter } from "next/navigation"
 const TAG_OPTIONS: ProductTag[] = ["women", "men", "kids"]
 
 export default function AdminPage() {
-  const logout = useAuthStore((s) => s.logout)
   const router = useRouter()
 
   return (
@@ -55,8 +54,6 @@ export default function AdminPage() {
             <form
               onSubmit={(e) => {
                 e.preventDefault()
-                logout()
-                router.replace("/admin/signin")
               }}
             >
               <Button type="submit" variant="outline" className="rounded-none">
