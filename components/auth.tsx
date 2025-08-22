@@ -37,7 +37,6 @@ type AuthContextType = {
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 const KEY_CURRENT_USER = "inkspire_current_user"
-const KEY_USERS = "inkspire_users"
 const KEY_USER_ORDERS = "inkspire_user_orders"
 
 const loginSchema = z.object({
@@ -94,13 +93,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const login = useCallback(async (email: string, _password: string) => {
-    const users = getJSON<Record<string, User>>(KEY_USERS, {})
-    if (!users[email]) {
-      users[email] = { email }
-      setJSON(KEY_USERS, users)
-    }
-    setJSON(KEY_CURRENT_USER, users[email])
-    setUser(users[email])
+    const current: User = { email }
+    setJSON(KEY_CURRENT_USER, current)
+    setUser(current)
     setOpen(false)
     resolverRef.current?.()
     resolverRef.current = null
@@ -117,17 +112,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (data.password !== data.confirmPassword) {
       throw new Error("Las contraseñas no coinciden")
     }
-
-    const users = getJSON<Record<string, User>>(KEY_USERS, {})
-    users[data.email] = {
+    const newUser: User = {
       email: data.email,
       name: data.name,
       lastName: data.lastName,
-      phone: data.phone
+      phone: data.phone,
     }
-    setJSON(KEY_USERS, users)
-    setJSON(KEY_CURRENT_USER, users[data.email])
-    setUser(users[data.email])
+    setJSON(KEY_CURRENT_USER, newUser)
+    setUser(newUser)
     setOpen(false)
     resolverRef.current?.()
     resolverRef.current = null
@@ -248,7 +240,7 @@ function AuthModal({
         lastname: result.user.profile?.lastname || "",
         tel: result.user.profile?.tel || "",
         email: result.user.email || "",
-        role: (result.user as any)?.user_metadata?.role || "user",
+        role: result.user.profile?.role || "user",
       }
 
       useAuthStore.getState().login(authUser, result.session?.access_token || "")

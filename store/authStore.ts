@@ -34,9 +34,6 @@ export const useAuthStore = create<AuthState>()(
           isAuthenticated: true,
           isLoading: false
         });
-        try {
-          localStorage.setItem('user_id', userData.id);
-        } catch {}
       },
       logout: () => {
         set({
@@ -46,7 +43,6 @@ export const useAuthStore = create<AuthState>()(
           isLoading: false
         });
         try {
-          localStorage.removeItem('user_id');
           localStorage.removeItem('auth-storage');
           localStorage.removeItem('inkspire_wishlist');
         } catch {}

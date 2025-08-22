@@ -24,7 +24,7 @@ export async function signIn(signInData: signInProps) {
     // Paso 3: Obtener perfil extendido
     const { data: profile, error: profileError } = await supabase
       .from("users")
-      .select("name, lastname, tel, active")
+      .select("name, lastname, tel, active, role")
       .eq("id", authData.user.id)
       .single();
 
