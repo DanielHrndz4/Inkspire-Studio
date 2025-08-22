@@ -1,4 +1,6 @@
 import { supabase } from "@/utils/supabase/server";
+import { supabaseAdmin } from "@/utils/supabase/admin";
+import type { User as SupabaseUser } from "@supabase/supabase-js";
 
 interface userDataProps {
   name: string;
@@ -8,7 +10,9 @@ interface userDataProps {
   password: string;
 }
 
-const signUp = async (userData: userDataProps) => {
+const signUp = async (
+  userData: userDataProps,
+): Promise<{ data: SupabaseUser | null; error: string | null }> => {
   const { name, lastname, tel, email, password } = userData;
 
   const { data, error: errorAuth } = await supabase.auth.signUp({
@@ -19,12 +23,11 @@ const signUp = async (userData: userDataProps) => {
     },
   });
 
-  if (errorAuth) throw new Error(errorAuth.message);
+  if (errorAuth) return { data: null, error: errorAuth.message };
 
   const user = data.user;
-  if (!user) throw new Error("Usuario no creado en auth");
+  if (!user) return { data: null, error: "Usuario no creado en auth" };
 
-  // 👇 insert solo si existe en auth.users
   const { error: errorPublic } = await supabase.from("users").insert({
     id: user.id,
     name,
@@ -35,12 +38,14 @@ const signUp = async (userData: userDataProps) => {
   });
 
   if (errorPublic) {
-    // rollback: borro el user en auth
-    await supabase.auth.admin.deleteUser(user.id);
-    throw new Error("Error al crear el perfil: " + errorPublic.message);
+    await supabaseAdmin.auth.admin.deleteUser(user.id);
+    return {
+      data: null,
+      error: "Error al crear el perfil: " + errorPublic.message,
+    };
   }
 
-  return user;
+  return { data: user, error: null };
 };
 
 
