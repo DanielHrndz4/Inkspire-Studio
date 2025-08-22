@@ -34,7 +34,8 @@ CREATE TABLE public.orders (
     phone text,                   -- teléfono
     address text,                 -- dirección
     city text,                    -- ciudad
-    created_at timestamp with time zone DEFAULT now()
+    created_at timestamp with time zone DEFAULT now(),
+    status text NOT NULL DEFAULT 'pendiente'
 );
 
 

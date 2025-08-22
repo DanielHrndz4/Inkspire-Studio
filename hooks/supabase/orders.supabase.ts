@@ -18,6 +18,18 @@ export interface OrderData {
   cart: CartItem[];
 }
 
+export interface Order {
+  id: string;
+  created_at: string;
+  status: "pagado" | "pendiente";
+  full_name: string;
+  email: string;
+  phone?: string;
+  address?: string;
+  city?: string;
+  items: CartItem[];
+}
+
 /**
  * Crea un pedido y sus items en Supabase, vinculado por email
  * @param orderData - Datos del pedido y carrito
@@ -34,6 +46,7 @@ export const createOrder = async (orderData: OrderData) => {
           phone: orderData.phone || null,
           address: orderData.address,
           city: orderData.city,
+          status: "pendiente",
         },
       ])
       .select()
@@ -62,4 +75,58 @@ export const createOrder = async (orderData: OrderData) => {
     console.error("Error creando pedido:", error);
     throw error;
   }
+};
+
+export const getOrdersByEmail = async (email: string): Promise<Order[]> => {
+  const { data, error } = await supabase
+    .from("orders")
+    .select(
+      "id, created_at, status, full_name, email, phone, address, city, order_items(id, title, color, size, qty, price)"
+    )
+    .eq("email", email)
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return (data || []).map((o: any) => ({
+    id: o.id,
+    created_at: o.created_at,
+    status: o.status,
+    full_name: o.full_name,
+    email: o.email,
+    phone: o.phone,
+    address: o.address,
+    city: o.city,
+    items: o.order_items || [],
+  }));
+};
+
+export const listAllOrders = async (): Promise<Order[]> => {
+  const { data, error } = await supabase
+    .from("orders")
+    .select(
+      "id, created_at, status, full_name, email, phone, address, city, order_items(id, title, color, size, qty, price)"
+    )
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return (data || []).map((o: any) => ({
+    id: o.id,
+    created_at: o.created_at,
+    status: o.status,
+    full_name: o.full_name,
+    email: o.email,
+    phone: o.phone,
+    address: o.address,
+    city: o.city,
+    items: o.order_items || [],
+  }));
+};
+
+export const updateOrderStatus = async (
+  id: string,
+  status: Order["status"],
+) => {
+  const { error } = await supabase
+    .from("orders")
+    .update({ status })
+    .eq("id", id);
+  if (error) throw error;
 };
