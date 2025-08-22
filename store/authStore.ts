@@ -1,4 +1,3 @@
-// store.ts
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
@@ -36,7 +35,7 @@ export const useAuthStore = create<AuthState>()(
           isLoading: false
         });
         try {
-          localStorage.setItem('user_id', userData.id)
+          localStorage.setItem('user_id', userData.id);
         } catch {}
       },
       logout: () => {
@@ -47,28 +46,16 @@ export const useAuthStore = create<AuthState>()(
           isLoading: false
         });
         try {
-          localStorage.removeItem('user_id')
-          localStorage.removeItem('auth-storage')
-          localStorage.removeItem('inkspire_wishlist')
+          localStorage.removeItem('user_id');
+          localStorage.removeItem('auth-storage');
+          localStorage.removeItem('inkspire_wishlist');
         } catch {}
-        location.reload()
+        location.reload();
       },
-      setLoading: (loading: boolean) => set({ isLoading: loading })
+      setLoading: (loading: boolean) => set({ isLoading: loading }),
     }),
     {
       name: 'auth-storage',
-      storage: {
-        getItem: (name) => {
-          const value = localStorage.getItem(name)
-          return value ? atob(value) : null
-        },
-        setItem: (name, value) => {
-          localStorage.setItem(name, btoa(value))
-        },
-        removeItem: (name) => localStorage.removeItem(name),
-      },
-      serialize: (state) => JSON.stringify(state),
-      deserialize: (str) => JSON.parse(str),
     }
   )
 );
