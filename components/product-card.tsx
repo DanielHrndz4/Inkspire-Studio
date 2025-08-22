@@ -66,7 +66,6 @@ export default function ProductCard({ product = PLACEHOLDER_PRODUCT, showQuickBu
   const handleWishlist = (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    console.log(product.id)
     toggle(product.id)
   }
 

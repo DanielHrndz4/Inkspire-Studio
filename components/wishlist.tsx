@@ -7,6 +7,7 @@ import {
   toggleWishlistItem,
   clearWishlist as clearWishlistApi,
 } from "@/hooks/supabase/wishlist.supabase"
+import { toast } from "@/components/ui/use-toast"
 
 const KEY = "inkspire_wishlist"
 
@@ -46,18 +47,15 @@ export function useWishlist() {
   const toggle = useCallback(
     async (slug: string) => {
       const userId = user?.id
-      console.log('user id', user)
       if (!userId) {
-        setSlugs((prev) => {
-          const next = prev.includes(slug) ? prev.filter((s) => s !== slug) : [slug, ...prev]
-          write(next)
-          return next
+        toast({
+          title: "Inicia sesión",
+          description: "Debes iniciar sesión para guardar favoritos",
         })
         return
       }
       await toggleWishlistItem(slug)
       const updated = await fetchWishlist()
-      console.log(updated)
       setSlugs(updated)
       write(updated) // persist for faster client loads
     },
