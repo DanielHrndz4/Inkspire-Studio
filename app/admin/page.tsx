@@ -32,12 +32,11 @@ import { Order, listAllOrders, updateOrderStatus } from "@/hooks/supabase/orders
 import { CartProvider } from "@/components/cart"
 import { Products, ProductTag } from "@/interface/product.interface"
 import { useAuthStore } from "@/store/authStore"
-import { useRouter } from "next/navigation"
 
 const TAG_OPTIONS: ProductTag[] = ["women", "men", "kids"]
 
 export default function AdminPage() {
-  const router = useRouter()
+  const logout = useAuthStore((s) => s.logout)
 
   return (
     <CartProvider>
@@ -54,6 +53,7 @@ export default function AdminPage() {
             <form
               onSubmit={(e) => {
                 e.preventDefault()
+                logout()
               }}
             >
               <Button type="submit" variant="outline" className="rounded-none">

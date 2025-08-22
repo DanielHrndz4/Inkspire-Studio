@@ -48,6 +48,8 @@ export const useAuthStore = create<AuthState>()(
         });
         try {
           localStorage.removeItem('user_id')
+          localStorage.removeItem('auth-storage')
+          localStorage.removeItem('inkspire_wishlist')
         } catch {}
         location.reload()
       },

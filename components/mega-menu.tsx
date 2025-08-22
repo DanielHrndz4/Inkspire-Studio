@@ -107,8 +107,7 @@ export default function MegaMenu() {
                     const Icon = sc.icon
                     const isActive =
                       pathname === sc.href ||
-                      (sc.href !== "/" && pathname?.startsWith(sc.href) &&
-                        (sc.href === "/admin" ? pathname !== "/admin/signin" : true))
+                      (sc.href !== "/" && pathname?.startsWith(sc.href))
                     return (
                       <DropdownMenuItem asChild key={sc.href} className="cursor-pointer">
                         <Link
