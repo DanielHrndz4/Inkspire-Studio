@@ -122,6 +122,47 @@ export const listProducts = async (): Promise<Products[]> => {
   }));
 }
 
+export const getProductsByIds = async (ids: string[]): Promise<Products[]> => {
+  if (ids.length === 0) return []
+
+  const { data, error } = await supabase
+    .from("products")
+    .select(`
+      id,
+      title,
+      description,
+      type,
+      material,
+      price,
+      discount_percentage,
+      category:categories(name,image),
+      product_variants(color,sizes,images,tags)
+    `)
+    .in("id", ids)
+
+  if (error) throw error
+
+  return (data || []).map((p: any) => ({
+    id: p.id,
+    title: p.title,
+    description: p.description,
+    type: p.type,
+    material: p.material,
+    price: p.price,
+    discountPercentage: p.discount_percentage,
+    category: {
+      name: p.category?.name,
+      image: p.category?.image
+    },
+    product: (p.product_variants || []).map((v: any) => ({
+      color: v.color,
+      size: v.sizes || [],
+      images: v.images || [],
+      tags: v.tags || [],
+    })),
+  }))
+}
+
 // Las otras funciones (getProductById, createProduct, updateProduct, deleteProduct) se mantienen igual
 export const getProductById = async (id: string): Promise<Products | null> => {
   const { data, error } = await supabase
