@@ -281,7 +281,7 @@ function AuthModal({
         throw new Error(parsed.error.issues[0].message)
       }
 
-      const { data, error }: any = await signUp({
+      const { data, error } = await signUp({
         name: parsed.data.name,
         lastname: parsed.data.lastName,
         tel: parsed.data.phone,
@@ -290,7 +290,7 @@ function AuthModal({
       })
 
       if (error) {
-        throw error
+        throw new Error(error)
       }
 
       console.log("Usuario registrado:", data)
