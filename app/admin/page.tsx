@@ -584,10 +584,11 @@ function OrdersTab() {
                 <td className="p-3 font-medium">$ {o.items.reduce((s, it) => s + it.price * it.qty, 0).toFixed(2)}</td>
                 <td className="p-3">
                   {o.full_name || o.email ? (
-                    <>
+                    <div className="grid gap-0.5">
                       <div>{o.full_name}</div>
-                      <div className="text-xs text-muted-foreground">{o.email}</div>
-                    </>
+                      <div className="text-xs text-muted-foreground"><a href={`mailto:${o.email}`}>{o.email}</a></div>
+                      <div className="text-xs text-muted-foreground">{o.phone}</div>
+                    </div>
                   ) : (
                     <span className="text-muted-foreground">—</span>
                   )}

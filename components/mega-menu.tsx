@@ -28,7 +28,7 @@ export default function MegaMenu() {
   return (
     <nav className="hidden md:flex items-center gap-1">
       {/* Ítems principales siempre visibles */}
-      {TOP_LEVEL_MAIN.map((item) => {
+      {TOP_LEVEL_MAIN.map((item:any) => {
         const Icon = item.icon
         const isActive =
           pathname === item.href || (item.href !== "/" && pathname?.startsWith(item.href))

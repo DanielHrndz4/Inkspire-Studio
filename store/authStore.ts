@@ -20,6 +20,10 @@ interface AuthState {
   setLoading: (loading: boolean) => void;
 }
 
+// Helpers para codificar/decodificar base64
+const encode = (value: string) => btoa(unescape(encodeURIComponent(value)));
+const decode = (value: string) => decodeURIComponent(escape(atob(value)));
+
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
@@ -27,6 +31,7 @@ export const useAuthStore = create<AuthState>()(
       token: null,
       isAuthenticated: false,
       isLoading: false,
+
       login: (userData: User, authToken: string) => {
         set({
           user: userData,
@@ -35,6 +40,7 @@ export const useAuthStore = create<AuthState>()(
           isLoading: false
         });
       },
+
       logout: () => {
         set({
           user: null,
@@ -48,10 +54,26 @@ export const useAuthStore = create<AuthState>()(
         } catch {}
         location.reload();
       },
+
       setLoading: (loading: boolean) => set({ isLoading: loading }),
     }),
     {
       name: 'auth-storage',
+      storage: {
+        getItem: (name) => {
+          const raw = localStorage.getItem(name);
+          if (!raw) return null;
+          try {
+            return JSON.parse(decode(raw));
+          } catch {
+            return null;
+          }
+        },
+        setItem: (name, value) => {
+          localStorage.setItem(name, encode(JSON.stringify(value)));
+        },
+        removeItem: (name) => localStorage.removeItem(name),
+      },
     }
   )
 );

@@ -1,18 +1,27 @@
-import type { LucideIcon } from "lucide-react"
-import { Shirt, Sparkles, Layers, List, Grid2X2, FolderGit2, Wrench, Heart } from 'lucide-react'
+import type { LucideIcon } from "lucide-react";
+import {
+  Shirt,
+  Sparkles,
+  Layers,
+  List,
+  Grid2X2,
+  FolderGit2,
+  Wrench,
+  Heart,
+} from "lucide-react";
 
 export type NavItem = {
-  label: string
-  href: string
-  icon?: LucideIcon
-}
+  label: string;
+  href: string;
+  icon?: LucideIcon;
+};
 
 export type CategoryGroup = {
-  key: string
-  title: string
-  icon?: LucideIcon
-  items: NavItem[]
-}
+  key: string;
+  title: string;
+  icon?: LucideIcon;
+  items: NavItem[];
+};
 
 // Grupos de categorías (submenu)
 export const CATEGORY_GROUPS: CategoryGroup[] = [
@@ -48,14 +57,14 @@ export const CATEGORY_GROUPS: CategoryGroup[] = [
       { label: "Tipografía", href: "/categories/tipografia" },
     ],
   },
-]
+];
 
 // Ítems de primer nivel (main menu) – SIEMPRE visibles en desktop y como atajos arriba en móvil
 export const TOP_LEVEL_MAIN: NavItem[] = [
   { label: "Categorías", href: "/categories", icon: Layers },
   { label: "Colección", href: "/collection", icon: FolderGit2 },
   { label: "Personalizar", href: "/customize", icon: Wrench },
-]
+];
 
 // Resto de accesos (se muestran en submenu/“Explorar” y en la lista de atajos del móvil)
 export const SHORTCUTS: NavItem[] = [
@@ -63,5 +72,4 @@ export const SHORTCUTS: NavItem[] = [
   // Ojo: NO incluir Categorías, Colección, Personalizar aquí para evitar duplicados
   { label: "Servicios", href: "/services", icon: Grid2X2 },
   { label: "Wishlist", href: "/wishlist", icon: Heart },
-  { label: "Admin", href: "/admin" },
-]
+];

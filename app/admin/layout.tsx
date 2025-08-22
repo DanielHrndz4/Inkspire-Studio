@@ -7,8 +7,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const user = useAuthStore((s) => s.user)
   const isAdmin = user?.role === "admin"
 
-  console.log(user)
-
   if (!isAdmin) {
     return <NotFound />
   }

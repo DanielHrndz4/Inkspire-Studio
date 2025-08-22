@@ -105,7 +105,7 @@ export default function Page() {
             </div>
           </section>
 
-          <LocationSection />
+          {/* <LocationSection /> */}
           <Testimonials />
           <InstagramGrid />
           <NewsletterForm />

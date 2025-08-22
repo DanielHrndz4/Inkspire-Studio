@@ -84,6 +84,9 @@ export default function SiteHeader() {
                     <DropdownMenuItem asChild>
                       <Link href="/wishlist">Wishlist</Link>
                     </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/orders">Mis pedidos</Link>
+                    </DropdownMenuItem>
                     <DropdownMenuItem onClick={logout}>Cerrar sesión</DropdownMenuItem>
                   </>
                 ) : (

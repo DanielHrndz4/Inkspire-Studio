@@ -4,17 +4,13 @@ import { useEffect, useState } from "react"
 import SiteHeader from "@/components/site-header"
 import SiteFooter from "@/components/site-footer"
 import { CartProvider } from "@/components/cart"
-import { useAuth } from "@/components/auth"
 import { getOrdersByEmail, Order } from "@/hooks/supabase/orders.supabase"
 import { formatCurrency } from "@/lib/format"
+import { useAuthStore } from "@/store/authStore"
 
 export default function OrdersPage() {
-  const { user, ensureAuth } = useAuth()
+  const { user } = useAuthStore()
   const [orders, setOrders] = useState<Order[]>([])
-
-  useEffect(() => {
-    ensureAuth()
-  }, [ensureAuth])
 
   useEffect(() => {
     const load = async () => {
