@@ -1,5 +1,5 @@
 import type { LucideIcon } from "lucide-react"
-import { Shirt, Sparkles, Layers, List, Grid2X2, FolderGit2, Wrench, Heart, LogIn } from 'lucide-react'
+import { Shirt, Sparkles, Layers, List, Grid2X2, FolderGit2, Wrench, Heart } from 'lucide-react'
 
 export type NavItem = {
   label: string
@@ -64,5 +64,4 @@ export const SHORTCUTS: NavItem[] = [
   { label: "Servicios", href: "/services", icon: Grid2X2 },
   { label: "Wishlist", href: "/wishlist", icon: Heart },
   { label: "Admin", href: "/admin" },
-  { label: "Iniciar sesión (Admin)", href: "/admin/signin", icon: LogIn },
 ]
