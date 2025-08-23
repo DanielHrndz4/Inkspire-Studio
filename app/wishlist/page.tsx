@@ -9,7 +9,6 @@ import { CartProvider } from "@/components/cart"
 import { useWishlist } from "@/components/wishlist"
 import { getProductsByIds } from "@/hooks/supabase/products.supabase"
 import { Products } from "@/interface/product.interface"
-import SEO from "@/components/seo"
 
 export default function WishlistPage() {
   const { slugs, clear } = useWishlist()
@@ -39,7 +38,6 @@ export default function WishlistPage() {
 
   return (
     <CartProvider>
-      <SEO title="Wishlist" description="Tu lista de deseos de Inkspire Studio." />
       <div className="flex min-h-[100dvh] flex-col bg-white">
         <SiteHeader />
         <main className="container mx-auto px-4 py-10 grid gap-6">
