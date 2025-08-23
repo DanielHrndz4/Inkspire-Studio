@@ -7,7 +7,6 @@ import { CartProvider } from "@/components/cart"
 import { listCategoriesWithProductCount } from "@/hooks/supabase/categories.supabase"
 import { useEffect, useState } from "react"
 import { Skeleton } from "@/components/ui/skeleton" // Asegúrate de tener este componente
-import SEO from "@/components/seo"
 
 export default function CategoriesPage() {
   const [categories, setCategories] = useState<any[]>([])
@@ -32,42 +31,6 @@ export default function CategoriesPage() {
 
   return (
     <CartProvider>
-      <SEO
-        title="Categorías de Productos Personalizados | Inkspire Studio"
-        description="Explora las categorías de productos personalizados de Inkspire Studio: camisetas, gorras, accesorios, bordados y más en El Salvador."
-        url="/categorias"
-        image="https://icktrjprljbmkfhnsegu.supabase.co/storage/v…ject/public/isbucket/1755535102452-ym7jvnxy79.jpg"
-        keywords={[
-          "categorías",
-          "productos personalizados",
-          "camisetas",
-          "gorras",
-          "accesorios",
-          "bordado",
-          "estampado",
-          "Inkspire Studio",
-          "El Salvador"
-        ]}
-        type="website"
-        locale="es_SV"
-        siteName="Inkspire Studio"
-        twitterCard="summary_large_image"
-        structuredData={{
-          "@context": "https://schema.org",
-          "@type": "CollectionPage",
-          name: "Categorías de Productos",
-          url: "https://inkspire-studio.vercel.app/categorias",
-          description: "Descubre las diferentes categorías de productos personalizados de Inkspire Studio.",
-          publisher: {
-            "@type": "Organization",
-            name: "Inkspire Studio",
-            logo: {
-              "@type": "ImageObject",
-              url: "https://inkspire-studio.vercel.app/logo.png"
-            }
-          },
-        }}
-      />
 
       <div className="flex min-h-[100dvh] flex-col">
         <SiteHeader />
