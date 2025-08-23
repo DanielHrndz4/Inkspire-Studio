@@ -2,7 +2,6 @@ import type { Metadata } from 'next'
 import { getProductsByCategoryName } from "@/hooks/supabase/categories.supabase"
 import { getProductsByType } from "@/hooks/supabase/products.supabase"
 import CategoryDetailPage from './category-detail-client'
-import { capitalize } from 'lodash-es';
 
 interface PageProps {
   params: Promise<{ category: string }>;
@@ -37,10 +36,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const productExamples = products.slice(0, 3).map((p:any) => p.title).join(', ');
   
   return {
-    title: `${capitalize(cleanTextCat)} | Inkspire Studio`,
+    title: `${cleanTextCat} | Inkspire Studio`,
     description: `Explora nuestra colección de ${cleanTextCat.toLowerCase()}. ${productCount} productos disponibles: ${productExamples} y más. Envío gratis en El Salvador.`,
     openGraph: {
-      title: `${capitalize(cleanTextCat)} | Inkspire Studio`,
+      title: `${cleanTextCat} | Inkspire Studio`,
       description: `Descubre nuestra colección de ${cleanTextCat.toLowerCase()} con ${productCount} productos únicos.`,
       images: products.length > 0 && products[0].image_url ? 
         [products[0].image_url] : ['/og-default.jpg'],
