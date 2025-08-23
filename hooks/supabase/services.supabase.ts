@@ -1,6 +1,9 @@
 import { supabase } from "@/utils/supabase/server"
 
-const BUCKET = "isbucket"
+const BUCKET = process.env.NEXT_PUBLIC_SUPABASE_BUCKET
+if (!BUCKET) {
+  throw new Error("NEXT_PUBLIC_SUPABASE_BUCKET environment variable is not set");
+}
 
 export interface ServiceRequestInput {
   name: string
@@ -8,22 +11,6 @@ export interface ServiceRequestInput {
   service: string
   budget?: number
   message?: string
-  ref_urls?: string[]
-}
-
-export async function uploadServiceFiles(files: File[]): Promise<string[]> {
-  const urls: string[] = []
-  for (const file of files) {
-    const ext = file.name.split(".").pop()
-    const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
-    const { error } = await supabase.storage.from(BUCKET).upload(fileName, file)
-    if (error) throw error
-    const {
-      data: { publicUrl },
-    } = supabase.storage.from(BUCKET).getPublicUrl(fileName)
-    urls.push(publicUrl)
-  }
-  return urls
 }
 
 export async function createServiceRequest(input: ServiceRequestInput) {
@@ -35,7 +22,6 @@ export async function createServiceRequest(input: ServiceRequestInput) {
       service: input.service,
       budget: input.budget,
       message: input.message,
-      ref_urls: input.ref_urls,
     })
     .select()
     .single()

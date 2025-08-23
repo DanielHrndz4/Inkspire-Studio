@@ -6,7 +6,6 @@ CREATE TABLE public.service_requests (
   service text NOT NULL,
   budget numeric(10,2),
   message text,
-  ref_urls text[],
   created_at timestamptz DEFAULT now()
 );
 

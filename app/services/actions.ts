@@ -1,8 +1,8 @@
 "use server"
 
-import { createServiceRequest, uploadServiceFiles } from "@/hooks/supabase/services.supabase"
+import { createServiceRequest } from "@/hooks/supabase/services.supabase"
 
-export async function requestDesign(formData: FormData) {
+export async function requestDesign(_prevState: unknown, formData: FormData) {
   const name = String(formData.get("name") ?? "")
   const email = String(formData.get("email") ?? "")
   const service = String(formData.get("service") ?? "")
@@ -10,21 +10,12 @@ export async function requestDesign(formData: FormData) {
   const budgetValue = formData.get("budget")
   const budget = budgetValue ? Number(budgetValue) : undefined
 
-  const files = formData
-    .getAll("refs")
-    .filter((f): f is File => f instanceof File && f.size > 0)
-  let ref_urls: string[] = []
-  if (files.length) {
-    ref_urls = await uploadServiceFiles(files)
-  }
-
   await createServiceRequest({
     name,
     email,
     service,
     budget,
     message,
-    ref_urls,
   })
 
   return {

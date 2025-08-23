@@ -61,12 +61,6 @@ function DesignForm() {
         <Label htmlFor="message">Descripción del proyecto</Label>
         <Textarea id="message" name="message" placeholder="Cuéntanos lo que necesitas..." rows={6} />
       </div>
-      <div className="grid gap-2">
-        <Label htmlFor="refs">Referencias (opcional)</Label>
-        <Input id="refs" name="refs" type="file" multiple />
-        <p className="text-xs text-muted-foreground">Puedes adjuntar imágenes de referencia. (Demostración)</p>
-      </div>
-
       <Button type="submit" className="h-11 rounded-none" disabled={pending}>
         {pending ? "Enviando..." : "Solicitar cotización"}
       </Button>
