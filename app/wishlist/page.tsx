@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import SiteHeader from "@/components/site-header"
 import SiteFooter from "@/components/site-footer"
 import ProductCard from "@/components/product-card"
+import ProductSkeleton from "@/components/product-skeleton"
 import { CartProvider } from "@/components/cart"
 import { useWishlist } from "@/components/wishlist"
 import { getProductsByIds } from "@/hooks/supabase/products.supabase"
@@ -12,19 +13,24 @@ import { Products } from "@/interface/product.interface"
 export default function WishlistPage() {
   const { slugs, clear } = useWishlist()
   const [products, setProducts] = useState<Products[]>([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const load = async () => {
       if (slugs.length === 0) {
         setProducts([])
+        setLoading(false)
         return
       }
       try {
+        setLoading(true)
         const fetched = await getProductsByIds(slugs)
         setProducts(fetched)
       } catch (err) {
         console.error(err)
         setProducts([])
+      } finally {
+        setLoading(false)
       }
     }
     load()
@@ -49,6 +55,10 @@ export default function WishlistPage() {
 
           {slugs.length === 0 ? (
             <p className="text-sm text-muted-foreground">Aún no has agregado productos a tu lista de deseos.</p>
+          ) : loading ? (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              <ProductSkeleton count={Math.min(slugs.length, 4) || 4} />
+            </div>
           ) : (
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {products.map((p) => (

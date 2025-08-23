@@ -18,20 +18,24 @@ import CategorySpotlight from "@/components/category-spotlight"
 import HomeCollection from "@/components/home-collection"
 import AudienceSections from "@/components/audience-sections"
 import BackToTop from "@/components/back-to-top"
-import React, { useEffect } from 'react'; 
+import React, { useEffect } from 'react';
 import { getLatestProducts } from "@/hooks/supabase/products.supabase"
+import ProductSkeleton from "@/components/product-skeleton"
 
 export default function Page() {
   const featuredCats = categories
-  const [latestProducts, setLatestProducts] = React.useState<any[]>([]);
+  const [latestProducts, setLatestProducts] = React.useState<any[]>([])
+  const [loading, setLoading] = React.useState(true)
 
   useEffect(() => {
     async function fetchProducts() {
-      const products = await getLatestProducts();
-      setLatestProducts(products);
+      setLoading(true)
+      const products = await getLatestProducts()
+      setLatestProducts(products)
+      setLoading(false)
     }
-    fetchProducts();
-  }, []);
+    fetchProducts()
+  }, [])
   return (
     <CartProvider>
       <div className="flex min-h-[100dvh] flex-col bg-white">
@@ -88,9 +92,13 @@ export default function Page() {
               </Link>
             </div>
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {latestProducts.slice(0, 4).map((p) => (
-                <ProductCard key={p.id} product={p} />
-              ))}
+              {loading ? (
+                <ProductSkeleton count={4} />
+              ) : (
+                latestProducts.slice(0, 4).map((p) => (
+                  <ProductCard key={p.id} product={p} />
+                ))
+              )}
             </div>
           </section>
 

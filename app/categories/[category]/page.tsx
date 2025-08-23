@@ -4,6 +4,7 @@ import { useMemo, useState, useEffect, use } from "react"
 import SiteHeader from "@/components/site-header"
 import SiteFooter from "@/components/site-footer"
 import ProductCard from "@/components/product-card"
+import ProductSkeleton from "@/components/product-skeleton"
 import Breadcrumbs from "@/components/breadcrumbs"
 import { useSearchParams, usePathname } from "next/navigation"
 import { CartProvider } from "@/components/cart"
@@ -35,8 +36,10 @@ export default function CategoryDetailPage({ params }: CategoryDetailPageProps) 
   const visibility = useMemo(() => getVisibilityMap(), [])
 
   const [baseItemsRaw, setBaseItemsRaw] = useState<Products[]>([])
+  const [loading, setLoading] = useState(true)
   const load = async () => {
     try {
+      setLoading(true)
       const allowedTypes = [
         "t-shirt",
         "hoodie",
@@ -63,6 +66,8 @@ export default function CategoryDetailPage({ params }: CategoryDetailPageProps) 
       console.error("Error loading products:", err)
       // Mostrar mensaje de error al usuario si es necesario
       setBaseItemsRaw([])
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -319,7 +324,11 @@ export default function CategoryDetailPage({ params }: CategoryDetailPageProps) 
                 </div>
               )}
 
-              {filteredItems.length === 0 ? (
+              {loading ? (
+                <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                  <ProductSkeleton count={12} />
+                </div>
+              ) : filteredItems.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12 space-y-4">
                   <svg className="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />

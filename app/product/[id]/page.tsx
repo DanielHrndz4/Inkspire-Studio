@@ -10,6 +10,7 @@ import ProductCard from "@/components/product-card"
 import { getProductById, listProducts } from "@/hooks/supabase/products.supabase"
 import { Products } from "@/interface/product.interface"
 import { CartProvider } from "@/components/cart"
+import ProductPageSkeleton from "@/components/product-page-skeleton"
 
 type PageProps = {
   params: { id?: string }
@@ -40,8 +41,20 @@ export default function ProductPage({ params }: PageProps) {
     if (id) load()
   }, [id])
 
-  if (!loading && !product) return notFound()
-  if (!product) return null
+  if (loading) {
+    return (
+      <CartProvider>
+        <div className="flex min-h-[100dvh] flex-col">
+          <SiteHeader />
+          <main className="container mx-auto px-4 py-10 grid gap-10 lg:grid-cols-2">
+            <ProductPageSkeleton />
+          </main>
+          <SiteFooter />
+        </div>
+      </CartProvider>
+    )
+  }
+  if (!product) return notFound()
 
   const selectedVariant = product.product.find(v => v.color === selectedColor) ?? product.product[0]
 
