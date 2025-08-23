@@ -20,7 +20,7 @@ export const getProductsByCategoryName = async (
   categoryName: string,
   page: number = 1,
   pageSize: number = 10
-): Promise<CategoryProductsResponse> => {
+): Promise<any> => {
   // Decodificar el nombre recibido y pasarlo a minúsculas
   const decodedCategoryName = decodeURIComponent(categoryName).toLowerCase();
 

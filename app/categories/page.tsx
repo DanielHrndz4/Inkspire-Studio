@@ -1,71 +1,37 @@
-"use client"
-
-import SiteHeader from "@/components/site-header"
-import SiteFooter from "@/components/site-footer"
-import CategoryCard from "@/components/category-card"
-import { CartProvider } from "@/components/cart"
+import type { Metadata } from 'next'
 import { listCategoriesWithProductCount } from "@/hooks/supabase/categories.supabase"
-import { useEffect, useState } from "react"
-import { Skeleton } from "@/components/ui/skeleton" // Asegúrate de tener este componente
+import CategoriesPageClient from './category-page'
 
-export default function CategoriesPage() {
-  const [categories, setCategories] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
+export async function generateMetadata(): Promise<Metadata> {
+  // Obtener categorías para metadata dinámica
+  const categories = await listCategoriesWithProductCount()
+  
+  // Crear descripción dinámica basada en las categorías disponibles
+  const categoryNames = categories.map(cat => cat.name).join(', ')
+  
+  return {
+    title: 'Categorías | Inkspire Studio',
+    description: `Explora nuestras categorías de productos personalizados: ${categoryNames}. Encuentra camisas, hoodies y más con diseños exclusivos.`,
+    openGraph: {
+      title: 'Categorías | Inkspire Studio',
+      description: `Descubre nuestras categorías de productos personalizados: ${categoryNames}.`,
+      images: categories.length > 0 && categories[0].image ? [categories[0].image] : ['/og-default.jpg'],
+      url: 'https://inkspire-studio.vercel.app/categories',
+      type: 'website',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      site: '@inkspirestudiosv',
+      creator: '@inkspirestudiosv',
+      images: categories.length > 0 && categories[0].image ? [categories[0].image] : ['/og-default.jpg'],
+    },
+    keywords: ['categorías', 'productos personalizados', ...categories.map(cat => cat.name)],
+  }
+}
 
-  useEffect(() => {
-    const loadCategories = async () => {
-      try {
-        setLoading(true)
-        const data = await listCategoriesWithProductCount()
-        setCategories(data)
-        console.log(data)
-      } catch (error) {
-        console.error("Error loading categories:", error)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    loadCategories()
-  }, [])
-
-  return (
-    <CartProvider>
-
-      <div className="flex min-h-[100dvh] flex-col">
-        <SiteHeader />
-        <main className="container mx-auto px-4 py-10 grid gap-8">
-          <header className="grid gap-2">
-            <h1 className="text-2xl md:text-3xl tracking-tight">Categorías</h1>
-            <p className="text-sm text-muted-foreground">Explora por temas y tipos de producto.</p>
-          </header>
-
-          {loading ? (
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {/* Esqueletos de carga */}
-              {[...Array(6)].map((_, index) => (
-                <div key={index} className="space-y-4">
-                  <Skeleton className="h-48 w-full rounded-lg" />
-                  <Skeleton className="h-6 w-3/4" />
-                  <Skeleton className="h-4 w-1/2" />
-                </div>
-              ))}
-            </div>
-          ) : (
-            <section className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {categories.map((cat) => (
-                <CategoryCard
-                  key={cat.name}
-                  name={cat.name}
-                  image={cat.image}
-                  count={cat.count} // Asegúrate que este campo coincida con tu respuesta
-                />
-              ))}
-            </section>
-          )}
-        </main>
-        <SiteFooter />
-      </div>
-    </CartProvider>
-  )
+export default async function CategoriesPage() {
+  // Obtener datos en el servidor
+  const categories = await listCategoriesWithProductCount()
+  
+  return <CategoriesPageClient initialCategories={categories} />
 }

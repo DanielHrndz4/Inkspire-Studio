@@ -1,360 +1,85 @@
-"use client"
-
-import { useMemo, useState, useEffect, use } from "react"
-import SiteHeader from "@/components/site-header"
-import SiteFooter from "@/components/site-footer"
-import ProductCard from "@/components/product-card"
-import ProductSkeleton from "@/components/product-skeleton"
-import Breadcrumbs from "@/components/breadcrumbs"
-import { useSearchParams, usePathname } from "next/navigation"
-import { CartProvider } from "@/components/cart"
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Label } from "@/components/ui/label"
-import { Input } from "@/components/ui/input"
-import PaginatedGrid from "@/components/paginated-grid"
-import { getVisibilityMap } from "@/lib/admin-store"
+import type { Metadata } from 'next'
 import { getProductsByCategoryName } from "@/hooks/supabase/categories.supabase"
 import { getProductsByType } from "@/hooks/supabase/products.supabase"
-import { Products } from "@/interface/product.interface"
-import SEO from "@/components/seo"
+import CategoryDetailPage from './category-detail-client'
+import { capitalize } from 'lodash-es';
 
-interface CategoryDetailPageProps {
+interface PageProps {
   params: Promise<{ category: string }>;
 }
 
-export default function CategoryDetailPage({ params }: CategoryDetailPageProps) {
-  const searchParams = useSearchParams()
-  const pathname = usePathname()
-  const { category: paramCat } = use(params)
-  const cleanTextCat = paramCat ? decodeURIComponent(paramCat) : ""
-
-  const initialAudience = (searchParams.get("audiencia") ?? "").toLowerCase()
-  const initialQuery = searchParams.get("q") ?? ""
-  const initialSort = (searchParams.get("sort") ?? "relevance").toLowerCase()
-
-  // Obtener el mapa de visibilidad
-  const visibility = useMemo(() => getVisibilityMap(), [])
-
-  const [baseItemsRaw, setBaseItemsRaw] = useState<Products[]>([])
-  const [loading, setLoading] = useState(true)
-  const load = async () => {
-    try {
-      setLoading(true)
-      const allowedTypes = [
-        "t-shirt",
-        "hoodie",
-        "polo",
-        "croptop",
-        "oversized",
-        "long-sleeve",
-      ] as const;
-      const productType = paramCat;
-      if (allowedTypes.includes(productType as typeof allowedTypes[number])) {
-        const products = await getProductsByType(productType as typeof allowedTypes[number]);
-        setBaseItemsRaw(products);
-      } else {
-        const { products } = await getProductsByCategoryName(paramCat);
-        if (products.length === 0) {
-          // Manejar caso donde no hay productos
-          console.warn(`No products found for category: ${paramCat}`);
-        }
-        setBaseItemsRaw(products);
-      }
-
-      console.log(productType)
-    } catch (err) {
-      console.error("Error loading products:", err)
-      // Mostrar mensaje de error al usuario si es necesario
-      setBaseItemsRaw([])
-    } finally {
-      setLoading(false)
-    }
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  // Obtener parámetros
+  const { category } = await params;
+  const cleanTextCat = category ? decodeURIComponent(category) : "";
+  
+  // Obtener productos
+  const allowedTypes = [
+    "t-shirt",
+    "hoodie",
+    "polo",
+    "croptop",
+    "oversized",
+    "long-sleeve",
+  ] as const;
+  
+  let products = [];
+  
+  if (allowedTypes.includes(category as typeof allowedTypes[number])) {
+    products = await getProductsByType(category as typeof allowedTypes[number]);
+  } else {
+    const result = await getProductsByCategoryName(category);
+    products = result.products;
   }
-
-  useEffect(() => {
-    load()
-  }, [paramCat])
-
-  const baseItems = useMemo(
-    () => baseItemsRaw.filter(p => visibility[p.id] !== false),
-    [baseItemsRaw, visibility]
-  )
-
-  // Estado de filtros
-  const [q, setQ] = useState(initialQuery)
-  const [colors, setColors] = useState<string[]>([])
-  const [materials, setMaterials] = useState<string[]>([])
-  const [audiencia, setAudiencia] = useState<string>(initialAudience)
-  const [sort, setSort] = useState<string>(initialSort)
-
-  useEffect(() => {
-    setAudiencia(initialAudience)
-    setQ(initialQuery)
-    setSort(initialSort)
-  }, [initialAudience, initialQuery, initialSort])
-
-  // Opciones disponibles
-  const colorsAll = useMemo(() => {
-    const set = new Set<string>()
-    baseItems.forEach((p) => {
-      p.product.forEach((variant: any) => {
-        set.add(variant.color)
-      })
-    })
-    return Array.from(set)
-  }, [baseItems])
-
-  const materialsAll = useMemo(() => {
-    const set = new Set<string>()
-    baseItems.forEach((p) => set.add(p.material || ""))
-    return Array.from(set)
-  }, [baseItems])
-
-  const parseAudience = (audience: string) => {
-    switch (audience.toLowerCase()) {
-      case "hombres":
-        return "men"
-      case "mujeres":
-        return "women"
-      case "niños":
-        return "kids"
-      default:
-        return "all"
-    }
+  
+  // Crear descripción dinámica
+  const productCount = products.length;
+  const productExamples = products.slice(0, 3).map((p:any) => p.title).join(', ');
+  
+  return {
+    title: `${capitalize(cleanTextCat)} | Inkspire Studio`,
+    description: `Explora nuestra colección de ${cleanTextCat.toLowerCase()}. ${productCount} productos disponibles: ${productExamples} y más. Envío gratis en El Salvador.`,
+    openGraph: {
+      title: `${capitalize(cleanTextCat)} | Inkspire Studio`,
+      description: `Descubre nuestra colección de ${cleanTextCat.toLowerCase()} con ${productCount} productos únicos.`,
+      images: products.length > 0 && products[0].image_url ? 
+        [products[0].image_url] : ['/og-default.jpg'],
+      url: `https://inkspire-studio.vercel.app/categories/${category}`,
+      type: 'website',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      site: '@inkspirestudiosv',
+      creator: '@inkspirestudiosv',
+      images: products.length > 0 && products[0].image_url ? 
+        [products[0].image_url] : ['/og-default.jpg'],
+    },
+    keywords: [cleanTextCat, 'productos personalizados', 'El Salvador', ...products.slice(0, 5).map((p:any) => p.title)],
   }
-
-  // Aplicar filtros
-  const filteredItems = useMemo(() => {
-    let items = baseItems
-
-    if (audiencia) {
-      const parsedAudience = parseAudience(audiencia)
-      items = items.filter((p) => {
-        // Si es "all", mostrar todos los productos
-        if (parsedAudience === "all") return true
-
-        // Verificar si alguna variante del producto tiene el tag correspondiente
-        return p.product.some((variant: any) => variant.tags?.includes(parsedAudience))
-      })
-    }
-
-    // Resto de los filtros permanece igual...
-    const term = q.trim().toLowerCase()
-    if (term) {
-      items = items.filter(
-        (p) => p.title.toLowerCase().includes(term) ||
-          p.description?.toLowerCase().includes(term))
-    }
-
-    if (colors.length > 0) {
-      items = items.filter((p) =>
-        p.product.some((variant: any) => colors.includes(variant.color)))
-    }
-
-    if (materials.length > 0) {
-      items = items.filter((p) => materials.includes(p.material || ""))
-    }
-
-    switch (sort) {
-      case "price-asc":
-        items = [...items].sort((a, b) => a.price - b.price)
-        break
-      case "price-desc":
-        items = [...items].sort((a, b) => b.price - a.price)
-        break
-      default:
-        break
-    }
-    return items
-  }, [baseItems, audiencia, q, colors, materials, sort])
-
-  // Sincronizar a URL (q, audiencia, sort)
-  useEffect(() => {
-    const params = new URLSearchParams()
-    if (q) params.set("q", q)
-    if (audiencia) params.set("audiencia", audiencia)
-    if (sort && sort !== "relevance") params.set("sort", sort)
-    const newUrl = `${pathname}${params.toString() ? `?${params}` : ""}`
-    window.history.replaceState(null, "", newUrl)
-  }, [q, audiencia, sort, pathname])
-
-  const toggle = (list: string[], value: string, setter: (v: string[]) => void) => {
-    if (list.includes(value)) setter(list.filter((v) => v !== value))
-    else setter([...list, value])
-  }
-
-  const resetFilters = () => {
-    setColors([])
-    setMaterials([])
-    setAudiencia("")
-    setQ("")
-    setSort("relevance")
-  }
-
-  return (
-    <CartProvider>
-      <SEO title={`Categoría: ${cleanTextCat}`} description={`Productos de ${cleanTextCat} en Inkspire Studio.`} />
-      <div className="flex min-h-[100dvh] flex-col">
-        <SiteHeader />
-        <main className="container mx-auto px-4 pt-8 pb-10 grid gap-5">
-          <Breadcrumbs
-            items={[
-              { label: "Inicio", href: "/" },
-              { label: "Categorías", href: "/categories" },
-              { label: cleanTextCat },
-            ]}
-          />
-
-          <header className="grid gap-2">
-            <h1 className="text-2xl md:text-3xl tracking-tight capitalize">
-              {cleanTextCat}
-            </h1>
-            {/* {cat.description ? <p className="text-sm text-muted-foreground">{cat.description}</p> : null} */}
-          </header>
-
-          <section className="grid gap-8 md:grid-cols-[280px_1fr]">
-            <aside className="md:sticky md:top-20 md:h-fit grid gap-6">
-              {/* Buscador */}
-              <div className="grid gap-2">
-                <Label htmlFor="q" className="text-xs uppercase tracking-widest text-muted-foreground">
-                  {`Buscar en ${cleanTextCat}`}
-                </Label>
-                <Input
-                  id="q"
-                  placeholder="Ej. white, oxford, anime..."
-                  value={q}
-                  onChange={(e) => setQ(e.target.value)}
-                  className="rounded-none"
-                />
-              </div>
-
-              {/* Audiencia */}
-              <div className="grid gap-2">
-                <div className="text-xs uppercase tracking-widest text-muted-foreground">Audiencia</div>
-                <div className="flex flex-wrap gap-2">
-                  {["hombres", "mujeres", "niños"].map((a) => (
-                    <button
-                      key={a}
-                      onClick={() => setAudiencia((prev) => (prev === a ? "" : a))}
-                      className={`text-xs px-3 py-1 rounded-full border ${audiencia === a ? "bg-foreground text-background" : "bg-background text-foreground"
-                        }`}
-                      aria-pressed={audiencia === a}
-                    >
-                      {capitalize(a)}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <Accordion type="multiple" defaultValue={["color", "material"]}>
-                <AccordionItem value="color">
-                  <AccordionTrigger className="text-base">
-                    Color
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    <div className="grid gap-2">
-                      {colorsAll.length === 0 && (
-                        <div className="text-xs text-muted-foreground">Sin opciones de color</div>
-                      )}
-                      {colorsAll.map((c) => (
-                        <Label key={c} className="flex items-center gap-2 font-normal">
-                          <Checkbox
-                            checked={colors.includes(c)}
-                            onCheckedChange={() => toggle(colors, c, setColors)}
-                          />
-                          {c}
-                        </Label>
-                      ))}
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-
-                <AccordionItem value="material">
-                  <AccordionTrigger className="text-base">
-                    Material
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    <div className="grid gap-2">
-                      {materialsAll.length === 0 && (
-                        <div className="text-xs text-muted-foreground">Sin opciones de material</div>
-                      )}
-                      {materialsAll.map((m) => (
-                        <Label key={m} className="flex items-center gap-2 font-normal">
-                          <Checkbox
-                            checked={materials.includes(m)}
-                            onCheckedChange={() => toggle(materials, m, setMaterials)}
-                          />
-                          {m}
-                        </Label>
-                      ))}
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
-
-              {(colors.length > 0 || materials.length > 0 || audiencia || q) && (
-                <button
-                  onClick={resetFilters}
-                  className="text-xs px-3 py-2 rounded-md border mt-2 w-fit hover:bg-muted"
-                >
-                  Limpiar filtros
-                </button>
-              )}
-            </aside>
-
-            <section className="grid gap-6">
-              {/* Chips activos */}
-              {(colors.length > 0 || materials.length > 0 || audiencia || q) && (
-                <div className="flex flex-wrap gap-2">
-                  {q && <span className="text-xs px-2 py-1 rounded-full border">Búsqueda: {q}</span>}
-                  {audiencia && (
-                    <span className="text-xs px-2 py-1 rounded-full border inline-flex items-center h-6">
-                      Audiencia: {capitalize(audiencia)}
-                    </span>
-                  )}
-                  {colors.map((c) => (
-                    <span key={`c-${c}`} className="text-xs px-2 py-1 rounded-full border">
-                      Color: {c}
-                    </span>
-                  ))}
-                  {materials.map((m) => (
-                    <span key={`m-${m}`} className="text-xs px-2 py-1 rounded-full border">
-                      Material: {m}
-                    </span>
-                  ))}
-                </div>
-              )}
-
-              {loading ? (
-                <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                  <ProductSkeleton count={12} />
-                </div>
-              ) : filteredItems.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-12 space-y-4">
-                  <svg className="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                  </svg>
-                  <h3 className="text-xl font-medium text-gray-600">No encontramos productos</h3>
-                  <p className="text-gray-500 max-w-md">Parece que no hay items disponibles con los filtros actuales.</p>
-                </div>
-              ) : (
-                <PaginatedGrid
-                  items={filteredItems}
-                  initialPageSize={12}
-                  perPageOptions={[12, 24, 36]}
-                  renderItem={(p) => <ProductCard key={p.id} product={p} />}
-                />
-              )}
-            </section>
-          </section>
-        </main>
-        <SiteFooter />
-      </div>
-    </CartProvider>
-  )
 }
 
-function capitalize(s: string) {
-  return s.charAt(0).toUpperCase() + s.slice(1)
+export default async function Page({ params }: PageProps) {
+  // Obtener parámetros
+  const { category } = await params;
+  
+  // Obtener datos en el servidor
+  const allowedTypes = [
+    "t-shirt",
+    "hoodie",
+    "polo",
+    "croptop",
+    "oversized",
+    "long-sleeve",
+  ] as const;
+  
+  let products = [];
+  
+  if (allowedTypes.includes(category as typeof allowedTypes[number])) {
+    products = await getProductsByType(category as typeof allowedTypes[number]);
+  } else {
+    const result = await getProductsByCategoryName(category);
+    products = result.products;
+  }
+  
+  return <CategoryDetailPage initialProducts={products} category={category} />
 }
