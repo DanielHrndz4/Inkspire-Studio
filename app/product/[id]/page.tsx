@@ -1,8 +1,8 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useParams, redirect } from "next/navigation" // redirect opcional en client
 import Image from "next/image"
-import { notFound } from "next/navigation"
 import SiteHeader from "@/components/site-header"
 import SiteFooter from "@/components/site-footer"
 import ProductConfigurator from "@/components/product-configurator"
@@ -12,16 +12,14 @@ import { Products } from "@/interface/product.interface"
 import { CartProvider } from "@/components/cart"
 import ProductPageSkeleton from "@/components/product-page-skeleton"
 
-type PageProps = {
-  params: { id?: string }
-}
+export default function ProductPage() {
+  const params = useParams<{ id: string | string[] }>()
+  const id = Array.isArray(params.id) ? params.id[0] : params.id || ""
 
-export default function ProductPage({ params }: PageProps) {
-  const id = params?.id ?? ""
   const [product, setProduct] = useState<Products | null>(null)
   const [related, setRelated] = useState<Products[]>([])
   const [selectedColor, setSelectedColor] = useState("")
-  const [selectedImageIndex, setSelectedImageIndex] = useState(0) // Estado para imagen seleccionada
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -54,9 +52,25 @@ export default function ProductPage({ params }: PageProps) {
       </CartProvider>
     )
   }
-  if (!product) return notFound()
 
-  const selectedVariant = product.product.find(v => v.color === selectedColor) ?? product.product[0]
+  // notFound() es server-only; en client puedes redirigir o mostrar un 404 local
+  if (!product) {
+    // redirect("/404") // <- si prefieres redirigir
+    return (
+      <CartProvider>
+        <div className="flex min-h-[100dvh] flex-col">
+          <SiteHeader />
+          <main className="container mx-auto px-4 py-10">
+            <p className="text-sm text-muted-foreground">Producto no encontrado.</p>
+          </main>
+          <SiteFooter />
+        </div>
+      </CartProvider>
+    )
+  }
+
+  const selectedVariant =
+    product.product.find(v => v.color === selectedColor) ?? product.product[0]
 
   return (
     <CartProvider>
@@ -65,7 +79,6 @@ export default function ProductPage({ params }: PageProps) {
         <main className="container mx-auto px-4 py-10 grid gap-10 lg:grid-cols-2">
           {/* Galería */}
           <div className="grid gap-4">
-            {/* Imagen principal */}
             <div className="relative aspect-[4/5] w-full overflow-hidden rounded-md bg-muted">
               <Image
                 src={selectedVariant.images[selectedImageIndex] || "/placeholder.svg"}
@@ -75,16 +88,12 @@ export default function ProductPage({ params }: PageProps) {
                 priority
               />
             </div>
-            
-            {/* Miniaturas */}
             <div className="grid grid-cols-4 gap-4">
               {selectedVariant.images.map((img, i) => (
                 <button
                   key={`${selectedColor}-${i}`}
                   className={`relative aspect-square rounded-md overflow-hidden border-2 ${
-                    i === selectedImageIndex 
-                      ? "border-primary" 
-                      : "border-transparent"
+                    i === selectedImageIndex ? "border-primary" : "border-transparent"
                   }`}
                   onClick={() => setSelectedImageIndex(i)}
                 >
@@ -106,7 +115,7 @@ export default function ProductPage({ params }: PageProps) {
               selectedColor={selectedColor}
               onColorChange={(color) => {
                 setSelectedColor(color)
-                setSelectedImageIndex(0) // Resetear imagen al cambiar color
+                setSelectedImageIndex(0)
               }}
               selectedVariant={selectedVariant}
               onImageSelect={setSelectedImageIndex}
