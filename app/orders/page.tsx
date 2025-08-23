@@ -7,6 +7,7 @@ import { CartProvider } from "@/components/cart"
 import { getOrdersByEmail, Order } from "@/hooks/supabase/orders.supabase"
 import { formatCurrency } from "@/lib/format"
 import { useAuthStore } from "@/store/authStore"
+import SEO from "@/components/seo"
 
 export default function OrdersPage() {
   const { user } = useAuthStore()
@@ -28,6 +29,7 @@ export default function OrdersPage() {
 
   return (
     <CartProvider>
+      <SEO title="Órdenes" description="Revisa el estado de tus pedidos." />
       <div className="flex min-h-[100dvh] flex-col bg-white">
         <SiteHeader />
         <main className="container mx-auto px-4 py-10 grid gap-6">

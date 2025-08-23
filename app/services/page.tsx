@@ -9,10 +9,12 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { requestDesign } from "./actions"
 import { CartProvider } from "@/components/cart"
+import SEO from "@/components/seo"
 
 export default function ServicesPage() {
   return (
     <CartProvider>
+      <SEO title="Servicios de diseño" description="Branding, ilustración y diseños a medida." />
       <div className="flex min-h-[100dvh] flex-col">
         <SiteHeader />
         <main className="container mx-auto px-4 py-10 grid gap-8 md:max-w-3xl">

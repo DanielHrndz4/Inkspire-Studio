@@ -13,6 +13,7 @@ import { Upload, Move, RotateCw, ZoomIn, Trash2, Plus } from 'lucide-react'
 import { CartProvider } from "@/components/cart"
 import { Slider } from "@/components/ui/slider"
 import TShirtViewer2D from "@/components/tshirt-viewer"
+import SEO from "@/components/seo"
 
 type Garment = "Camisa" | "Hoodie"
 type Placement = {
@@ -101,6 +102,7 @@ const getSideImagesByColor = (color: string): Record<string, string> => {
 export default function CustomizePage() {
   return (
     <CartProvider>
+      <SEO title="Personaliza" description="Diseña tus propias prendas personalizadas." />
       <div className="flex min-h-[100dvh] flex-col">
         <SiteHeader />
         <main className="container mx-auto px-4 py-10 grid gap-8 lg:grid-cols-2">

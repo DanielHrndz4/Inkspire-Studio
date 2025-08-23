@@ -20,6 +20,7 @@ import BackToTop from "@/components/back-to-top"
 import React, { useEffect } from 'react';
 import { getLatestProducts } from "@/hooks/supabase/products.supabase"
 import ProductSkeleton from "@/components/product-skeleton"
+import SEO from "@/components/seo"
 
 export default function Page() {
   const featuredCats = categories
@@ -37,6 +38,7 @@ export default function Page() {
   }, [])
   return (
     <CartProvider>
+      <SEO title="Inicio" description="Camisas y hoodies personalizados con calidad de estudio." />
       <div className="flex min-h-[100dvh] flex-col bg-white">
         <SiteHeader />
         <main className="flex-1">

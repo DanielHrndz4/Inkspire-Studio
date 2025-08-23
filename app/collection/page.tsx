@@ -15,6 +15,7 @@ import HomeCollection from "@/components/home-collection"
 import { listProducts } from "@/hooks/supabase/products.supabase"
 import type { Products } from "@/interface/product.interface"
 import ProductSkeleton from "@/components/product-skeleton"
+import SEO from "@/components/seo"
 
 const TABS = [
   { key: "all", label: "Todo" },
@@ -57,6 +58,7 @@ export default function CollectionPage() {
 
   return (
     <CartProvider>
+      <SEO title="Colección" description="Descubre nuestra colección destacada de prendas." />
       <div className="flex max-h-[50dvh] flex-col bg-white">
         <SiteHeader />
         <main className="flex-1">

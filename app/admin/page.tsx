@@ -33,6 +33,7 @@ import { ServiceRequest, listServiceRequests } from "@/hooks/supabase/services.s
 import { CartProvider } from "@/components/cart"
 import { Products, ProductTag } from "@/interface/product.interface"
 import { useAuthStore } from "@/store/authStore"
+import SEO from "@/components/seo"
 
 const TAG_OPTIONS: ProductTag[] = ["women", "men", "kids"]
 
@@ -41,6 +42,7 @@ export default function AdminPage() {
 
   return (
     <CartProvider>
+      <SEO title="Admin" description="Panel de administración de Inkspire Studio." />
       <div className="flex min-h-[100dvh] flex-col bg-white">
         <SiteHeader />
         <main className="container mx-auto px-4 py-10 grid gap-8">

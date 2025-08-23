@@ -11,6 +11,7 @@ import { getProductById, listProducts } from "@/hooks/supabase/products.supabase
 import { Products } from "@/interface/product.interface"
 import { CartProvider } from "@/components/cart"
 import ProductPageSkeleton from "@/components/product-page-skeleton"
+import SEO from "@/components/seo"
 
 export default function ProductPage() {
   const params = useParams<{ id: string | string[] }>()
@@ -42,6 +43,7 @@ export default function ProductPage() {
   if (loading) {
     return (
       <CartProvider>
+        <SEO title="Producto" description="Cargando producto..." />
         <div className="flex min-h-[100dvh] flex-col">
           <SiteHeader />
           <main className="container mx-auto px-4 py-10 grid gap-10 lg:grid-cols-2">
@@ -58,6 +60,7 @@ export default function ProductPage() {
     // redirect("/404") // <- si prefieres redirigir
     return (
       <CartProvider>
+        <SEO title="Producto no encontrado" description="Producto no encontrado" />
         <div className="flex min-h-[100dvh] flex-col">
           <SiteHeader />
           <main className="container mx-auto px-4 py-10">
@@ -74,6 +77,7 @@ export default function ProductPage() {
 
   return (
     <CartProvider>
+      <SEO title={product.title} description={product.description} />
       <div className="flex min-h-[100dvh] flex-col">
         <SiteHeader />
         <main className="container mx-auto px-4 py-10 grid gap-10 lg:grid-cols-2">
