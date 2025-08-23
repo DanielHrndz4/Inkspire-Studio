@@ -2,6 +2,7 @@
 
 import Image from "next/image"
 import Link from "next/link"
+import { useEffect, useState } from "react"
 import SiteHeader from "@/components/site-header"
 import SiteFooter from "@/components/site-footer"
 import CategorySpotlight from "@/components/category-spotlight"
@@ -10,8 +11,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import ProductCard from "@/components/product-card"
 import { CartProvider } from "@/components/cart"
 import { categories } from "@/lib/categories"
-import { products } from "@/lib/data"
 import HomeCollection from "@/components/home-collection"
+import { listProducts } from "@/hooks/supabase/products.supabase"
+import type { Products } from "@/interface/product.interface"
 
 const TABS = [
   { key: "all", label: "Todo" },
@@ -24,6 +26,11 @@ const TABS = [
 
 export default function CollectionPage() {
   const topCats = categories.slice(0, 3)
+  const [products, setProducts] = useState<Products[]>([])
+
+  useEffect(() => {
+    listProducts().then(setProducts).catch(() => setProducts([]))
+  }, [])
 
   const tiles = [
     { type: "link", src: "/images/categories/camisas.png", alt: "Camisas", href: "/categories/camisas", label: "Camisas", kicker: "Capítulo" },
@@ -93,7 +100,19 @@ export default function CollectionPage() {
                 </TabsList>
 
                 {TABS.map((t) => {
-                  const list = t.key === "all" ? products : products.filter((p) => (p.product.tags ?? []).includes(t.key))
+                  const list =
+                    t.key === "all"
+                      ? products
+                      : products.filter(
+                          (p) =>
+                            p.category?.name?.toLowerCase() === t.key ||
+                            p.type?.toLowerCase() === t.key ||
+                            p.product.some((v) =>
+                              (v.tags || [])
+                                .map((tag) => tag.toLowerCase())
+                                .includes(t.key),
+                            ),
+                        )
                   return (
                     <TabsContent key={t.key} value={t.key} className="mt-6">
                       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">

@@ -29,6 +29,7 @@ import {
   listCategories,
 } from "@/hooks/supabase/categories.supabase"
 import { Order, listAllOrders, updateOrderStatus } from "@/hooks/supabase/orders.supabase"
+import { ServiceRequest, listServiceRequests } from "@/hooks/supabase/services.supabase"
 import { CartProvider } from "@/components/cart"
 import { Products, ProductTag } from "@/interface/product.interface"
 import { useAuthStore } from "@/store/authStore"
@@ -67,6 +68,7 @@ export default function AdminPage() {
               <TabsTrigger value="inventory" className="rounded-none">Inventario</TabsTrigger>
               <TabsTrigger value="new" className="rounded-none">Nuevo producto</TabsTrigger>
               <TabsTrigger value="orders" className="rounded-none">Órdenes</TabsTrigger>
+              <TabsTrigger value="services" className="rounded-none">Servicios</TabsTrigger>
             </TabsList>
 
             <TabsContent value="inventory" className="mt-6">
@@ -79,6 +81,10 @@ export default function AdminPage() {
 
             <TabsContent value="orders" className="mt-6">
               <OrdersTab />
+            </TabsContent>
+
+            <TabsContent value="services" className="mt-6">
+              <ServiceRequestsTab />
             </TabsContent>
           </Tabs>
         </main>
@@ -613,6 +619,55 @@ function OrdersTab() {
               <tr>
                 <td colSpan={6} className="p-6 text-center text-muted-foreground">
                   Aún no hay órdenes.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  )
+}
+
+function ServiceRequestsTab() {
+  const [requests, setRequests] = useState<ServiceRequest[]>([])
+
+  useEffect(() => {
+    listServiceRequests().then(setRequests).catch(() => setRequests([]))
+  }, [])
+
+  return (
+    <section className="grid gap-4">
+      <div className="flex items-center justify-between">
+        <div className="text-sm text-muted-foreground">{requests.length} solicitudes</div>
+      </div>
+      <div className="overflow-auto border rounded-md">
+        <table className="w-full text-sm">
+          <thead className="bg-muted/50 text-muted-foreground">
+            <tr className="text-left">
+              <th className="p-3">Fecha</th>
+              <th className="p-3">Nombre</th>
+              <th className="p-3">Correo</th>
+              <th className="p-3">Servicio</th>
+              <th className="p-3">Presupuesto</th>
+              <th className="p-3">Mensaje</th>
+            </tr>
+          </thead>
+          <tbody>
+            {requests.map((r) => (
+              <tr key={r.id} className="border-t align-top">
+                <td className="p-3">{new Date(r.created_at).toLocaleString()}</td>
+                <td className="p-3">{r.name}</td>
+                <td className="p-3"><a href={`mailto:${r.email}`}>{r.email}</a></td>
+                <td className="p-3">{r.service}</td>
+                <td className="p-3">{r.budget ? `$ ${r.budget}` : "—"}</td>
+                <td className="p-3 max-w-[200px] break-words">{r.message}</td>
+              </tr>
+            ))}
+            {requests.length === 0 && (
+              <tr>
+                <td colSpan={6} className="p-6 text-center text-muted-foreground">
+                  Aún no hay solicitudes.
                 </td>
               </tr>
             )}
