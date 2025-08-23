@@ -32,7 +32,43 @@ export default function CategoriesPage() {
 
   return (
     <CartProvider>
-      <SEO title="Categorías" description="Explora por temas y tipos de producto." />
+      <SEO
+        title="Categorías de Productos Personalizados | Inkspire Studio"
+        description="Explora las categorías de productos personalizados de Inkspire Studio: camisetas, gorras, accesorios, bordados y más en El Salvador."
+        url="/categorias"
+        image="https://icktrjprljbmkfhnsegu.supabase.co/storage/v…ject/public/isbucket/1755535102452-ym7jvnxy79.jpg"
+        keywords={[
+          "categorías",
+          "productos personalizados",
+          "camisetas",
+          "gorras",
+          "accesorios",
+          "bordado",
+          "estampado",
+          "Inkspire Studio",
+          "El Salvador"
+        ]}
+        type="website"
+        locale="es_SV"
+        siteName="Inkspire Studio"
+        twitterCard="summary_large_image"
+        structuredData={{
+          "@context": "https://schema.org",
+          "@type": "CollectionPage",
+          name: "Categorías de Productos",
+          url: "https://inkspire-studio.vercel.app/categorias",
+          description: "Descubre las diferentes categorías de productos personalizados de Inkspire Studio.",
+          publisher: {
+            "@type": "Organization",
+            name: "Inkspire Studio",
+            logo: {
+              "@type": "ImageObject",
+              url: "https://inkspire-studio.vercel.app/logo.png"
+            }
+          },
+        }}
+      />
+
       <div className="flex min-h-[100dvh] flex-col">
         <SiteHeader />
         <main className="container mx-auto px-4 py-10 grid gap-8">
@@ -40,7 +76,7 @@ export default function CategoriesPage() {
             <h1 className="text-2xl md:text-3xl tracking-tight">Categorías</h1>
             <p className="text-sm text-muted-foreground">Explora por temas y tipos de producto.</p>
           </header>
-          
+
           {loading ? (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {/* Esqueletos de carga */}

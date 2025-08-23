@@ -38,7 +38,42 @@ export default function Page() {
   }, [])
   return (
     <CartProvider>
-      <SEO title="Inicio" description="Camisas y hoodies personalizados con calidad de estudio." />
+      <SEO
+        title="Inkspire Studio | Camisas y Hoodies Personalizados en El Salvador"
+        description="Inkspire Studio ofrece camisas, hoodies y prendas personalizadas con bordado y estampado premium en El Salvador. Calidad de estudio y diseño exclusivo."
+        url="/"
+        image="/images/og-home.jpg"
+        keywords={[
+          "camisas personalizadas",
+          "hoodies personalizados",
+          "ropa personalizada",
+          "bordado",
+          "estampado",
+          "Inkspire Studio",
+          "El Salvador",
+          "San Salvador"
+        ]}
+        type="website"
+        locale="es_SV"
+        siteName="Inkspire Studio"
+        twitterCard="summary_large_image"
+        structuredData={{
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          name: "Inkspire Studio",
+          url: "https://inkspire-studio.vercel.app",
+          description: "Camisas, hoodies y prendas personalizadas con los más altos estándares de calidad en El Salvador.",
+          publisher: {
+            "@type": "Organization",
+            name: "Inkspire Studio",
+            logo: {
+              "@type": "ImageObject",
+              url: "https://inkspire-studio.vercel.app/logo.png"
+            }
+          },
+        }}
+      />
+
       <div className="flex min-h-[100dvh] flex-col bg-white">
         <SiteHeader />
         <main className="flex-1">
