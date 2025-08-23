@@ -17,15 +17,15 @@ import type { Products } from "@/interface/product.interface"
 
 const TABS = [
   { key: "all", label: "Todo" },
-  { key: "camisas", label: "Camisas" },
-  { key: "hoodies", label: "Hoodies" },
+  { key: "t-shirt", label: "Camisas" },
+  { key: "hoodie", label: "Hoodies" },
   { key: "anime", label: "Anime" },
-  { key: "carros", label: "Carros" },
-  { key: "tipografia", label: "Tipografía" },
+  { key: "cars", label: "Carros" },
+  { key: "typography", label: "Tipografía" },
 ] as const
 
 export default function CollectionPage() {
-  const topCats = categories.slice(0, 3)
+  const topCats = categories.slice(0, 8)
   const [products, setProducts] = useState<Products[]>([])
 
   useEffect(() => {
@@ -104,15 +104,15 @@ export default function CollectionPage() {
                     t.key === "all"
                       ? products
                       : products.filter(
-                          (p) =>
-                            p.category?.name?.toLowerCase() === t.key ||
-                            p.type?.toLowerCase() === t.key ||
-                            p.product.some((v) =>
-                              (v.tags || [])
-                                .map((tag) => tag.toLowerCase())
-                                .includes(t.key),
-                            ),
-                        )
+                        (p) =>
+                          p.category?.name?.toLowerCase() === t.key ||
+                          p.type?.toLowerCase() === t.key ||
+                          p.product.some((v) =>
+                            (v.tags || [])
+                              .map((tag) => tag.toLowerCase())
+                              .includes(t.key),
+                          ),
+                      )
                   return (
                     <TabsContent key={t.key} value={t.key} className="mt-6">
                       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
