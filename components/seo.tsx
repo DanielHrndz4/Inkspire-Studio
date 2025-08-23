@@ -15,6 +15,7 @@ interface SEOProps {
   twitterCard?: 'summary' | 'summary_large_image' | 'app' | 'player'
   noIndex?: boolean
   structuredData?: object
+  customMeta?: { name?: string; property?: string; content: string }[]
 }
 
 export default function SEO({
@@ -31,7 +32,8 @@ export default function SEO({
   siteName = 'Inkspire Studio',
   twitterCard = 'summary_large_image',
   noIndex = false,
-  structuredData
+  structuredData,
+  customMeta = []
 }: SEOProps) {
   const siteUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://inkspire-studio.vercel.app'
   const pageUrl = url ? `${siteUrl}${url}` : siteUrl
@@ -117,11 +119,16 @@ export default function SEO({
       <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
       <link rel="manifest" href="/site.webmanifest" />
       <meta name="theme-color" content="#ffffff" />
-      
+
       {/* Información adicional para El Salvador */}
       <meta name="country" content="El Salvador" />
       <meta name="language" content="es" />
       <meta name="distribution" content="local" />
+
+      {/* Metadatos personalizados */}
+      {customMeta.map((meta, index) => (
+        <meta key={index} {...meta} />
+      ))}
     </Head>
   )
 }
