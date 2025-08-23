@@ -7,6 +7,7 @@ import { CartProvider } from "@/components/cart"
 import { listCategoriesWithProductCount } from "@/hooks/supabase/categories.supabase"
 import { useEffect, useState } from "react"
 import { Skeleton } from "@/components/ui/skeleton" // Asegúrate de tener este componente
+import SEO from "@/components/seo"
 
 export default function CategoriesPage() {
   const [categories, setCategories] = useState<any[]>([])
@@ -31,6 +32,7 @@ export default function CategoriesPage() {
 
   return (
     <CartProvider>
+      <SEO title="Categorías" description="Explora por temas y tipos de producto." />
       <div className="flex min-h-[100dvh] flex-col">
         <SiteHeader />
         <main className="container mx-auto px-4 py-10 grid gap-8">

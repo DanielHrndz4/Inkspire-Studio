@@ -17,6 +17,7 @@ import { getVisibilityMap } from "@/lib/admin-store"
 import { getProductsByCategoryName } from "@/hooks/supabase/categories.supabase"
 import { getProductsByType } from "@/hooks/supabase/products.supabase"
 import { Products } from "@/interface/product.interface"
+import SEO from "@/components/seo"
 
 interface CategoryDetailPageProps {
   params: Promise<{ category: string }>;
@@ -193,6 +194,7 @@ export default function CategoryDetailPage({ params }: CategoryDetailPageProps) 
 
   return (
     <CartProvider>
+      <SEO title={`Categoría: ${cleanTextCat}`} description={`Productos de ${cleanTextCat} en Inkspire Studio.`} />
       <div className="flex min-h-[100dvh] flex-col">
         <SiteHeader />
         <main className="container mx-auto px-4 pt-8 pb-10 grid gap-5">

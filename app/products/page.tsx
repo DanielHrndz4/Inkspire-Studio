@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { useIntersection } from "@/hooks/use-intersection"
 import { cn } from "@/lib/utils"
+import SEO from "@/components/seo"
 
 type SortKey = "relevance" | "price-asc" | "price-desc" | "title-asc" | "title-desc"
 
@@ -105,6 +106,7 @@ export default function ProductsPage() {
 
   return (
     <CartProvider>
+      <SEO title="Productos" description="Explora todos nuestros productos personalizados." />
       <div className="flex min-h-[100dvh] flex-col bg-white">
         <SiteHeader />
 
