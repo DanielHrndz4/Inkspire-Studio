@@ -13,6 +13,16 @@ export interface ServiceRequestInput {
   message?: string
 }
 
+export interface ServiceRequest {
+  id: string
+  created_at: string
+  name: string
+  email: string
+  service: string
+  budget?: number | null
+  message?: string | null
+}
+
 export async function createServiceRequest(input: ServiceRequestInput) {
   const { data, error } = await supabase
     .from("service_requests")
@@ -27,4 +37,13 @@ export async function createServiceRequest(input: ServiceRequestInput) {
     .single()
   if (error) throw error
   return data
+}
+
+export async function listServiceRequests(): Promise<ServiceRequest[]> {
+  const { data, error } = await supabase
+    .from("service_requests")
+    .select("id, created_at, name, email, service, budget, message")
+    .order("created_at", { ascending: false })
+  if (error) throw error
+  return data || []
 }
