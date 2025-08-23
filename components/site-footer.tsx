@@ -4,8 +4,11 @@ export default function SiteFooter() {
   return (
     <footer className="border-t">
       <div className="container mx-auto px-4 py-10 grid gap-8 md:grid-cols-4">
-        <div className="grid gap-3">
-          <div className="font-semibold tracking-widest uppercase">Inkspire Studio</div>
+        <div className="grid gap-4">
+          <div className="flex flex-row gap-2 items-center">
+            <img src="/logo.png" alt="Inkspire Studio" className="w-10"/>
+            <div className="font-semibold tracking-widest uppercase">Inkspire Studio</div>
+          </div>
           <p className="text-sm text-muted-foreground">
             Camisas y hoodies personalizados. Diseño gráfico a medida. Calidad y presentación impecable.
           </p>

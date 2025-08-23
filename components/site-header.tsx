@@ -29,7 +29,10 @@ export default function SiteHeader() {
           <div className="flex items-center gap-3">
             <MobileNav />
             <Link href="/" className="font-semibold tracking-widest uppercase">
-              Inkspire Studio
+              <div className="flex flex-row gap-2 items-center justify-center">
+                <img src="/logo.png" alt="Inkspire Studio" className="w-10" />
+                Inkspire Studio
+              </div>
             </Link>
           </div>
 

@@ -278,7 +278,7 @@ export function getAllMaterials(): string[] {
 
 // En tu archivo de datos (lib/data.ts o similar)
 export function listProductsByCategory(category: string) {
-  if (category === "tshirts") {
+  if (category === "t-shirt") {
     return products.filter(p => p.type === "t-shirt")
   }
   return products.filter(p => p.category.name.toLowerCase() === category)

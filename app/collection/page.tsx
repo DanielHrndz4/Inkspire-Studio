@@ -11,6 +11,7 @@ import ProductCard from "@/components/product-card"
 import { CartProvider } from "@/components/cart"
 import { categories } from "@/lib/categories"
 import { products } from "@/lib/data"
+import HomeCollection from "@/components/home-collection"
 
 const TABS = [
   { key: "all", label: "Todo" },
@@ -37,19 +38,19 @@ export default function CollectionPage() {
 
   return (
     <CartProvider>
-      <div className="flex min-h-[100dvh] flex-col bg-white">
+      <div className="flex max-h-[50dvh] flex-col bg-white">
         <SiteHeader />
         <main className="flex-1">
           <section className="relative">
-            <div className="relative aspect-[16/7] w-full overflow-hidden bg-muted">
+            <div className="relative aspect-[25/7] w-full overflow-hidden bg-muted">
               <Image
-                src="/images/hero-2.png"
+                src="/images/curry-banner.jpg"
                 alt="Colección Inkspire — Exposición de prendas"
                 fill
                 priority
                 className="object-cover"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
               <div className="absolute inset-0 flex items-end">
                 <div className="container mx-auto px-4 py-10 md:py-16">
                   <div className="max-w-2xl text-white grid gap-4">
@@ -59,9 +60,9 @@ export default function CollectionPage() {
                       Una selección curada de camisas y hoodies. Capítulos y temáticas que celebran el diseño.
                     </p>
                     <div className="flex gap-4">
-                      <Link href="/customize" className="underline underline-offset-4">
+                      {/* <Link href="/customize" className="underline underline-offset-4">
                         Personalizar
-                      </Link>
+                      </Link> */}
                       <Link href="/categories" className="underline underline-offset-4">
                         Ver categorías
                       </Link>
@@ -72,8 +73,8 @@ export default function CollectionPage() {
             </div>
           </section>
 
-          <CategorySpotlight categories={topCats} title="Capítulos" subtitle="Camisas, Hoodies y Temáticas seleccionadas" />
-          <EditorialGrid tiles={tiles as any} />
+          <CategorySpotlight categories={topCats} title="Capítulos Destacados" subtitle="Camisas, Hoodies y Temáticas seleccionadas" />
+          <HomeCollection showCollection={false} />
 
           <section aria-label="Piezas destacadas" className="bg-white">
             <div className="container mx-auto px-4 py-12 grid gap-6">
@@ -92,7 +93,7 @@ export default function CollectionPage() {
                 </TabsList>
 
                 {TABS.map((t) => {
-                  const list = t.key === "all" ? products : products.filter((p) => (p.tags ?? []).includes(t.key))
+                  const list = t.key === "all" ? products : products.filter((p) => (p.product.tags ?? []).includes(t.key))
                   return (
                     <TabsContent key={t.key} value={t.key} className="mt-6">
                       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">

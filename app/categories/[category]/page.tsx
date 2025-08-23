@@ -37,28 +37,28 @@ export default function CategoryDetailPage({ params }: CategoryDetailPageProps) 
   const [baseItemsRaw, setBaseItemsRaw] = useState<Products[]>([])
   const load = async () => {
     try {
-      const typeMap: Record<string, Products["type"]> = {
-        tshirt: "t-shirt",
-        hoodie: "hoodie",
-        polo: "polo",
-        croptop: "croptop",
-        oversized: "oversized",
-        "long-sleeve": "long-sleeve",
-      }
-
-      const productType = paramCat ? typeMap[paramCat.toLowerCase()] : undefined
-
-      if (productType) {
-        const products = await getProductsByType(productType)
-        setBaseItemsRaw(products)
+      const allowedTypes = [
+        "t-shirt",
+        "hoodie",
+        "polo",
+        "croptop",
+        "oversized",
+        "long-sleeve",
+      ] as const;
+      const productType = paramCat;
+      if (allowedTypes.includes(productType as typeof allowedTypes[number])) {
+        const products = await getProductsByType(productType as typeof allowedTypes[number]);
+        setBaseItemsRaw(products);
       } else {
-        const { products } = await getProductsByCategoryName(paramCat)
+        const { products } = await getProductsByCategoryName(paramCat);
         if (products.length === 0) {
           // Manejar caso donde no hay productos
-          console.warn(`No products found for category: ${paramCat}`)
+          console.warn(`No products found for category: ${paramCat}`);
         }
-        setBaseItemsRaw(products)
+        setBaseItemsRaw(products);
       }
+
+      console.log(productType)
     } catch (err) {
       console.error("Error loading products:", err)
       // Mostrar mensaje de error al usuario si es necesario

@@ -370,6 +370,7 @@ function AuthModal({
 
       if (error) {
         // Manejo específico de errores de Supabase
+        console.log("Error en registro:", error)
         if (error.includes("already registered")) {
           throw new Error("Este correo electrónico ya está registrado")
         } else if (error.includes("weak password")) {

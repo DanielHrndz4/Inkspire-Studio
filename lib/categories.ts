@@ -25,13 +25,13 @@ export const categories: Category[] = [
     description: "Arte inspirado en tus series favoritas.",
   },
   {
-    slug: "carros",
+    slug: "cars",
     title: "Carros",
     image: "/images/categories/cars.jpg",
     description: "Motores y velocidad con estilo.",
   },
   {
-    slug: "tipografia",
+    slug: "typography",
     title: "Tipografía",
     image: "/images/categories/typography.jpg",
     description: "Diseños tipográficos minimalistas.",

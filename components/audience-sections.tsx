@@ -10,9 +10,9 @@ import { useEffect, useState } from "react"
 type AudienceKey = ProductTag
 
 const AUDIENCES: { key: AudienceKey; title: string; href: string; image: string }[] = [
-  { key: "men", title: "Hombres", href: "/categories/tshirts?audiencia=hombres", image: "/images/men-section.jpeg" },
-  { key: "women", title: "Mujeres", href: "/categories/tshirts?audiencia=mujeres", image: "/images/women-section.jpeg" },
-  { key: "kids", title: "Niños", href: "/categories/tshirts?audiencia=niños", image: "/images/kids-section.jpeg" },
+  { key: "men", title: "Hombres", href: "/categories/t-shirt?audiencia=hombres", image: "/images/men-section.jpeg" },
+  { key: "women", title: "Mujeres", href: "/categories/t-shirt?audiencia=mujeres", image: "/images/women-section.jpeg" },
+  { key: "kids", title: "Niños", href: "/categories/t-shirt?audiencia=niños", image: "/images/kids-section.jpeg" },
 ]
 
 export default function AudienceSections() {

@@ -30,10 +30,10 @@ export const CATEGORY_GROUPS: CategoryGroup[] = [
     title: "Camisas",
     icon: Shirt,
     items: [
-      { label: "Hombres", href: "/categories/camisas?audiencia=hombres" },
-      { label: "Mujeres", href: "/categories/camisas?audiencia=mujeres" },
-      { label: "Niños", href: "/categories/camisas?audiencia=niños" },
-      { label: "Todas las camisas", href: "/categories/camisas" },
+      { label: "Hombres", href: "/categories/t-shirt?audiencia=hombres" },
+      { label: "Mujeres", href: "/categories/t-shirt?audiencia=mujeres" },
+      { label: "Niños", href: "/categories/t-shirt?audiencia=niños" },
+      { label: "Todas las camisas", href: "/categories/t-shirt" },
     ],
   },
   {
@@ -41,10 +41,10 @@ export const CATEGORY_GROUPS: CategoryGroup[] = [
     title: "Hoodies",
     icon: Shirt,
     items: [
-      { label: "Hombres", href: "/categories/hoodies?audiencia=hombres" },
-      { label: "Mujeres", href: "/categories/hoodies?audiencia=mujeres" },
-      { label: "Niños", href: "/categories/hoodies?audiencia=niños" },
-      { label: "Todos los hoodies", href: "/categories/hoodies" },
+      { label: "Hombres", href: "/categories/hoodie?audiencia=hombres" },
+      { label: "Mujeres", href: "/categories/hoodie?audiencia=mujeres" },
+      { label: "Niños", href: "/categories/hoodie?audiencia=niños" },
+      { label: "Todos los hoodies", href: "/categories/hoodie" },
     ],
   },
   {
@@ -53,8 +53,8 @@ export const CATEGORY_GROUPS: CategoryGroup[] = [
     icon: Sparkles,
     items: [
       { label: "Anime", href: "/categories/anime" },
-      { label: "Carros", href: "/categories/carros" },
-      { label: "Tipografía", href: "/categories/tipografia" },
+      { label: "Carros", href: "/categories/cars" },
+      { label: "Tipografía", href: "/categories/typography" },
     ],
   },
 ];
@@ -63,13 +63,12 @@ export const CATEGORY_GROUPS: CategoryGroup[] = [
 export const TOP_LEVEL_MAIN: NavItem[] = [
   { label: "Categorías", href: "/categories", icon: Layers },
   { label: "Colección", href: "/collection", icon: FolderGit2 },
-  { label: "Personalizar", href: "/customize", icon: Wrench },
+  // { label: "Personalizar", href: "/customize", icon: Wrench },
 ];
 
 // Resto de accesos (se muestran en submenu/“Explorar” y en la lista de atajos del móvil)
 export const SHORTCUTS: NavItem[] = [
-  { label: "Todos los productos", href: "/products", icon: List },
-  // Ojo: NO incluir Categorías, Colección, Personalizar aquí para evitar duplicados
+  // { label: "Todos los productos", href: "/products", icon: List },
   { label: "Servicios", href: "/services", icon: Grid2X2 },
   { label: "Wishlist", href: "/wishlist", icon: Heart },
 ];

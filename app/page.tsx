@@ -83,7 +83,7 @@ export default function Page() {
                 <h2 className="text-xl md:text-2xl tracking-tight">Nuevos esenciales</h2>
                 <p className="text-sm text-muted-foreground">Una selección de temporada</p>
               </div>
-              <Link href="categories/tshirts" className="text-sm hover:underline underline-offset-4">
+              <Link href="categories/t-shirt" className="text-sm hover:underline underline-offset-4">
                 Ver todos
               </Link>
             </div>
@@ -97,9 +97,9 @@ export default function Page() {
           <HowItWorks />
 
           <section className="relative">
-            <div className="relative aspect-[21/9] w-full overflow-hidden bg-muted">
-              <Image src="/images/hero-2.png" alt="Servicios de diseño Inkspire Studio" fill className="object-cover" />
-              <div className="absolute inset-0 bg-black/50" />
+            <div className="relative aspect-[35/9] w-full overflow-hidden bg-muted">
+              <Image src="/images/pk-banner.jpg" alt="Servicios de diseño Inkspire Studio" fill className="object-cover" />
+              <div className="absolute inset-0 bg-black/60" />
               <div className="absolute inset-0 flex items-center">
                 <div className="container mx-auto px-4">
                   <div className="max-w-2xl text-white grid gap-4">

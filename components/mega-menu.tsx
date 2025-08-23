@@ -18,6 +18,7 @@ import {
 import { ChevronDown } from 'lucide-react'
 import { CATEGORY_GROUPS, SHORTCUTS, TOP_LEVEL_MAIN } from "@/lib/menu"
 import { cn } from "@/lib/utils"
+import { DropdownMenuPortal } from "@radix-ui/react-dropdown-menu"
 
 export default function MegaMenu() {
   const pathname = usePathname()
@@ -28,7 +29,7 @@ export default function MegaMenu() {
   return (
     <nav className="hidden md:flex items-center gap-1">
       {/* Ítems principales siempre visibles */}
-      {TOP_LEVEL_MAIN.map((item:any) => {
+      {TOP_LEVEL_MAIN.map((item: any) => {
         const Icon = item.icon
         const isActive =
           pathname === item.href || (item.href !== "/" && pathname?.startsWith(item.href))
@@ -82,15 +83,19 @@ export default function MegaMenu() {
                           {GroupIcon ? <GroupIcon className="mr-2 h-4 w-4" /> : null}
                           <span>{group.title}</span>
                         </DropdownMenuSubTrigger>
-                        <DropdownMenuSubContent>
-                          {group.items.map((it) => (
-                            <DropdownMenuItem asChild key={it.href}>
-                              <Link href={it.href} className="flex items-center gap-2">
-                                <span>{it.label}</span>
-                              </Link>
-                            </DropdownMenuItem>
-                          ))}
-                        </DropdownMenuSubContent>
+
+                        {/* 👇 Forzar portal para que salga por encima */}
+                        <DropdownMenuPortal>
+                          <DropdownMenuSubContent sideOffset={4} alignOffset={-5} className="z-50">
+                            {group.items.map((it) => (
+                              <DropdownMenuItem asChild key={it.href}>
+                                <Link href={it.href} className="flex items-center gap-2">
+                                  <span>{it.label}</span>
+                                </Link>
+                              </DropdownMenuItem>
+                            ))}
+                          </DropdownMenuSubContent>
+                        </DropdownMenuPortal>
                       </DropdownMenuSub>
                     )
                   })}
