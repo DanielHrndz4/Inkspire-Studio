@@ -7,13 +7,13 @@ export type Category = {
 
 export const categories: Category[] = [
   {
-    slug: "messi-collection",
+    slug: "messi%20legacy%20collection",
     title: "Messi Collection",
     image: "/images/categories/messi-collection.jpg",
     description: "Corte, tejido y color a tu medida.",
   },
   {
-    slug: "cr7-collection",
+    slug: "cr7%20'siuuu'%20edition",
     title: "CR7 Collection",
     image: "/images/categories/cr7-collection.jpg",
     description: "Comodidad premium y personalización total.",

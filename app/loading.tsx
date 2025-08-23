@@ -7,7 +7,7 @@ export default function Loading() {
         {/* Logo de Inkspire */}
         <div className="flex flex-col items-center gap-3">
           <div className="w-32 rounded-lg flex items-center justify-center">
-           <img src="logo.png" alt="Inkspire Studio" />
+           <img src="https://inkspire-studio.vercel.app/logo.png" alt="Inkspire Studio" />
           </div>
           <span className="text-xl font-semibold text-[#2a2a2a] uppercase">Inkspire Studio</span>
         </div>
