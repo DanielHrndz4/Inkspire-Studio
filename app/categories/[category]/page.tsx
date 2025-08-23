@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input"
 import PaginatedGrid from "@/components/paginated-grid"
 import { getVisibilityMap } from "@/lib/admin-store"
 import { getProductsByCategoryName } from "@/hooks/supabase/categories.supabase"
-import { listProducts } from "@/hooks/supabase/products.supabase"
+import { getProductsByType } from "@/hooks/supabase/products.supabase"
 import { Products } from "@/interface/product.interface"
 
 interface CategoryDetailPageProps {
@@ -37,11 +37,21 @@ export default function CategoryDetailPage({ params }: CategoryDetailPageProps) 
   const [baseItemsRaw, setBaseItemsRaw] = useState<Products[]>([])
   const load = async () => {
     try {
-      if (paramCat === "tshirts") {
-        const all = await listProducts()
-        setBaseItemsRaw(all.filter(p => p.type === "t-shirt"))
+      const typeMap: Record<string, Products["type"]> = {
+        tshirt: "t-shirt",
+        hoodie: "hoodie",
+        polo: "polo",
+        croptop: "croptop",
+        oversized: "oversized",
+        "long-sleeve": "long-sleeve",
+      }
+
+      const productType = paramCat ? typeMap[paramCat.toLowerCase()] : undefined
+
+      if (productType) {
+        const products = await getProductsByType(productType)
+        setBaseItemsRaw(products)
       } else {
-        console.log(paramCat)
         const { products } = await getProductsByCategoryName(paramCat)
         if (products.length === 0) {
           // Manejar caso donde no hay productos

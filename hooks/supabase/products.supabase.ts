@@ -124,6 +124,50 @@ export const getFilteredProducts = async (filters: {
   return products;
 }
 
+// Función para obtener productos por tipo
+export const getProductsByType = async (
+  type: Products["type"]
+): Promise<Products[]> => {
+  const { data, error } = await supabase
+    .from("products")
+    .select(
+      `
+      id,
+      title,
+      description,
+      type,
+      material,
+      price,
+      discount_percentage,
+      category:categories(name,image),
+      product_variants(color,sizes,images,tags)
+    `
+    )
+    .eq("type", type);
+
+  if (error) throw error;
+
+  return (data || []).map((p: any) => ({
+    id: p.id,
+    title: p.title,
+    description: p.description,
+    type: p.type,
+    material: p.material,
+    price: p.price,
+    discountPercentage: p.discount_percentage,
+    category: {
+      name: p.category?.name,
+      image: p.category?.image,
+    },
+    product: (p.product_variants || []).map((v: any) => ({
+      color: v.color,
+      size: v.sizes || [],
+      images: v.images || [],
+      tags: v.tags || [],
+    })),
+  }));
+};
+
 // Función original para listar productos (mantenida para compatibilidad)
 export const listProducts = async (): Promise<Products[]> => {
   const { data, error } = await supabase
