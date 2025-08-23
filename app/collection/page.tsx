@@ -14,6 +14,7 @@ import { categories } from "@/lib/categories"
 import HomeCollection from "@/components/home-collection"
 import { listProducts } from "@/hooks/supabase/products.supabase"
 import type { Products } from "@/interface/product.interface"
+import ProductSkeleton from "@/components/product-skeleton"
 
 const TABS = [
   { key: "all", label: "Todo" },
@@ -27,9 +28,20 @@ const TABS = [
 export default function CollectionPage() {
   const topCats = categories.slice(0, 8)
   const [products, setProducts] = useState<Products[]>([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    listProducts().then(setProducts).catch(() => setProducts([]))
+    const load = async () => {
+      try {
+        const data = await listProducts()
+        setProducts(data)
+      } catch {
+        setProducts([])
+      } finally {
+        setLoading(false)
+      }
+    }
+    load()
   }, [])
 
   const tiles = [
@@ -115,14 +127,20 @@ export default function CollectionPage() {
                       )
                   return (
                     <TabsContent key={t.key} value={t.key} className="mt-6">
-                      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                        {list.map((p) => (
-                          <ProductCard key={p.id} product={p} />
-                        ))}
-                        {list.length === 0 && (
-                          <p className="text-sm text-muted-foreground">No hay piezas en esta categoría por ahora.</p>
-                        )}
-                      </div>
+                      {loading ? (
+                        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                          <ProductSkeleton count={4} />
+                        </div>
+                      ) : (
+                        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                          {list.map((p) => (
+                            <ProductCard key={p.id} product={p} />
+                          ))}
+                          {list.length === 0 && (
+                            <p className="text-sm text-muted-foreground">No hay piezas en esta categoría por ahora.</p>
+                          )}
+                        </div>
+                      )}
                     </TabsContent>
                   )
                 })}

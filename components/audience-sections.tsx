@@ -3,6 +3,8 @@
 import Image from "next/image"
 import Link from "next/link"
 import ProductCard from "@/components/product-card"
+import ProductSkeleton from "@/components/product-skeleton"
+import { Skeleton } from "@/components/ui/skeleton"
 import { ProductTag, Products } from "@/interface/product.interface"
 import { hasAudienceTag, listProducts } from "@/hooks/supabase/products.supabase"
 import { useEffect, useState } from "react"
@@ -52,7 +54,23 @@ export default function AudienceSections() {
     return (
       <section aria-label="Por audiencia" className="bg-white">
         <div className="container mx-auto px-4 py-12 grid gap-8">
-          <div className="text-center py-12">Cargando productos...</div>
+          <header className="flex items-end justify-between">
+            <div className="grid gap-1">
+              <Skeleton className="h-6 w-48" />
+              <Skeleton className="h-4 w-64" />
+            </div>
+            <Skeleton className="h-4 w-32" />
+          </header>
+          <div className="grid gap-8">
+            {AUDIENCES.map((a) => (
+              <div key={a.key} className="grid lg:grid-cols-2 gap-6 items-start">
+                <Skeleton className="relative aspect-[16/9] w-full rounded-md" />
+                <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6">
+                  <ProductSkeleton count={3} />
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
     )
