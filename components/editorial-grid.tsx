@@ -23,20 +23,33 @@ export default function EditorialGrid({
           <h2 className="text-xl md:text-2xl tracking-tight">{title}</h2>
           <p className="text-sm text-muted-foreground">{subtitle}</p>
         </header>
-        <div className="grid grid-cols-2 md:grid-cols-6 auto-rows-[10px] gap-4">
+        
+        {/* Contenedor grid responsivo */}
+        <div className="grid grid-cols-2 md:grid-cols-6 gap-4 auto-rows-auto">
           {tiles.map((t, i) => {
-            const spans =
+            // Definir tamaños para diferentes breakpoints
+            const mobileSpans = "col-span-2";
+            const desktopSpans =
               i % 8 === 0
-                ? "md:col-span-3 md:row-span-[24]"
+                ? "md:col-span-3 md:row-span-3"
                 : i % 5 === 0
-                ? "md:col-span-2 md:row-span-[18]"
-                : "md:col-span-1 md:row-span-[12]"
+                ? "md:col-span-2 md:row-span-2"
+                : "md:col-span-1 md:row-span-1"
 
             return (
-              <div key={i} className={`relative col-span-2 ${spans} overflow-hidden rounded-md bg-white border`}>
+              <div 
+                key={i} 
+                className={`relative ${mobileSpans} ${desktopSpans} aspect-square lg:aspect-[3/4] md:aspect-auto overflow-hidden rounded-md bg-white border`}
+              >
                 {t.type === "image" ? (
                   <>
-                    <Image src={t.src || "/placeholder.svg"} alt={t.alt} fill className="object-cover" />
+                    <Image 
+                      src={t.src || "/placeholder.svg"} 
+                      alt={t.alt} 
+                      fill 
+                      className="object-cover" 
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
                   </>
                 ) : (
@@ -46,6 +59,7 @@ export default function EditorialGrid({
                       alt={t.alt}
                       fill
                       className="object-cover transition-transform duration-700 group-hover:scale-[1.03]"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/20 to-transparent" />
                     <div className="absolute bottom-0 left-0 p-4">

@@ -10,7 +10,6 @@ export default function HomeCollection({ showCollection = true }: any) {
     { type: "link", src: "/images/categories/anime.png", alt: "Anime", href: "/categories/anime", label: "Anime", kicker: "Temática" },
     { type: "image", src: "/images/lookbook-cars.jpeg", alt: "Editorial 3" },
     { type: "link", src: "/images/cat-typography.jpg", alt: "Tipografía", href: "/categories/typography", label: "Tipografía", kicker: "Temática" },
-    { type: "image", src: "/images/loombook-cr7-hoodie.jpg", alt: "Editorial 4" },
   ] as const
 
   return (

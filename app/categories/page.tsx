@@ -1,6 +1,9 @@
 import type { Metadata } from 'next'
 import { listCategoriesWithProductCount } from "@/hooks/supabase/categories.supabase"
 import CategoriesPageClient from './category-page'
+import { searchProducts } from "@/hooks/supabase/search.supabase"
+
+export const revalidate = 0
 
 export async function generateMetadata(): Promise<Metadata> {
   // Obtener categorías para metadata dinámica
@@ -29,9 +32,22 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 }
 
-export default async function CategoriesPage() {
-  // Obtener datos en el servidor
+interface PageProps {
+  searchParams: { q?: string }
+}
+
+export default async function CategoriesPage({ searchParams }: PageProps) {
+  const q = searchParams.q?.toString() ?? ""
+  if (q) {
+    const products = await searchProducts(q)
+    return (
+      <CategoriesPageClient
+        initialCategories={[]}
+        initialProducts={products}
+        searchQuery={q}
+      />
+    )
+  }
   const categories = await listCategoriesWithProductCount()
-  
-  return <CategoriesPageClient initialCategories={categories} />
+  return <CategoriesPageClient initialCategories={categories} initialProducts={[]} searchQuery="" />
 }

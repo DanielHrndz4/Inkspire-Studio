@@ -15,8 +15,8 @@ export default function SiteFooter() {
         </div>
         <div className="grid gap-2 text-sm">
           <div className="font-medium">Colección</div>
-          <Link href="/categories/camisas" className="text-muted-foreground hover:opacity-70">Camisas</Link>
-          <Link href="/categories/hoodies" className="text-muted-foreground hover:opacity-70">Hoodies</Link>
+          <Link href="/categories/t-shirt" className="text-muted-foreground hover:opacity-70">Camisas</Link>
+          <Link href="/categories/hoodie" className="text-muted-foreground hover:opacity-70">Hoodies</Link>
           <Link href="/customize" className="text-muted-foreground hover:opacity-70">Personalizar</Link>
         </div>
         <div className="grid gap-2 text-sm">
@@ -33,7 +33,10 @@ export default function SiteFooter() {
         </div>
         <div className="grid gap-2 text-sm">
           <div className="font-medium">Servicios</div>
-          <Link href="/services" className="text-muted-foreground hover:opacity-70">Diseño Gráfico</Link>
+          <Link href="/services" className="text-muted-foreground hover:opacity-70">Branding / Logo</Link>
+          <Link href="/services" className="text-muted-foreground hover:opacity-70">Ilustración</Link>
+          <Link href="/services" className="text-muted-foreground hover:opacity-70">Vectorización</Link>
+          <Link href="/services" className="text-muted-foreground hover:opacity-70">Diseño merch</Link>
         </div>
         <div className="grid gap-2 text-sm">
           <div className="font-medium">Síguenos</div>
