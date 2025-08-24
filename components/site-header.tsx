@@ -25,7 +25,7 @@ export default function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/60 border-b">
       <div className="container mx-auto px-4">
-        <div className="h-16 flex items-center justify-between gap-3">
+        <div className="h-16 flex items-center justify-between gap-3" suppressHydrationWarning>
           <div className="flex items-center gap-3">
             <MobileNav />
             <Link href="/" className="font-semibold tracking-widest uppercase">
