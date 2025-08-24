@@ -1,21 +1,61 @@
 {
   "name": "Inkspire Studio",
-  "short_name": "Inkspire",
-  "description": "Personaliza camisas y hoodies con Inkspire Studio.",
+  "short_name": "Inkspire Studio",
+  "description": "Camisas y hoodies personalizados. Diseño gráfico a medida. Calidad y presentación impecable.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
+  "background_color": "#FFFFFF",
   "theme_color": "#000000",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "es",
+  "categories": ["shopping", "fashion", "art"],
   "icons": [
     {
-      "src": "/logo.png",
-      "sizes": "192x192",
-      "type": "image/png"
+      "src": "/icons/android-launchericon-72-72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "maskable any"
     },
     {
-      "src": "/logo.png",
+      "src": "/icons/android-launchericon-96-96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/android-launchericon-144-144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/android-launchericon-192-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/android-launchericon-512-512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "maskable any"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "https://inkspire-studio.vercel.app/images/cars-collection.png",
+      "sizes": "375x667",
+      "type": "image/png",
+      "platform": "narrow",
+      "label": "Página principal de Inkspire Studio"
+    },
+    {
+      "src": "https://inkspire-studio.vercel.app/images/cars-collection.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "platform": "wide",
+      "label": "Catálogo de productos en desktop"
     }
   ]
 }

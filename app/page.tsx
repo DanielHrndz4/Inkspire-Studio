@@ -41,7 +41,7 @@ export default function Page() {
         <SiteHeader />
         <main className="flex-1">
           <section className="relative">
-            <div className="relative aspect-[13/9] lg:aspect-[21/9] w-full overflow-hidden bg-muted">
+            <div className="relative aspect-[13/9] lg:aspect-[30/9] w-full overflow-hidden bg-muted">
               <Image
                 src="/images/cars-collection.png"
                 alt="Inkspire Studio - personalización premium"
