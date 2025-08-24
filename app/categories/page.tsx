@@ -5,6 +5,7 @@ import CategoriesPageClient from './category-page'
 export async function generateMetadata(): Promise<Metadata> {
   // Obtener categorías para metadata dinámica
   const categories = await listCategoriesWithProductCount()
+  console.log(categories)
   
   // Crear descripción dinámica basada en las categorías disponibles
   const categoryNames = categories.map(cat => cat.name).join(', ')

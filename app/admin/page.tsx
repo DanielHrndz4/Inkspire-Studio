@@ -611,6 +611,8 @@ function OrdersTab() {
                     <SelectContent>
                       <SelectItem value="pendiente">pendiente</SelectItem>
                       <SelectItem value="pagado">pagado</SelectItem>
+                      <SelectItem value="en envío">en envío</SelectItem>
+                      <SelectItem value="completado">completado</SelectItem>
                     </SelectContent>
                   </Select>
                 </td>
