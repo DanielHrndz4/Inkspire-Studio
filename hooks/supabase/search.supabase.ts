@@ -21,7 +21,9 @@ export const searchProducts = async (query: string): Promise<Products[]> => {
       category:categories(name,image),
       product_variants(color,sizes,images,tags)
     `)
-    .or(`title.ilike.%${q}%,type.ilike.%${q}%,categories.name.ilike.%${q}%`);
+    .or(
+      `title.ilike.%${q}%,type.ilike.%${q}%,category.name.ilike.%${q}%`
+    );
 
   if (error) throw error;
 

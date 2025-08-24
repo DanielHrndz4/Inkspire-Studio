@@ -31,8 +31,7 @@ export default function CategoriesPageClient({ initialCategories }: CategoriesPa
         setLoading(false)
       }
     }
-    
-    // refreshCategories() // Descomenta si quieres siempre datos frescos
+    refreshCategories()
   }, [])
 
   return (
