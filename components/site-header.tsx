@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { ShoppingBag, Search, User } from 'lucide-react'
 import { Button } from "@/components/ui/button"
@@ -13,17 +13,37 @@ import { useAuth } from "@/components/auth"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
 import { useAuthStore } from "@/store/authStore"
 import { useWishlist } from "@/components/wishlist"
+import { searchProducts } from "@/hooks/supabase/search.supabase"
+import type { Products } from "@/interface/product.interface"
 
 export default function SiteHeader() {
   const { count, setOpen } = useCart()
   const [showSearch, setShowSearch] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
+  const [suggestions, setSuggestions] = useState<Products[]>([])
   const router = useRouter()
   const { openAuth } = useAuth()
   const user = useAuthStore((state) => state.user)
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
   const logout = useAuthStore((state) => state.logout)
   useWishlist()
+
+  useEffect(() => {
+    const handler = setTimeout(async () => {
+      const term = searchQuery.trim()
+      if (!term) {
+        setSuggestions([])
+        return
+      }
+      try {
+        const results = await searchProducts(term)
+        setSuggestions(results.slice(0, 5))
+      } catch (error) {
+        console.error(error)
+      }
+    }, 300)
+    return () => clearTimeout(handler)
+  }, [searchQuery])
 
   return (
     <header className="sticky top-0 z-40 bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/60 border-b">
@@ -48,13 +68,20 @@ export default function SiteHeader() {
                 onSubmit={(e) => {
                   e.preventDefault()
                   if (searchQuery.trim()) {
-                    router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`)
+                    router.push(`/categories?q=${encodeURIComponent(searchQuery.trim())}`)
                     setShowSearch(false)
                     setSearchQuery("")
+                    setSuggestions([])
                   }
                 }}
               >
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <button
+                  type="submit"
+                  className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"
+                  aria-label="Buscar"
+                >
+                  <Search className="h-4 w-4" />
+                </button>
                 <Input
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -62,6 +89,26 @@ export default function SiteHeader() {
                   className="pl-9 w-[220px] rounded-none"
                   aria-label="Buscar"
                 />
+                {suggestions.length > 0 && (
+                  <ul className="absolute z-50 mt-1 w-full rounded-md border bg-background text-sm shadow">
+                    {suggestions.map((p) => (
+                      <li key={p.id}>
+                        <Link
+                          href={`/product/${p.id}`}
+                          className="block px-3 py-2 hover:bg-muted"
+                          onClick={() => {
+                            setShowSearch(false)
+                            setSearchQuery("")
+                            setSuggestions([])
+                          }}
+                        >
+                          <span>{p.title}</span>
+                          <span className="block text-xs text-muted-foreground">{p.category?.name}</span>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </form>
             </div>
 
@@ -144,13 +191,20 @@ export default function SiteHeader() {
               onSubmit={(e) => {
                 e.preventDefault()
                 if (searchQuery.trim()) {
-                  router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`)
+                  router.push(`/categories?q=${encodeURIComponent(searchQuery.trim())}`)
                   setShowSearch(false)
                   setSearchQuery("")
+                  setSuggestions([])
                 }
               }}
             >
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <button
+                type="submit"
+                className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"
+                aria-label="Buscar"
+              >
+                <Search className="h-4 w-4" />
+              </button>
               <Input
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -158,6 +212,26 @@ export default function SiteHeader() {
                 className="pl-9 rounded-none"
                 aria-label="Buscar"
               />
+              {suggestions.length > 0 && (
+                <ul className="absolute z-50 mt-1 w-full rounded-md border bg-background text-sm shadow">
+                  {suggestions.map((p) => (
+                    <li key={p.id}>
+                      <Link
+                        href={`/product/${p.id}`}
+                        className="block px-3 py-2 hover:bg-muted"
+                        onClick={() => {
+                          setShowSearch(false)
+                          setSearchQuery("")
+                          setSuggestions([])
+                        }}
+                      >
+                        <span>{p.title}</span>
+                        <span className="block text-xs text-muted-foreground">{p.category?.name}</span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </form>
           </div>
         )}
