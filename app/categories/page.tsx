@@ -2,6 +2,8 @@ import type { Metadata } from 'next'
 import { listCategoriesWithProductCount } from "@/hooks/supabase/categories.supabase"
 import CategoriesPageClient from './category-page'
 
+export const revalidate = 0
+
 export async function generateMetadata(): Promise<Metadata> {
   // Obtener categorías para metadata dinámica
   const categories = await listCategoriesWithProductCount()
