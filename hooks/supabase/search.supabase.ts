@@ -1,13 +1,20 @@
 import { Products } from "@/interface/product.interface";
 import { supabase } from "@/utils/supabase/server";
 
-/**
- * Busca productos que coincidan con el término dado en el título, tipo o nombre de la categoría.
- */
-export const searchProducts = async (query: string): Promise<Products[]> => {
-  const q = query.trim();
-  if (!q) return [];
+const normalizeText = (text: string): string => {
+  return text
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // quita tildes
+    .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "") // quita signos de puntuación
+    .toLowerCase()
+    .trim();
+};
 
+
+export const searchProducts = async (query: string): Promise<Products[]> => {
+  const normalizedQuery = normalizeText(query);
+  if (!normalizedQuery) return [];
+  
   const { data, error } = await supabase
     .from("products")
     .select(`
@@ -18,14 +25,15 @@ export const searchProducts = async (query: string): Promise<Products[]> => {
       material,
       price,
       discount_percentage,
-      category:categories(name,image),
+      categories!inner(name,image),
       product_variants(color,sizes,images,tags)
     `)
-    .or(
-      `title.ilike.%${q}%,type.ilike.%${q}%,category.name.ilike.%${q}%`
-    );
+    .ilike('title', `%${normalizedQuery}%`)
 
-  if (error) throw error;
+  if (error) {
+    console.error('Error en búsqueda:', error);
+    throw error;
+  }
 
   return (data || []).map((p: any) => ({
     id: p.id,
@@ -36,8 +44,8 @@ export const searchProducts = async (query: string): Promise<Products[]> => {
     price: p.price,
     discountPercentage: p.discount_percentage,
     category: {
-      name: p.category?.name,
-      image: p.category?.image,
+      name: p.categories?.name,
+      image: p.categories?.image,
     },
     product: (p.product_variants || []).map((v: any) => ({
       color: v.color,

@@ -15,6 +15,7 @@ import { useAuthStore } from "@/store/authStore"
 import { useWishlist } from "@/components/wishlist"
 import { searchProducts } from "@/hooks/supabase/search.supabase"
 import type { Products } from "@/interface/product.interface"
+import { formatCurrency } from "@/lib/format"
 
 export default function SiteHeader() {
   const { count, setOpen } = useCart()
@@ -38,6 +39,7 @@ export default function SiteHeader() {
       try {
         const results = await searchProducts(term)
         setSuggestions(results.slice(0, 5))
+        console.log(results)
       } catch (error) {
         console.error(error)
       }
@@ -68,7 +70,7 @@ export default function SiteHeader() {
                 onSubmit={(e) => {
                   e.preventDefault()
                   if (searchQuery.trim()) {
-                    router.push(`/categories?q=${encodeURIComponent(searchQuery.trim())}`)
+                    // router.push(`/categories/q=${encodeURIComponent(searchQuery.trim())}`)
                     setShowSearch(false)
                     setSearchQuery("")
                     setSuggestions([])
@@ -86,7 +88,7 @@ export default function SiteHeader() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Buscar productos"
-                  className="pl-9 w-[220px] rounded-none"
+                  className="pl-9 w-[320px] rounded-none"
                   aria-label="Buscar"
                 />
                 {suggestions.length > 0 && (
@@ -102,8 +104,16 @@ export default function SiteHeader() {
                             setSuggestions([])
                           }}
                         >
-                          <span>{p.title}</span>
-                          <span className="block text-xs text-muted-foreground">{p.category?.name}</span>
+                          <div className="flex flex-row gap-3">
+                            <img src={p.product[0]?.images[0]} alt="" className="w-1/5" />
+                            <div className="flex flex-col justify-between">
+                              <div className="flex flex-col">
+                                <span>{p.title}</span>
+                                <span className="block text-xs text-muted-foreground">{p.category?.name}</span>
+                              </div>
+                              <span>{formatCurrency(p.price)}</span>
+                            </div>
+                          </div>
                         </Link>
                       </li>
                     ))}

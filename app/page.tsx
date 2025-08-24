@@ -41,7 +41,7 @@ export default function Page() {
         <SiteHeader />
         <main className="flex-1">
           <section className="relative">
-            <div className="relative aspect-[21/9] w-full overflow-hidden bg-muted">
+            <div className="relative aspect-[15/9] lg:aspect-[21/9] w-full overflow-hidden bg-muted">
               <Image
                 src="/images/cars-collection.png"
                 alt="Inkspire Studio - personalización premium"
@@ -49,7 +49,7 @@ export default function Page() {
                 priority
                 className="object-cover"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/70 to-transparent" />
               <div className="absolute inset-0 flex items-end">
                 <div className="container mx-auto px-4 py-12 md:py-16">
                   <div className="max-w-xl grid gap-4 text-white">
