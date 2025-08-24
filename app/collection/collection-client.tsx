@@ -68,7 +68,7 @@ export default function CollectionPageClient({ initialProducts }: CollectionPage
         <SiteHeader />
         <main className="flex-1">
           <section className="relative">
-            <div className="relative aspect-[25/7] w-full overflow-hidden bg-muted">
+            <div className="relative aspect-[13/9] lg:aspect-[21/9] w-full overflow-hidden bg-muted">
               <Image
                 src="/images/curry-banner.jpg"
                 alt="Colección Inkspire — Exposición de prendas"

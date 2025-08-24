@@ -41,7 +41,7 @@ export default function Page() {
         <SiteHeader />
         <main className="flex-1">
           <section className="relative">
-            <div className="relative aspect-[15/9] lg:aspect-[21/9] w-full overflow-hidden bg-muted">
+            <div className="relative aspect-[13/9] lg:aspect-[21/9] w-full overflow-hidden bg-muted">
               <Image
                 src="/images/cars-collection.png"
                 alt="Inkspire Studio - personalización premium"
@@ -60,9 +60,9 @@ export default function Page() {
                       Camisas y hoodies personalizados con calidad de estudio. Diseña, aprueba y recibe en casa.
                     </p>
                     <div className="flex gap-3">
-                      <Link href="/customize">
+                      {/* <Link href="/customize">
                         <Button className="rounded-none h-11 px-8">Personalizar ahora</Button>
-                      </Link>
+                      </Link> */}
                       <Link href="/collection">
                         <Button variant="outline" className="rounded-none h-11 px-8 bg-transparent text-white border-white hover:bg-white/10">
                           Ver Colección
