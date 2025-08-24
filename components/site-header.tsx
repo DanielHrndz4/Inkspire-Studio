@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { ShoppingBag, Search, User } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -16,6 +17,8 @@ import { useWishlist } from "@/components/wishlist"
 export default function SiteHeader() {
   const { count, setOpen } = useCart()
   const [showSearch, setShowSearch] = useState(false)
+  const [searchQuery, setSearchQuery] = useState("")
+  const router = useRouter()
   const { openAuth } = useAuth()
   const user = useAuthStore((state) => state.user)
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
@@ -40,14 +43,26 @@ export default function SiteHeader() {
 
           <div className="flex items-center gap-2">
             <div className="hidden md:flex items-center">
-              <div className="relative">
+              <form
+                className="relative"
+                onSubmit={(e) => {
+                  e.preventDefault()
+                  if (searchQuery.trim()) {
+                    router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`)
+                    setShowSearch(false)
+                    setSearchQuery("")
+                  }
+                }}
+              >
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Buscar productos"
                   className="pl-9 w-[220px] rounded-none"
                   aria-label="Buscar"
                 />
-              </div>
+              </form>
             </div>
 
             <Button
@@ -124,14 +139,26 @@ export default function SiteHeader() {
 
         {showSearch && (
           <div className="pb-3 md:hidden">
-            <div className="relative">
+            <form
+              className="relative"
+              onSubmit={(e) => {
+                e.preventDefault()
+                if (searchQuery.trim()) {
+                  router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`)
+                  setShowSearch(false)
+                  setSearchQuery("")
+                }
+              }}
+            >
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Buscar productos"
                 className="pl-9 rounded-none"
                 aria-label="Buscar"
               />
-            </div>
+            </form>
           </div>
         )}
       </div>
