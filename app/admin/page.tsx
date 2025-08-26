@@ -350,6 +350,7 @@ function NewProductTab() {
         <Label htmlFor="category">Categoría</Label>
         <Select
           value={categoryName}
+          required
           onValueChange={(val) => {
             setCategoryName(val)
             const cat = categories.find((c) => c.name === val)
