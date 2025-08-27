@@ -28,37 +28,50 @@ export default function CategoryDetailPage({ initialProducts, category }: Catego
   const pathname = usePathname()
   const cleanTextCat = category ? decodeURIComponent(category) : ""
 
-  const initialAudience = (searchParams.get("audiencia") ?? "").toLowerCase()
-  const initialQuery = (searchParams.get("q") ?? "").toLowerCase()
-  const initialSort = (searchParams.get("sort") ?? "relevance").toLowerCase()
+  // Initialize state with safe defaults
+  const [initialized, setInitialized] = useState(false)
+  const initialAudience = (searchParams?.get("audiencia") ?? "").toLowerCase()
+  const initialQuery = (searchParams?.get("q") ?? "").toLowerCase()
+  const initialSort = (searchParams?.get("sort") ?? "relevance").toLowerCase()
 
   // Obtener el mapa de visibilidad
   const visibility = useMemo(() => getVisibilityMap(), [])
 
   const [baseItemsRaw, setBaseItemsRaw] = useState<Products[]>(initialProducts)
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const load = async () => {
+    setLoading(true)
+    setError(null)
     try {
-      setLoading(true)
-      const allowedTypes = [
-        "t-shirt",
-        "hoodie",
-        "polo",
-        "croptop",
-        "oversized",
-        "long-sleeve",
-      ] as const;
-      
-      if (allowedTypes.includes(category as typeof allowedTypes[number])) {
-        const products = await getProductsByType(category as typeof allowedTypes[number]);
-        setBaseItemsRaw(products);
+      const allowedTypes = ["t-shirt","hoodie","polo","croptop","oversized","long-sleeve"] as const
+      const cat = decodeURIComponent(category || "")
+
+      let products: Products[] = []
+
+      if (allowedTypes.includes(cat as typeof allowedTypes[number])) {
+        const res = await getProductsByType(cat as typeof allowedTypes[number])
+        // Handle different response formats
+        if (Array.isArray(res)) {
+          products = res
+        } else if (res && typeof res === "object") {
+          products = (res as any).data || (res as any).products || []
+        }
       } else {
-        const { products } = await getProductsByCategoryName(category);
-        setBaseItemsRaw(products);
+        const res = await getProductsByCategoryName(cat)
+        // Handle different response formats
+        if (Array.isArray(res)) {
+          products = res
+        } else if (res && typeof res === "object") {
+          products = (res as any).data || (res as any).products || []
+        }
       }
-    } catch (err) {
+
+      setBaseItemsRaw(products ?? [])
+    } catch (err: any) {
       console.error("Error loading products:", err)
+      setError(err.message || "Error al cargar los productos")
       setBaseItemsRaw([])
     } finally {
       setLoading(false)
@@ -66,36 +79,42 @@ export default function CategoryDetailPage({ initialProducts, category }: Catego
   }
 
   useEffect(() => {
+    // Mark as initialized after first render
+    setInitialized(true)
+    
     // Solo recargar si los productos iniciales están vacíos
     if (initialProducts.length === 0) {
       load()
     }
-  }, [category])
+  }, [category, initialProducts.length])
 
   const baseItems = useMemo(
     () => baseItemsRaw.filter(p => visibility[p.id] !== false),
     [baseItemsRaw, visibility]
   )
 
-  // Estado de filtros
-  const [q, setQ] = useState(initialQuery)
+  // Estado de filtros - initialize with safe values
+  const [q, setQ] = useState("")
   const [colors, setColors] = useState<string[]>([])
   const [materials, setMaterials] = useState<string[]>([])
-  const [audiencia, setAudiencia] = useState<string>(initialAudience)
-  const [sort, setSort] = useState<string>(initialSort)
+  const [audiencia, setAudiencia] = useState("")
+  const [sort, setSort] = useState("relevance")
 
+  // Initialize filter states after component mounts
   useEffect(() => {
-    setAudiencia(initialAudience)
-    setQ(initialQuery)
-    setSort(initialSort)
-  }, [initialAudience, initialQuery, initialSort])
+    if (initialized) {
+      setQ(initialQuery)
+      setAudiencia(initialAudience)
+      setSort(initialSort)
+    }
+  }, [initialized, initialQuery, initialAudience, initialSort])
 
   // Opciones disponibles
   const colorsAll = useMemo(() => {
     const set = new Set<string>()
     baseItems.forEach((p) => {
       p.product.forEach((variant: any) => {
-        set.add(variant.color)
+        if (variant.color) set.add(variant.color)
       })
     })
     return Array.from(set)
@@ -103,7 +122,9 @@ export default function CategoryDetailPage({ initialProducts, category }: Catego
 
   const materialsAll = useMemo(() => {
     const set = new Set<string>()
-    baseItems.forEach((p) => set.add(p.material || ""))
+    baseItems.forEach((p) => {
+      if (p.material) set.add(p.material)
+    })
     return Array.from(set)
   }, [baseItems])
 
@@ -128,7 +149,8 @@ export default function CategoryDetailPage({ initialProducts, category }: Catego
       const parsedAudience = parseAudience(audiencia)
       items = items.filter((p) => {
         if (parsedAudience === "all") return true
-        return p.product.some((variant: any) => variant.tags?.includes(parsedAudience))
+        return p.product.some((variant: any) => 
+          variant.tags && variant.tags.includes(parsedAudience))
       })
     }
 
@@ -136,16 +158,18 @@ export default function CategoryDetailPage({ initialProducts, category }: Catego
     if (term) {
       items = items.filter(
         (p) => p.title.toLowerCase().includes(term) ||
-          p.description?.toLowerCase().includes(term))
+          (p.description && p.description.toLowerCase().includes(term))
+      )
     }
 
     if (colors.length > 0) {
       items = items.filter((p) =>
-        p.product.some((variant: any) => colors.includes(variant.color)))
+        p.product.some((variant: any) => variant.color && colors.includes(variant.color))
+      )
     }
 
     if (materials.length > 0) {
-      items = items.filter((p) => materials.includes(p.material || ""))
+      items = items.filter((p) => p.material && materials.includes(p.material))
     }
 
     switch (sort) {
@@ -163,13 +187,15 @@ export default function CategoryDetailPage({ initialProducts, category }: Catego
 
   // Sincronizar a URL (q, audiencia, sort)
   useEffect(() => {
+    if (!initialized) return;
+    
     const params = new URLSearchParams()
     if (q) params.set("q", q)
     if (audiencia) params.set("audiencia", audiencia)
     if (sort && sort !== "relevance") params.set("sort", sort)
     const newUrl = `${pathname}${params.toString() ? `?${params}` : ""}`
     window.history.replaceState(null, "", newUrl)
-  }, [q, audiencia, sort, pathname])
+  }, [q, audiencia, sort, pathname, initialized])
 
   const toggle = (list: string[], value: string, setter: (v: string[]) => void) => {
     if (list.includes(value)) setter(list.filter((v) => v !== value))
@@ -202,6 +228,18 @@ export default function CategoryDetailPage({ initialProducts, category }: Catego
               {cleanTextCat}
             </h1>
           </header>
+
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-800 p-4 rounded-md">
+              <p>{error}</p>
+              <button 
+                onClick={load}
+                className="mt-2 px-4 py-2 bg-red-100 hover:bg-red-200 rounded-md text-sm"
+              >
+                Reintentar
+              </button>
+            </div>
+          )}
 
           <section className="grid gap-8 md:grid-cols-[280px_1fr]">
             <aside className="md:sticky md:top-20 md:h-fit grid gap-6">
@@ -324,6 +362,12 @@ export default function CategoryDetailPage({ initialProducts, category }: Catego
                   </svg>
                   <h3 className="text-xl font-medium text-gray-600">No encontramos productos</h3>
                   <p className="text-gray-500 max-w-md">Parece que no hay items disponibles con los filtros actuales.</p>
+                  <button
+                    onClick={resetFilters}
+                    className="px-4 py-2 bg-blue-100 hover:bg-blue-200 rounded-md"
+                  >
+                    Limpiar filtros
+                  </button>
                 </div>
               ) : (
                 <PaginatedGrid

@@ -25,9 +25,9 @@ export const categories: Category[] = [
     description: "Arte inspirado en tus series favoritas.",
   },
   {
-    slug: "cars",
-    title: "Carros",
-    image: "/images/categories/cars.jpg",
+    slug: "racing",
+    title: "Racing",
+    image: "https://icktrjprljbmkfhnsegu.supabase.co/storage/v1/object/public/isbucket/racing.jpg",
     description: "Motores y velocidad con estilo.",
   },
   {
@@ -37,9 +37,9 @@ export const categories: Category[] = [
     description: "Diseños tipográficos minimalistas.",
   },
   {
-    slug: "marvel",
-    title: "Marvel",
-    image: "/images/categories/marvel.jpg",
+    slug: "superhéroes",
+    title: "Superhéroes",
+    image: "https://icktrjprljbmkfhnsegu.supabase.co/storage/v1/object/public/isbucket/1756148328276-sklh60fvpb7.jpg",
     description: "Superhéroes y villanos en cada prenda.",
   },
 ]

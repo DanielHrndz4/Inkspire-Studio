@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { ShoppingBag, Search, User } from 'lucide-react'
+import { ShoppingBag, Search, User, LogIn, UserPlus, LogOut, Heart, Package, Shield } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useCart } from "@/components/cart"
@@ -25,6 +25,7 @@ export default function SiteHeader() {
   const router = useRouter()
   const { openAuth } = useAuth()
   const user = useAuthStore((state) => state.user)
+  const isAdmin = user?.role === "admin"
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
   const logout = useAuthStore((state) => state.logout)
   useWishlist()
@@ -132,42 +133,85 @@ export default function SiteHeader() {
               <Search className="h-5 w-5" />
             </Button>
 
-            {/* Usuario */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" aria-label={user ? "Cuenta" : "Iniciar sesión"}>
-                  <div className="flex">
-                    {isAuthenticated
-                      ? user?.name
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label={user ? "Cuenta" : "Iniciar sesión"}
+                >
+                  <div className="flex items-center justify-center">
+                    {isAuthenticated ? (
+                      user?.name
                         ? user.name
                           .split(" ")
                           .slice(0, 2)
                           .map((n) => n.charAt(0).toUpperCase())
                           .join("")
-                        : ""
-                      : <User className="h-5 w-5" />}
+                        : <User className="h-5 w-5" />
+                    ) : (
+                      <User className="h-5 w-5" />
+                    )}
                   </div>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-52">
+
+              <DropdownMenuContent align="end" className="w-56">
                 {isAuthenticated ? (
                   <>
                     <DropdownMenuLabel className="text-xs">
-                      {user?.name ? `${user.name} · ` : ""}{user?.email}
+                      {user?.name ? `${user.name} · ` : ""}
+                      {user?.email}
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
+
+                    {isAdmin && (
+                      <>
+                        <DropdownMenuItem asChild>
+                          <Link href="/admin" className="flex items-center gap-2">
+                            <Shield className="h-4 w-4" />
+                            Panel Admin
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                      </>
+                    )}
+
                     <DropdownMenuItem asChild>
-                      <Link href="/wishlist">Wishlist</Link>
+                      <Link href="/wishlist" className="flex items-center gap-2">
+                        <Heart className="h-4 w-4" />
+                        Wishlist
+                      </Link>
                     </DropdownMenuItem>
+
                     <DropdownMenuItem asChild>
-                      <Link href="/orders">Mis pedidos</Link>
+                      <Link href="/orders" className="flex items-center gap-2">
+                        <Package className="h-4 w-4" />
+                        Mis pedidos
+                      </Link>
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={logout}>Cerrar sesión</DropdownMenuItem>
+
+                    <DropdownMenuItem onClick={logout} className="flex items-center gap-2">
+                      <LogOut className="h-4 w-4 text-red-500" />
+                      Cerrar sesión
+                    </DropdownMenuItem>
                   </>
                 ) : (
                   <>
-                    <DropdownMenuItem onClick={() => openAuth("login")}>Iniciar sesión</DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => openAuth("register")}>Crear cuenta</DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => openAuth("login")}
+                      className="flex items-center gap-2"
+                    >
+                      <LogIn className="h-4 w-4" />
+                      Iniciar sesión
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => openAuth("register")}
+                      className="flex items-center gap-2"
+                    >
+                      <UserPlus className="h-4 w-4" />
+                      Crear cuenta
+                    </DropdownMenuItem>
                   </>
                 )}
               </DropdownMenuContent>
