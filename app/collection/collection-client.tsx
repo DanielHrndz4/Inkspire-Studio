@@ -20,7 +20,7 @@ const TABS = [
   { key: "t-shirt", label: "Camisas" },
   { key: "hoodie", label: "Hoodies" },
   { key: "anime", label: "Anime" },
-  { key: "cars", label: "Carros" },
+  { key: "racing", label: "Racing" },
   { key: "typography", label: "Tipografía" },
 ] as const
 
@@ -137,7 +137,7 @@ export default function CollectionPageClient({ initialProducts }: CollectionPage
                         </div>
                       ) : (
                         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                          {list.map((p) => (
+                          {list.slice(0,12).map((p) => (
                             <ProductCard key={p.id} product={p} />
                           ))}
                           {list.length === 0 && (
